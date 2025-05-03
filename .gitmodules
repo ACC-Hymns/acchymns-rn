@@ -1,0 +1,3 @@
+[submodule "assets/books"]
+	path = books
+	url = https://github.com/ACC-Hymns/books
