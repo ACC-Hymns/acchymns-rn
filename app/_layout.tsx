@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { createContext, useEffect, useMemo, useState } from 'react';
@@ -10,6 +10,9 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
+import { Button, Pressable } from 'react-native';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -51,12 +54,20 @@ export default function RootLayout() {
         
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <HymnalContext.Provider value={context}>
-                <Stack initialRouteName='(tabs)'>
+                <QueryClientProvider client={new QueryClient()}>
+                    <Stack initialRouteName='(tabs)'>
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="hymnal_importer" options={{ headerShown: false }}/>
+                    <Stack.Screen 
+                        name="hymnal_importer" 
+                        options={{ 
+                        headerShown: false, 
+                        presentation: 'modal', 
+                        }}
+                    />
                     <Stack.Screen name="+not-found" />
-                </Stack>
-                <StatusBar style="auto" />
+                    </Stack>
+                    <StatusBar style="auto" />
+                </QueryClientProvider>
             </HymnalContext.Provider>
         </ThemeProvider>
     );

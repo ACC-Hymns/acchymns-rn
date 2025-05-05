@@ -22,7 +22,7 @@ export default function TabLayout() {
                     ios: {
                         // Use a transparent background on iOS to show the blur effect
                         position: 'absolute',
-                        height: 75, // Increase the height of the tab bar
+                        height: 85, // Increase the height of the tab bar
                     },
                     default: {
                         height: 55, // Increase the height of the tab bar
