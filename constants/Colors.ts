@@ -5,10 +5,10 @@
 
 const tintColorLight = '#000';
 const tintColorDark = '#fff';
-
 export const Colors = {
   light: {
     text: '#11181C',
+    fadedText: '#687076', // Slightly faded text color
     background: '#fff',
     tint: tintColorLight,
     icon: '#687076',
@@ -18,6 +18,7 @@ export const Colors = {
   },
   dark: {
     text: '#ECEDEE',
+    fadedText: '#9BA1A6', // Slightly faded text color
     background: '#141414',
     tint: tintColorDark,
     icon: '#9BA1A6',

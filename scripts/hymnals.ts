@@ -55,7 +55,7 @@ async function loadHymnals() {
 }
 
 
-async function downloadHymnal(book: string) {
+async function downloadHymnal(book: string, onProgress?: (progress: number) => void) {
     const folderUrl = `${GITHUB_BASE_URL}/${book}/`;
     const localFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
 
@@ -84,7 +84,6 @@ async function downloadHymnal(book: string) {
     const summaryContent = await FileSystem.readAsStringAsync(summaryFilePath);
     const summary = JSON.parse(summaryContent) as BookSummary;
 
-
     // Download the index.json file if it exists
     const indexUrl = `${folderUrl}index.json`;
     const indexFilePath = `${localFolderPath}index.json`;
@@ -97,7 +96,6 @@ async function downloadHymnal(book: string) {
         });
 
     // Download the songs.json file
-
     const songsUrl = `${folderUrl}songs.json`;
     const songsFilePath = `${localFolderPath}songs.json`;
     await FileSystem.downloadAsync(songsUrl, songsFilePath)
@@ -108,7 +106,7 @@ async function downloadHymnal(book: string) {
             console.error(`Error downloading songs.json: ${error}`);
         });
 
-    // create songs folder
+    // Create songs folder
     const songsFolderPath = `${localFolderPath}songs/`;
     await FileSystem.makeDirectoryAsync(songsFolderPath, { intermediates: true });
 
@@ -118,8 +116,10 @@ async function downloadHymnal(book: string) {
 
     console.log(songsList);
 
-    const chunkSize = 10;
+    const chunkSize = 25;
     const songNumbers = Object.keys(songsList);
+    const totalSongs = songNumbers.length;
+    let downloadedSongs = 0;
 
     for (let i = 0; i < songNumbers.length; i += chunkSize) {
         const chunk = songNumbers.slice(i, i + chunkSize);
@@ -131,6 +131,10 @@ async function downloadHymnal(book: string) {
 
                 await FileSystem.downloadAsync(songImageUrl, localSongImagePath)
                     .then(({ uri }) => {
+                        downloadedSongs++;
+                        if (onProgress) {
+                            onProgress((downloadedSongs / totalSongs) * 100);
+                        }
                     })
                     .catch(error => {
                         console.error(`Error downloading ${songNumber}.${summary.fileExtension}: ${error}`);
@@ -141,12 +145,39 @@ async function downloadHymnal(book: string) {
     }
 }
 
+async function removeHymnal(book: string) {
+    const hymnalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
+    const folderInfo = await FileSystem.getInfoAsync(hymnalFolderPath);
+    if (folderInfo.exists) {
+        await FileSystem.deleteAsync(hymnalFolderPath, { idempotent: true });
+        console.log(`Deleted ${book} hymnal folder.`);
+    } else {
+        console.log(`Hymnal folder for ${book} does not exist.`);
+    }
+}
+
+const fileCache: Record<string, string> = {};
+async function cachedReadFile(filePath: string): Promise<string> {
+    if (fileCache[filePath]) {
+        return fileCache[filePath];
+    }
+
+    const fileInfo = await FileSystem.getInfoAsync(filePath);
+    if (!fileInfo.exists) {
+        throw new Error(`File not found at path: ${filePath}`);
+    }
+
+    const fileContent = await FileSystem.readAsStringAsync(filePath);
+    fileCache[filePath] = fileContent;
+    return fileContent;
+}
+
 async function getSongData(book: string) {
     const hymnalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
     const songsFilePath = `${hymnalFolderPath}songs.json`;
-    const songsContent = await FileSystem.readAsStringAsync(songsFilePath);
+    const songsContent = await cachedReadFile(songsFilePath);
     const songsList = JSON.parse(songsContent) as SongList;
     return songsList;
 }
 
-export { loadHymnals, downloadHymnal, getSongData };
+export { loadHymnals, downloadHymnal, getSongData, removeHymnal };

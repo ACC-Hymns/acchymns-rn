@@ -18,14 +18,6 @@ export default function SettingsScreen() {
                         <Text style={styles.textStyle}>Settings</Text>
                     </View>
 
-
-                    <TouchableOpacity
-                        style={[styles.button, { backgroundColor: Colors[theme]['primary'] }]}
-                        onPress={() => router.push('/hymnal_importer')}
-                    >
-                        <Text style={styles.buttonText}>Import Hymnal</Text>
-                    </TouchableOpacity>
-
                 </ScrollView>
             </SafeAreaView>
         </>

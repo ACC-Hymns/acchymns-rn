@@ -17,6 +17,12 @@ const MAPPING = {
   'chevron.left': 'chevron-back',
   'ellipsis.circle': 'ellipsis-horizontal-circle-outline',
   'ellipsis.circle.fill': 'ellipsis-horizontal-circle',
+  'textformat.abc': 'funnel-outline',
+  'textformat.123': 'funnel-outline',
+  'book' : 'book-outline',
+  'book.fill' : 'book',
+  'square.and.arrow.up': 'share-outline',
+  'plus.circle': 'add-circle-outline',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

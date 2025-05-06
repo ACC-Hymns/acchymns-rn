@@ -1,20 +1,23 @@
 import GradientButton from '@/components/GradientButton';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { downloadHymnal } from '@/scripts/hymnals';
+import { downloadHymnal, loadHymnals } from '@/scripts/hymnals';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useContext, useRef, useState } from 'react';
+import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList } from 'react-native';
 
 export default function HymnalImporter() {
 
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme);
     const isPresented = router.canGoBack();
+    const context = useContext(HymnalContext);
 
     type GithubFolderStructure = {
         name: string;
@@ -63,39 +66,70 @@ export default function HymnalImporter() {
         queryFn: fetchHymnals,
     })
 
+    // fetch the data and log it to the console
+    const [progressValues, setProgressValues] = useState<Record<string, number>>({});
+
     if(status === 'pending') {
         return (
             <SafeAreaView style={styles.screenContainer}>
-                <Text style={styles.textStyle}>Loading...</Text>
+                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
+                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
+                </TouchableOpacity>
+                <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                    <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                </View>
             </SafeAreaView>
         )
     }
     if(status === 'error') {
         return (
             <SafeAreaView style={styles.screenContainer}>
+                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
+                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
+                </TouchableOpacity>
                 <Text style={styles.textStyle}>Error loading hymnals</Text>
             </SafeAreaView>
         )
     }
-
-    // fetch the data and log it to the console
 
     return (
         <>
             <SafeAreaView style={styles.screenContainer}>
                 {isPresented && (
                     <>
-                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16, marginTop: 16 }}>
+                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
                             <IconSymbol name="chevron.left" size={18} color="#007AFF" />
                             <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
                         </TouchableOpacity>
                         
-                        <ScrollView contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}>
-                            {data?.map((item) => (
+                        <FlatList
+                            data={data}
+                            keyExtractor={(item) => item.name.short}
+                            contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
+                            ListHeaderComponent={(
+                                <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                                    <Text style={styles.fadedText}>Import Hymnals</Text>
+                                    <View style={{ height: 5 }} />
+                                    <Text style={styles.descriptionText}>Download hymnals to access them offline.</Text>
+                                </View>
+                            )}
+                            renderItem={({ item }) => (
                                 <TouchableOpacity
-                                    key={item.name.short}
                                     onPress={async () => {
-                                        await downloadHymnal(item.name.short);
+                                        await downloadHymnal(item.name.short, (progress) => {
+                                            setProgressValues((prev) => ({
+                                                ...prev,
+                                                [item.name.short]: progress,
+                                            }));
+                                        });
+
+                                        // reload the data
+                                        const data = await loadHymnals();
+
+                                        if (!context) return;
+                                        context?.SET_BOOK_DATA(data);
                                     }}
                                     style={styles.buttonContainer}
                                     activeOpacity={0.7} // Adjust this value to control the darkness
@@ -107,11 +141,13 @@ export default function HymnalImporter() {
                                         style={[styles.gradient]}
                                     >
                                         <Text style={styles.buttonText}>{item.name.medium}</Text>
-
+                                        {progressValues[item.name.short] > 0 && (
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(progressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
+                                        )}
                                     </LinearGradient>
                                 </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+                            )}
+                        />
                     </>
                 )}
             </SafeAreaView>
@@ -121,6 +157,19 @@ export default function HymnalImporter() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        fadedText: {
+            fontSize: 24,
+            fontWeight: '500',
+            color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
+            fontFamily: 'Lato'
+        },
+        descriptionText: {
+            fontSize: 16,
+            fontWeight: '400',
+            color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
+            fontFamily: 'Lato',
+            textAlign: 'center'
+        },
         buttonContainer: {
             borderRadius: 16,
             justifyContent: 'center',
