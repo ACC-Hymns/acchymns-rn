@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-menu/menu": "^1.2.2",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
@@ -49,7 +50,9 @@
     "react-native-screens": "~4.10.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "zeego": "^3.0.6"
+    "zeego": "^3.0.6",
+    "expo-image-picker": "~16.1.4",
+    "expo-sharing": "~13.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

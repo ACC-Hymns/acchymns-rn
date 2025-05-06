@@ -10,6 +10,8 @@ const DEFAULT_HYMNALS = [
     'JH',
 ];
 
+export { HYMNAL_FOLDER, GITHUB_BASE_URL, DEFAULT_HYMNALS };
+
 // book name should be short like "ZH, GH, HG, JH"
 
 /* Folder structure:

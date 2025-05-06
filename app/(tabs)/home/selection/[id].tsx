@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookSummary, SongList } from '@/constants/types';
@@ -64,6 +64,11 @@ export default function SelectionScreen() {
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                     }}
+
+                                    onPress={() => {
+                                        router.push({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                    }}
+
                                     activeOpacity={0.7}
                                 >
                                     <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>

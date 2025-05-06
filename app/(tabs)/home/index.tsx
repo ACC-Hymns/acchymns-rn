@@ -83,7 +83,7 @@ export default function HomeScreen() {
 
     return (
         <>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+            <GestureHandlerRootView style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
                 <FlatList
                 style={[styles.scrollView]}
                 contentContainerStyle={{ paddingBottom: 90 }}
