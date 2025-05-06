@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
@@ -6,14 +6,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookSummary, SongList } from '@/constants/types';
 import { getSongData, HYMNAL_FOLDER } from '@/scripts/hymnals';
 import { Gesture, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
-import { Zoomable } from '@likashefqet/react-native-image-zoom';
-import { Image } from 'react-native';
+import { Zoomable, ZoomableRef } from '@likashefqet/react-native-image-zoom';
+import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system';
-import * as Linking from 'expo-linking';
-import * as Sharing from 'expo-sharing';
+import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Pdf from 'react-native-pdf';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string}>();
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+    
     
     // get book data from context
     const context = useContext(HymnalContext);
@@ -22,6 +25,9 @@ export default function DisplayScreen() {
     const [imageURI, setImageURI] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
+    const zoomableRef = useRef<ZoomableRef>(null);
+
+    const scale = useSharedValue(1);
     
     useLayoutEffect(() => {
         if (!context) return;
@@ -46,7 +52,7 @@ export default function DisplayScreen() {
                 const fileInfo = await FileSystem.getInfoAsync(normalizedFilePath);
 
                 if (fileInfo.exists) {
-                    const imageURI = fileInfo.exists ? filePath : null;
+                    const imageURI = fileInfo.exists ? normalizedFilePath : null;
                     setImageURI(imageURI);
                     console.log("Image URI:", imageURI);
                     console.log("File size (KB):", (fileInfo.size / 1024).toFixed(2));
@@ -63,48 +69,17 @@ export default function DisplayScreen() {
         fetchData();
     }, [bookData, params.id, navigation]);
 
-    useEffect(() => {
-        if (imageURI) {
-            const handleShare = async () => {
-                try {
-                    const fileInfo = await FileSystem.getInfoAsync(imageURI);
-                    if (fileInfo.exists) {
-                        await Sharing.shareAsync(imageURI, { dialogTitle: 'Share Image' });
-                    } else {
-                        console.error("File does not exist:", imageURI);
-                    }
-                } catch (error) {
-                    console.error("Error sharing image:", error);
-                }
-            };
-
-            const handleOpenLink = async () => {
-                try {
-                    await Linking.openURL(imageURI);
-                } catch (error) {
-                    console.error("Error opening link:", error);
-                }
-            };
-
-            handleShare();
-
-            // Add event listeners for share and open link actions
-            return () => {
-                // Cleanup event listeners if needed
-            };
-        }
-      }, [imageURI]);
+    const animatedStyle = useAnimatedStyle(
+        () => ({
+          borderRadius: 30 / scale.value,
+        }),
+        [scale]
+      );
 
     return (
             <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
                 {imageURI ? (
-                    <Zoomable>
-                        <Image
-                            key={imageURI}
-                            source={{uri: imageURI}}
-                            style={{ width: 200, height: 200 }}
-                        />
-                    </Zoomable>
+                    <Pdf source={{uri: imageURI}} />
                 ) : (
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <Text style={{ color: 'white' }}>{loading ? 'Loading...' : 'Image not available'}</Text>
