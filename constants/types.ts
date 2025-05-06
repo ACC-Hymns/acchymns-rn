@@ -10,6 +10,7 @@ type BookSummary = {
     addOn: boolean;
     indexAvailable: boolean;
     source?: BookSourceType;
+    size?: number; // in MB
 }
 
 enum BookSourceType {

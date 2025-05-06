@@ -19,10 +19,11 @@ const MAPPING = {
   'ellipsis.circle.fill': 'ellipsis-horizontal-circle',
   'textformat.abc': 'funnel-outline',
   'textformat.123': 'funnel-outline',
-  'book' : 'book-outline',
-  'book.fill' : 'book',
+  'book': 'book-outline',
+  'book.fill': 'book',
   'square.and.arrow.up': 'share-outline',
   'plus.circle': 'add-circle-outline',
+  'network.slash': 'cloud-offline-outline'
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

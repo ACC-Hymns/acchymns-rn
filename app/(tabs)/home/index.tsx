@@ -6,14 +6,14 @@ import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { use, useContext, useEffect, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
+import { Text, View, StyleSheet, Platform, ScrollView, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
 import DraggableFlatList, {
     RenderItemParams,
     ScaleDecorator,
 } from "react-native-draggable-flatlist";
-import { Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BorderlessButton, Gesture, GestureHandlerRootView, Pressable, RectButton } from 'react-native-gesture-handler';
 import * as ContextMenu from 'zeego/context-menu';
 
 export default function HomeScreen() {
@@ -22,6 +22,7 @@ export default function HomeScreen() {
     const styles = makeStyles(theme);
     const context = useContext(HymnalContext);
     const router = useRouter();
+    const navigation = useNavigation();
 
     const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
 
@@ -37,93 +38,94 @@ export default function HomeScreen() {
     }, [context?.BOOK_DATA]);
 
 
-    const renderHymnalItem = ({ item: bookKey , drag, isActive}: RenderItemParams<string>) => {
+    const renderHymnalItem = ({ item: bookKey }: { item: string }) => {
         return (
-            <ScaleDecorator>
-                <View style={{ marginBottom: 15 }}>
-                    <ContextMenu.Root key={bookKey}>
-                        <ContextMenu.Trigger>
-                            <TouchableOpacity activeOpacity={1}>
-                                <GradientButton
-                                    key={bookKey}
-                                    title={bookData![bookKey].name.medium}
-                                    primaryColor={bookData![bookKey].primaryColor}
-                                    secondaryColor={bookData![bookKey].secondaryColor}
-                                    onPress={() => {
-                                        router.push({ pathname: '/home/selection/[id]', params: { id: bookKey } });
-                                    }}
-                                    onLongPress={drag}
-                                />
-                            </TouchableOpacity>
-                        </ContextMenu.Trigger>
-                        <ContextMenu.Content>
-                            <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
-                                    console.log('Remove hymnal pressed');
+            <View style={{ marginBottom: 15 }}>
+            <ContextMenu.Root key={bookKey}>
+                <ContextMenu.Trigger>
+                    <Pressable
+                    unstable_pressDelay={0}
+                    onPress={() => {
+                        router.push({ pathname: '/home/selection/[id]', params: { id: bookKey } });
+                    }}
+                    >
+                        <GradientButton
+                            key={bookKey}
+                            title={bookData![bookKey].name.medium}
+                            primaryColor={bookData![bookKey].primaryColor}
+                            secondaryColor={bookData![bookKey].secondaryColor}
+                            //onLongPress={drag}
+                        />
+                    </Pressable>
+                </ContextMenu.Trigger>
+                <ContextMenu.Content>
+                    <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
 
-                                    // remove hymnal from context
-                                    await removeHymnal(bookKey);
+                            // remove hymnal from context
+                            await removeHymnal(bookKey);
 
-                                    const books = await loadHymnals();
-                                    context?.SET_BOOK_DATA(books);
-                                }}>
-                                <ContextMenu.ItemTitle>
-                                    <Text style={{ color: 'red' }}>Delete</Text>
-                                </ContextMenu.ItemTitle>
-                                <ContextMenu.ItemIcon ios={{ name: 'trash'}} />
-                            </ContextMenu.Item>
-                        </ContextMenu.Content>
-                    </ContextMenu.Root>
-                </View>
-            </ScaleDecorator>
-        )
+                            const books = await loadHymnals();
+                            context?.SET_BOOK_DATA(books);
+                        }}>
+                        <ContextMenu.ItemTitle>
+                            <Text style={{ color: 'red' }}>Delete</Text>
+                        </ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: 'trash'}} />
+                    </ContextMenu.Item>
+                </ContextMenu.Content>
+            </ContextMenu.Root>
+        </View>
+    )}
+
+    const renderDraggableHymnalItem = ({ item: bookKey , drag, isActive}: RenderItemParams<string>) => {
+        return renderHymnalItem({ item: bookKey });
     }
-
 
     return (
         <>
-            <GestureHandlerRootView>
-                <DraggableFlatList
-                    style={[styles.scrollView, { flex: 1 }]}
-                    contentContainerStyle={{ paddingBottom: 90 }}
-                    data={bookData ? Object.keys(bookData) : []}
-                    keyExtractor={(bookKey) => bookKey}
-                    onDragEnd={({ data }) => {
-                        const newBookData: Record<string, BookSummary> = {};
-                        data.forEach((bookKey, index) => {
-                            newBookData[bookKey] = bookData![bookKey];
-                        });
-                        setBookData(newBookData);
-                        context?.SET_BOOK_DATA(newBookData);
-                    }}
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <FlatList
+                style={[styles.scrollView]}
+                contentContainerStyle={{ paddingBottom: 90 }}
+                data={bookData ? Object.keys(bookData) : []}
+                keyExtractor={(bookKey) => bookKey}
+                // onDragEnd={({ data }) => {
+                //     const newBookData: Record<string, BookSummary> = {};
+                //     data.forEach((bookKey, index) => {
+                //         newBookData[bookKey] = bookData![bookKey];
+                //     });
+                //     setBookData(newBookData);
+                //     context?.SET_BOOK_DATA(newBookData);
+                // }}
 
-                    renderItem={renderHymnalItem}
-                    ListHeaderComponent={
-                        <View style={styles.titleContainer}>
-                            <Text style={styles.textStyle}>Home</Text>
-                        </View>
-                    }
-                    ListFooterComponent={
-                        <View style={{ alignItems: 'center', marginTop: 20 }}>
-                            <TouchableOpacity
-                                onPress={() => router.push('/hymnal_importer')}
-                            >
-                                <IconSymbol
-                                    name="plus.circle"
-                                    size={56}
-                                    weight='light'
-                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    }
-                    ListEmptyComponent={
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
-                            <Text style={styles.fadedText}>No Hymnals</Text>
-                            <View style={{ height: 5 }} />
-                            <Text style={styles.descriptionText}>To add a hymnal, tap the "+" button below.</Text>
-                        </View>
-                    }
-                />
+                renderItem={renderHymnalItem}
+                ListHeaderComponent={
+                    <View style={styles.titleContainer}>
+                        <Text style={styles.textStyle}>Home</Text>
+                    </View>
+                }
+                ListFooterComponent={
+                    <View style={{ alignItems: 'center', marginTop: 20 }}>
+                        <TouchableOpacity
+                            onPress={() => router.push('/hymnal_importer')}
+                        >
+                            <IconSymbol
+                                name="plus.circle"
+                                size={56}
+                                weight='light'
+                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                }
+                ListEmptyComponent={
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
+                        <Text style={styles.fadedText}>No Hymnals</Text>
+                        <View style={{ height: 5 }} />
+                        <Text style={styles.descriptionText}>To add a hymnal, tap the "+" button below.</Text>
+                    </View>
+                }
+            />
             </GestureHandlerRootView>
         </>
     );
@@ -131,9 +133,19 @@ export default function HomeScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        rowItem: {
+          height: 100,
+          width: 100,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        text: {
+          color: "white",
+          fontSize: 24,
+          fontWeight: "bold",
+          textAlign: "center",
+        },
         scrollView: {
-            flex: 1,
-            width: '100%',
             paddingTop: 15,
             paddingBottom: 15,
             paddingRight: 20,

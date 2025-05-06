@@ -38,12 +38,12 @@ export default function RootLayout() {
         const data = loadHymnals();
         data.then((data) => {
             SET_BOOK_DATA(data);
+            if (loaded) {
+                SplashScreen.hideAsync();
+            }
         }).catch((error) => {
             console.error("Error loading hymnals:", error);
         });
-        if (loaded) {
-            SplashScreen.hideAsync();
-        }
     }, [loaded]);
 
     if (!loaded) {

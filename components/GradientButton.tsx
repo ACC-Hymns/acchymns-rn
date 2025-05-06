@@ -1,10 +1,10 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface GradientButtonProps {
     title: string;
-    onPress: () => void;
+    onPress?: () => void;
     onLongPress?: () => void;
     primaryColor: string;
     secondaryColor: string;
@@ -21,35 +21,27 @@ const GradientButton: React.FC<GradientButtonProps> = ({
     const [pressStart, setPressStart] = React.useState<number | null>(null);
 
     return (
-        <TouchableOpacity
-            onPressIn={() => {
-                // check press duration
-                setPressStart(Date.now());
-            }}
-            onPressOut={() => {
-                const pressEnd = Date.now();
-                if (pressStart) {
-                    const duration = pressEnd - pressStart; // Calculate the duration of the press
-                    if(duration < 300) {
-                        onPress(); // Call the onPress function if the duration is less than 200ms
-                    } else {
-                        onLongPress && onLongPress(); // Call the onLongPress function if the duration is more than 200ms
-                    }
-                    setPressStart(null); // Reset the press start time
-                }
-            }}
-            style={styles.buttonContainer}
-            activeOpacity={0.7} // Adjust this value to control the darkness
-        >
-            <LinearGradient
-                colors={[primaryColor, secondaryColor]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.gradient]}
-            >
-                <Text style={styles.buttonText}>{title}</Text>
-            </LinearGradient>
-        </TouchableOpacity>
+            <Pressable
+                onPress={() => {
+                    // check press duration
+                    onPress?.();
+                }}
+
+                style={({ pressed }) => [
+                    styles.buttonContainer,
+                    pressed && { opacity: 0.7 },
+                ]}
+                    
+                >
+                <LinearGradient
+                    colors={[primaryColor, secondaryColor]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.gradient]}
+                >
+                    <Text style={styles.buttonText}>{title}</Text>
+                </LinearGradient>
+        </Pressable>
     );
 };
 
