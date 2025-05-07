@@ -105,7 +105,7 @@ export default function HomeScreen() {
                     </View>
                 }
                 ListFooterComponent={
-                    <View style={{ alignItems: 'center', marginTop: 20 }}>
+                    <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 30 }}>
                         <TouchableOpacity
                             onPress={() => router.push('/hymnal_importer')}
                         >
