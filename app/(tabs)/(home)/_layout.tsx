@@ -20,6 +20,9 @@ export default function HomeLayout() {
                 options={{
                     title: 'Selection',
                     headerShown: true,
+                    headerStyle: {
+                        backgroundColor: Colors[theme].headerBackground,
+                    },
                     headerBackVisible: false,
                     headerLeft: () => (
                         <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>

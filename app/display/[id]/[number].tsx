@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, ActivityIndicator, useColorScheme } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -10,10 +10,12 @@ import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
 import { convert, convertB64 } from 'react-native-pdf-to-image';
+import { Colors } from '@/constants/Colors';
 
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
+    const theme = useColorScheme() ?? 'light';
     const MIN_SCALE = 1;
     const MAX_SCALE = 5;
 
@@ -49,6 +51,7 @@ export default function DisplayScreen() {
 
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const data = await getSongData(params.id as string);
                 setSongData(data);
 
@@ -62,7 +65,7 @@ export default function DisplayScreen() {
                     const imageURI = fileInfo.exists ? normalizedFilePath : null;
                     // check if file is a PDF
                     if (bData.fileExtension === 'pdf') {
-                        console.log("File is a PDF, generating images...");
+                        //console.log("File is a PDF, generating images...");
 
                         // get base64 string from file
                         const base64Input = await FileSystem.readAsStringAsync(normalizedFilePath, {
@@ -74,16 +77,15 @@ export default function DisplayScreen() {
 
                         // start milliseconds
                         const startTime = Date.now();
-                        // const imageUris = await PdfPageImage.generateAllPages(`data:application/pdf;base64,${base64Input}`, 1).catch((error) => {
-                        //     console.error("Error generating images from PDF:", error);
-                        // });
-                        const imageUris = await convert(`data:application/pdf;base64,${base64Input}`);
+                        const imageUris = await PdfPageImage.generateAllPages(`data:application/pdf;base64,${base64Input}`, 1).catch((error) => {
+                            console.error("Error generating images from PDF:", error);
+                        });
 
-                        if (!imageUris || imageUris.outputFiles?.length === 0 || imageUris.outputFiles == undefined) {
+                        if (!imageUris || imageUris?.length === 0) {
                             console.error("No images generated from PDF");
                             return;
                         }
-                        const images = (await Promise.all(imageUris.outputFiles.map((uri) => loadSkiaImageFromUri(uri)))).filter((img): img is SkImage => img !== null);
+                        const images = (await Promise.all(imageUris.map((i) => loadSkiaImageFromUri(i.uri)))).filter((img): img is SkImage => img !== null);
 
                         // Measure total size
                         const totalHeight = images.reduce((acc, img) => acc + img.height(), 0);
@@ -107,23 +109,19 @@ export default function DisplayScreen() {
                         // Get the final image
                         const resultImage = surface.makeImageSnapshot();
                         const base64 = resultImage.encodeToBase64();
-                        const path = FileSystem.cacheDirectory + "stitched.png";
-                        await FileSystem.writeAsStringAsync(path, base64, {
-                            encoding: FileSystem.EncodingType.Base64,
-                        });
+                        const dataUri = `data:image/png;base64,${base64}`;
 
                         // end time
                         const endTime = Date.now();
                         const duration = endTime - startTime;
-                        console.log(`Image stitching took ${duration} milliseconds`);
+                        //console.log(`Image stitching took ${duration} milliseconds`);
 
-                        setImageURI(path);
+                        setImageURI(dataUri);
                     } else {
                         setImageURI(imageURI);
                     }
 
-                    console.log("Image URI:", imageURI);
-                    console.log("File size (KB):", (fileInfo.size / 1024).toFixed(2));
+                    //console.log("Image URI:", imageURI);
                 } else {
                     console.error("File does not exist:", filePath);
                 }
@@ -148,7 +146,7 @@ export default function DisplayScreen() {
     }, []);
 
     const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
-        const [ratio, setRatio] = useState(1);
+        const [ratio, setRatio] = useState(0);
         useEffect(() => {
             if (uri) {
                 Image.getSize(uri, (width, height) => {
@@ -178,7 +176,11 @@ export default function DisplayScreen() {
                 </ScrollView>
             ) : (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ color: 'white' }}>{loading ? 'Loading...' : 'Image not available'}</Text>
+                    {loading ? (
+                        <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                    ) : (
+                        <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
+                    )}
                 </View>
             )}
         </>

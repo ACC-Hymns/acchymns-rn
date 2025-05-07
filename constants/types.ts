@@ -35,6 +35,12 @@ type SongReference = {
     number: string;
 };
 
+enum SortMode {
+    NUMERICAL = 'NUMERICAL',
+    ALPHABETICAL = 'ALPHABETICAL',
+    TOPICAL = 'TOPICAL',
+};
+
 export type {
     BookSummary,
     Song,
@@ -42,4 +48,4 @@ export type {
     SongReference
 };
 
-export { BookSourceType}
+export { BookSourceType, SortMode }

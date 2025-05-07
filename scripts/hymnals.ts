@@ -2,6 +2,7 @@ import { BookSummary, SongList } from '@/constants/types';
 import * as FileSystem from 'expo-file-system';
 
 const HYMNAL_FOLDER = 'hymnals'; // folder name in the document directory
+const TEMP_FOLDER = 'temp'; // folder name in the document directory
 const GITHUB_BASE_URL = `https://raw.githubusercontent.com/ACC-Hymns/books/refs/heads/main`
 const DEFAULT_HYMNALS = [
     'ZH',
@@ -59,10 +60,18 @@ async function loadHymnals() {
 
 async function downloadHymnal(book: string, onProgress?: (progress: number) => void) {
     const folderUrl = `${GITHUB_BASE_URL}/${book}/`;
-    const localFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
+    const localFolderPath = `${FileSystem.documentDirectory}/${TEMP_FOLDER}/${book}/`;
+    const finalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
+
+    // clear temp folder
+    const tempFolderInfo = await FileSystem.getInfoAsync(localFolderPath);
+    if (tempFolderInfo.exists) {
+        await FileSystem.deleteAsync(localFolderPath, { idempotent: true });
+        console.log(`Deleted temp folder for ${book}.`);
+    }
 
     // Check if the folder already exists
-    const folderExists = await FileSystem.getInfoAsync(localFolderPath);
+    const folderExists = await FileSystem.getInfoAsync(finalFolderPath);
     if (folderExists.exists) {
         console.log(`Folder for ${book} already exists. Skipping download.`);
         return;
@@ -145,6 +154,22 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
         );
         console.log(`Downloaded songs ${i + 1} to ${Math.min(i + chunkSize, songNumbers.length)}`);
     }
+
+
+    // Move the downloaded files to the hymnal folder
+    await FileSystem.makeDirectoryAsync(finalFolderPath, { intermediates: true });
+    await FileSystem.moveAsync({
+        from: localFolderPath,
+        to: finalFolderPath,
+    })
+    .then(() => {
+        console.log(`Moved ${book} folder to ${finalFolderPath}`);
+    })
+    .catch(error => {
+        console.error(`Error moving ${book} folder: ${error}`);
+    });
+
+    console.log(`Finished downloading ${summary.name.short}.`);
 }
 
 async function removeHymnal(book: string) {

@@ -134,7 +134,11 @@ export default function HymnalImporter() {
                         </TouchableOpacity>
                         
                         <FlatList
-                            data={data}
+                            data={data.filter((item) => {
+                                // check if the item is already in the context
+                                const exists = context?.BOOK_DATA && Object.keys(context.BOOK_DATA).some(book => context.BOOK_DATA[book].name.short === item.name.short);
+                                return !exists;
+                            })}
                             keyExtractor={(item) => item.name.short}
                             contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
                             ListHeaderComponent={(
@@ -147,6 +151,14 @@ export default function HymnalImporter() {
                             renderItem={({ item }) => (
                                 <TouchableOpacity
                                     onPress={async () => {
+                                        // if already downloading don't do anything
+                                        if (progressValues[item.name.short] === -1 || progressValues[item.name.short] > 0) return;
+
+
+                                        setProgressValues((prev) => ({
+                                            ...prev,
+                                            [item.name.short]: -1,
+                                        }));
                                         await downloadHymnal(item.name.short, (progress) => {
                                             setProgressValues((prev) => ({
                                                 ...prev,
@@ -171,21 +183,17 @@ export default function HymnalImporter() {
                                         end={{ x: 1, y: 0 }}
                                         style={[styles.gradient]}
                                     >
-                                        {context?.BOOK_DATA && Object.keys(context?.BOOK_DATA).some(book => context.BOOK_DATA[book].name.short === item.name.short) ? (
-                                            <Text style={styles.buttonText}>{`${item.name.medium}`}</Text>
+                                        <Text style={styles.buttonText}>{item.name.medium}</Text>
+                                        {progressValues[item.name.short] === -1 ? (
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{'Starting download...'}</Text>
+                                        ) : progressValues[item.name.short] > 0 ? (
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(progressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
                                         ) : (
-                                            <>
-                                                <Text style={styles.buttonText}>{item.name.medium}</Text>
-                                                {progressValues[item.name.short] > 0 ? (
-                                                    <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(progressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
-                                                ) : (
-                                                    <Text style={{ color: 'white', marginTop: 5 }}>{`Size: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
-                                                )}
-                                                <View style={{ position: 'absolute', right: 20 }}>
-                                                    <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
-                                                </View>
-                                            </>
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Size: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
                                         )}
+                                        <View style={{ position: 'absolute', right: 20 }}>
+                                            <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
+                                        </View>
                                     </LinearGradient>
                                 </TouchableOpacity>
                             )}

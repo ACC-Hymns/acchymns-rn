@@ -8,12 +8,9 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
 import { useNavigation, useRouter } from 'expo-router';
 import { use, useContext, useEffect, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
-import DraggableFlatList, {
-    RenderItemParams,
-    ScaleDecorator,
-} from "react-native-draggable-flatlist";
-import { BorderlessButton, Gesture, GestureHandlerRootView, Pressable, RectButton } from 'react-native-gesture-handler';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { RenderItemParams } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
 import * as ContextMenu from 'zeego/context-menu';
 
 export default function HomeScreen() {
@@ -22,7 +19,6 @@ export default function HomeScreen() {
     const styles = makeStyles(theme);
     const context = useContext(HymnalContext);
     const router = useRouter();
-    const navigation = useNavigation();
 
     const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
 
@@ -41,41 +37,48 @@ export default function HomeScreen() {
     const renderHymnalItem = ({ item: bookKey }: { item: string }) => {
         return (
             <View style={{ marginBottom: 15 }}>
-            <ContextMenu.Root key={bookKey}>
-                <ContextMenu.Trigger>
-                    <Pressable
-                    unstable_pressDelay={0}
-                    onPress={() => {
-                        router.push({ pathname: '/home/selection/[id]', params: { id: bookKey } });
-                    }}
-                    >
-                        <GradientButton
-                            key={bookKey}
-                            title={bookData![bookKey].name.medium}
-                            primaryColor={bookData![bookKey].primaryColor}
-                            secondaryColor={bookData![bookKey].secondaryColor}
-                            //onLongPress={drag}
-                        />
-                    </Pressable>
-                </ContextMenu.Trigger>
-                <ContextMenu.Content>
-                    <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
+                <ContextMenu.Root key={bookKey}>
+                    <ContextMenu.Trigger>
+                        <Pressable
+                        unstable_pressDelay={0}
+                        onPress={() => {
+                            console.log('Pressed', bookKey);
+                            router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
+                        }}
+                        style={({ pressed }) => [
+                            {
+                                opacity: pressed ? 0.7 : 1,
+                            },
+                        ]}
+                        >
+                            <GradientButton
+                                key={bookKey}
+                                title={bookData![bookKey].name.medium}
+                                primaryColor={bookData![bookKey].primaryColor}
+                                secondaryColor={bookData![bookKey].secondaryColor}
+                                //onLongPress={drag}
+                            />
+                        </Pressable>
+                    </ContextMenu.Trigger>
+                    <ContextMenu.Content>
+                        <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
 
-                            // remove hymnal from context
-                            await removeHymnal(bookKey);
+                                // remove hymnal from context
+                                await removeHymnal(bookKey);
 
-                            const books = await loadHymnals();
-                            context?.SET_BOOK_DATA(books);
-                        }}>
-                        <ContextMenu.ItemTitle>
-                            <Text style={{ color: 'red' }}>Delete</Text>
-                        </ContextMenu.ItemTitle>
-                        <ContextMenu.ItemIcon ios={{ name: 'trash'}} />
-                    </ContextMenu.Item>
-                </ContextMenu.Content>
-            </ContextMenu.Root>
-        </View>
-    )}
+                                const books = await loadHymnals();
+                                context?.SET_BOOK_DATA(books);
+                            }}>
+                            <ContextMenu.ItemTitle>
+                                <Text style={{ color: 'red' }}>Delete</Text>
+                            </ContextMenu.ItemTitle>
+                            <ContextMenu.ItemIcon ios={{ name: 'trash'}} />
+                        </ContextMenu.Item>
+                    </ContextMenu.Content>
+                </ContextMenu.Root>
+            </View>
+        )
+    }
 
     const renderDraggableHymnalItem = ({ item: bookKey , drag, isActive}: RenderItemParams<string>) => {
         return renderHymnalItem({ item: bookKey });
@@ -83,7 +86,7 @@ export default function HomeScreen() {
 
     return (
         <>
-            <GestureHandlerRootView style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors[theme]['background'] }} onLayout={() => context?.onLayoutHomeView()}>
                 <FlatList
                 style={[styles.scrollView]}
                 contentContainerStyle={{ paddingBottom: 90 }}
