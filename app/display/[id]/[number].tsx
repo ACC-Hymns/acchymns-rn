@@ -1,42 +1,31 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView } from 'react-native-gesture-handler';
 import { BookSummary, SongList } from '@/constants/types';
 import { getSongData, HYMNAL_FOLDER } from '@/scripts/hymnals';
-import { Gesture, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
-import { Zoomable, ZoomableRef } from '@likashefqet/react-native-image-zoom';
-import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system';
-import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import Pdf from 'react-native-pdf';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function DisplayScreen() {
-    const params = useLocalSearchParams<{ id: string, number: string}>();
+    const params = useLocalSearchParams<{ id: string, number: string }>();
     const MIN_SCALE = 1;
     const MAX_SCALE = 5;
-    
-    
-    // get book data from context
+
     const context = useContext(HymnalContext);
     const [bookData, setBookData] = useState<BookSummary | null>(null);
     const [songData, setSongData] = useState<SongList | null>(null);
     const [imageURI, setImageURI] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
-    const zoomableRef = useRef<ZoomableRef>(null);
 
-    const scale = useSharedValue(1);
-    
     useLayoutEffect(() => {
         if (!context) return;
 
         const bData = context.BOOK_DATA[params.id as string];
         setBookData(bData);
         if (!bookData) return;
-
-        // get image URI from book data
 
         navigation.setOptions({ title: params.number });
 
@@ -69,22 +58,49 @@ export default function DisplayScreen() {
         fetchData();
     }, [bookData, params.id, navigation]);
 
-    const animatedStyle = useAnimatedStyle(
-        () => ({
-          borderRadius: 30 / scale.value,
-        }),
-        [scale]
-      );
+    useEffect(() => {
+        // Unlock orientation on page load
+        ScreenOrientation.unlockAsync();
+
+        return () => {
+            // Lock orientation back to default on exit
+            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        };
+    }, []);
+
+    const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
+        const [ratio, setRatio] = useState(1);
+        useEffect(() => {
+            if (uri) {
+                Image.getSize(uri, (width, height) => {
+                    setRatio(width / height);
+                });
+            }
+        }, [uri]);
+
+        return (
+            <Image
+                style={{ width: '100%', height: undefined, aspectRatio: ratio }}
+                resizeMode="contain"
+                source={{ uri }}
+            />
+        );
+    };
 
     return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-                {imageURI ? (
-                    <Pdf source={{uri: imageURI}} />
-                ) : (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={{ color: 'white' }}>{loading ? 'Loading...' : 'Image not available'}</Text>
-                    </View>
-                )}
-            </SafeAreaView>
+        <>
+            {imageURI ? (
+                <ScrollView
+                    style={{ flex: 1 }}
+                    minimumZoomScale={MIN_SCALE}
+                    maximumZoomScale={MAX_SCALE}>
+                    <FullWidthPicture uri={imageURI} />
+                </ScrollView>
+            ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ color: 'white' }}>{loading ? 'Loading...' : 'Image not available'}</Text>
+                </View>
+            )}
+        </>
     );
 }
