@@ -9,6 +9,7 @@ import PdfPageImage from 'react-native-pdf-page-image';
 import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
+import { convert, convertB64 } from 'react-native-pdf-to-image';
 
 
 export default function DisplayScreen() {
@@ -59,15 +60,30 @@ export default function DisplayScreen() {
 
                 if (fileInfo.exists) {
                     const imageURI = fileInfo.exists ? normalizedFilePath : null;
-
                     // check if file is a PDF
                     if (bData.fileExtension === 'pdf') {
+                        console.log("File is a PDF, generating images...");
+
+                        // get base64 string from file
+                        const base64Input = await FileSystem.readAsStringAsync(normalizedFilePath, {
+                            encoding: FileSystem.EncodingType.Base64,
+                        });
+
+                        if(!imageURI) 
+                            return;
 
                         // start milliseconds
                         const startTime = Date.now();
+                        // const imageUris = await PdfPageImage.generateAllPages(`data:application/pdf;base64,${base64Input}`, 1).catch((error) => {
+                        //     console.error("Error generating images from PDF:", error);
+                        // });
+                        const imageUris = await convert(`data:application/pdf;base64,${base64Input}`);
 
-                        const imageUris = await PdfPageImage.generateAllPages(normalizedFilePath, 1);
-                        const images = (await Promise.all(imageUris.map(page => loadSkiaImageFromUri(page.uri)))).filter((img): img is SkImage => img !== null);
+                        if (!imageUris || imageUris.outputFiles?.length === 0 || imageUris.outputFiles == undefined) {
+                            console.error("No images generated from PDF");
+                            return;
+                        }
+                        const images = (await Promise.all(imageUris.outputFiles.map((uri) => loadSkiaImageFromUri(uri)))).filter((img): img is SkImage => img !== null);
 
                         // Measure total size
                         const totalHeight = images.reduce((acc, img) => acc + img.height(), 0);
@@ -91,7 +107,7 @@ export default function DisplayScreen() {
                         // Get the final image
                         const resultImage = surface.makeImageSnapshot();
                         const base64 = resultImage.encodeToBase64();
-                        const path = FileSystem.documentDirectory + "stitched.png";
+                        const path = FileSystem.cacheDirectory + "stitched.png";
                         await FileSystem.writeAsStringAsync(path, base64, {
                             encoding: FileSystem.EncodingType.Base64,
                         });
@@ -106,7 +122,6 @@ export default function DisplayScreen() {
                         setImageURI(imageURI);
                     }
 
-                    setImageURI(imageURI);
                     console.log("Image URI:", imageURI);
                     console.log("File size (KB):", (fileInfo.size / 1024).toFixed(2));
                 } else {
@@ -157,7 +172,8 @@ export default function DisplayScreen() {
                 <ScrollView
                     style={{ flex: 1 }}
                     minimumZoomScale={MIN_SCALE}
-                    maximumZoomScale={MAX_SCALE}>
+                    maximumZoomScale={MAX_SCALE}
+                    >
                     <FullWidthPicture uri={imageURI} />
                 </ScrollView>
             ) : (

@@ -21,6 +21,7 @@
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
+    "@shopify/react-native-skia": "v2.0.0-next.2",
     "@tanstack/react-query": "^5.75.2",
     "expo": "~53.0.8",
     "expo-blur": "~14.1.4",
@@ -52,14 +53,14 @@
     "react-native-pdf": "^6.7.7",
     "react-native-pdf-page-image": "^0.2.1",
     "react-native-pdf-renderer": "^1.6.0",
+    "react-native-pdf-to-image": "^3.3.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
-    "zeego": "^3.0.6",
-    "@shopify/react-native-skia": "v2.0.0-next.2"
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
