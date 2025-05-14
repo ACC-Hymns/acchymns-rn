@@ -30,6 +30,15 @@
         "bundleIdentifier": "com.ChristopherW.acchmns"
       }
     },
+    "preview": {
+      "ios": {
+        "appleId": "fweinhardt@icloud.com",
+        "ascAppId": "1634426405",
+        "appleTeamId": "AVS62V4S24",
+        "sku": "ACCHymns-071322",
+        "bundleIdentifier": "com.ChristopherW.acchmns"
+      }
+    },
     "development": {
       "ios": {
         "appleId": "fweinhardt@icloud.com",

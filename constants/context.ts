@@ -7,6 +7,9 @@ interface HymnalContextType {
 
     onLayoutHomeView: () => void;
     setSortMode?: (mode: SortMode) => void;
+
+    downloadProgressValues: Record<string, number>;
+    setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>
 }
 
 export const HymnalContext = createContext<HymnalContextType | undefined>(undefined);

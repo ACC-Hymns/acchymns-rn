@@ -52,6 +52,16 @@ async function loadHymnals() {
             BOOK_DATA[book] = summary;
         } else {
             console.log(`Summary file not found for ${book}.`);
+
+            // if the summary file is not found, purge the book folder
+            const bookFolderPath = `${hymnalFolderPath}/${book}`;
+            const bookFolderInfo = await FileSystem.getInfoAsync(bookFolderPath);
+            if (bookFolderInfo.exists) {
+                await FileSystem.deleteAsync(bookFolderPath, { idempotent: true });
+                console.log(`Deleted folder for ${book}.`);
+            } else {
+                console.log(`Folder for ${book} does not exist.`);
+            }
         }
     }
     return BOOK_DATA;

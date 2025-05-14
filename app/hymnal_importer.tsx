@@ -74,9 +74,6 @@ export default function HymnalImporter() {
         queryFn: fetchHymnals,
     })
 
-    // fetch the data and log it to the console
-    const [progressValues, setProgressValues] = useState<Record<string, number>>({});
-
     if(status === 'pending') {
         return (
             <SafeAreaView style={styles.screenContainer}>
@@ -152,18 +149,12 @@ export default function HymnalImporter() {
                                 <TouchableOpacity
                                     onPress={async () => {
                                         // if already downloading don't do anything
-                                        if (progressValues[item.name.short] === -1 || progressValues[item.name.short] > 0) return;
+                                        if ((context?.downloadProgressValues?.[item.name.short] ?? 0) === -1 || (context?.downloadProgressValues?.[item.name.short] ?? 0) > 0) return;
 
 
-                                        setProgressValues((prev) => ({
-                                            ...prev,
-                                            [item.name.short]: -1,
-                                        }));
+                                        context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: -1 }));
                                         await downloadHymnal(item.name.short, (progress) => {
-                                            setProgressValues((prev) => ({
-                                                ...prev,
-                                                [item.name.short]: progress,
-                                            }));
+                                            context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: progress }));
                                         });
 
                                         // reload the data
@@ -184,10 +175,10 @@ export default function HymnalImporter() {
                                         style={[styles.gradient]}
                                     >
                                         <Text style={styles.buttonText}>{item.name.medium}</Text>
-                                        {progressValues[item.name.short] === -1 ? (
+                                        {context?.downloadProgressValues[item.name.short] === -1 ? (
                                             <Text style={{ color: 'white', marginTop: 5 }}>{'Starting download...'}</Text>
-                                        ) : progressValues[item.name.short] > 0 ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(progressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
+                                        ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
                                         ) : (
                                             <Text style={{ color: 'white', marginTop: 5 }}>{`Size: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
                                         )}

@@ -34,6 +34,7 @@ export default function RootLayout() {
     });
 
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
+    const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -46,8 +47,10 @@ export default function RootLayout() {
             BOOK_DATA,
             SET_BOOK_DATA,
             onLayoutHomeView: onLayoutRootView,
+            downloadProgressValues,
+            setDownloadProgressValues
         };
-    }, [BOOK_DATA, SET_BOOK_DATA]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues]);
     // Load hymnal data
 
 

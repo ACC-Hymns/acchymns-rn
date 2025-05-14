@@ -11,7 +11,8 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
 import { convert, convertB64 } from 'react-native-pdf-to-image';
 import { Colors } from '@/constants/Colors';
-
+import { Zoomable } from '@likashefqet/react-native-image-zoom';
+import ZoomableScrollView from '@/components/ZoomableScrollView';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -25,6 +26,9 @@ export default function DisplayScreen() {
     const [imageURI, setImageURI] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
+
+    
+    const scrollRef = useRef<ScrollView | null>(null);
 
     async function loadSkiaImageFromUri(uri: string) {
         try {
@@ -138,40 +142,59 @@ export default function DisplayScreen() {
     useEffect(() => {
         // Unlock orientation on page load
         ScreenOrientation.unlockAsync();
+        const handleOrientationChange = () => {
+            if(!imageURI) return;
+
+            Image.getSize(imageURI, (width, height) => {
+                // reset zoom scale to 1 on orientation change
+                if (scrollRef.current) {
+                    scrollRef.current.scrollResponderZoomTo({
+                        x: 0,
+                        y: 0,
+                        width: width,
+                        height: height,
+                        animated: true,
+                    });
+                }
+            });
+        };
+
+        const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
         return () => {
             // Lock orientation back to default on exit
             ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+            ScreenOrientation.removeOrientationChangeListener(subscription);
         };
     }, []);
 
-    const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
-        const [ratio, setRatio] = useState(0);
-        useEffect(() => {
-            if (uri) {
-                Image.getSize(uri, (width, height) => {
-                    setRatio(width / height);
-                });
-            }
-        }, [uri]);
 
-        return (
-            <Image
-                style={{ width: '100%', height: undefined, aspectRatio: ratio }}
-                resizeMode="contain"
-                source={{ uri }}
-            />
-        );
-    };
+    const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
+            const [ratio, setRatio] = useState(0);
+            useEffect(() => {
+                if (uri) {
+                    Image.getSize(uri, (width, height) => {
+                        setRatio(width / height);
+                    });
+                }
+            }, [uri]);
+    
+            return (
+                <Image
+                    style={{ width: '100%', height: undefined, aspectRatio: ratio }}
+                    resizeMode="contain"
+                    source={{ uri }}
+                />
+            );
+        };
 
     return (
         <>
             {imageURI ? (
                 <ScrollView
-                    style={{ flex: 1 }}
                     minimumZoomScale={MIN_SCALE}
                     maximumZoomScale={MAX_SCALE}
-                    >
+                >
                     <FullWidthPicture uri={imageURI} />
                 </ScrollView>
             ) : (

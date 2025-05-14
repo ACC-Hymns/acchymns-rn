@@ -120,6 +120,7 @@ export default function SelectionScreen() {
                                             if (isNavigating) return;
                                             router.push({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
                                             setIsNavigating(true);
+                                            setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                                         }}
 
                                         activeOpacity={0.7}
