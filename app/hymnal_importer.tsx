@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useContext, useRef, useState } from 'react';
+import { fetch } from 'expo/fetch'
 import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList } from 'react-native';
 
 export default function HymnalImporter() {
@@ -62,11 +63,27 @@ export default function HymnalImporter() {
 
     // fetch github folder structure from api and return the data
     async function fetchHymnals() {
-        const res = await fetch('https://dy6yndxt29.execute-api.us-east-2.amazonaws.com/default/FetchHymnalsRN');
-        const data: BookSummary[] = await res.json();
-        // sort the data based on the desired_sort array
-        sortHymnals(data);
-        return data;
+        try {
+            const res = await fetch('https://api.acchymns.app/available_hymnals', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data: BookSummary[] = await res.json();
+            // sort the data based on the desired_sort array
+            sortHymnals(data);
+            return data;
+        } catch (error) {
+            console.error('Error fetching hymnals:', error);
+            throw error; // Ensure the error is propagated to the useQuery error state
+        }
     }
 
     const { data, status, refetch } = useQuery({

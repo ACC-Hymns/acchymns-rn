@@ -14,7 +14,8 @@
             "appleTeamId": "AVS62V4S24",
             "buildNumber": "1000",
             "infoPlist": {
-                "ITSAppUsesNonExemptEncryption": false
+                "ITSAppUsesNonExemptEncryption": false,
+                "NSAllowsArbitraryLoads": true
             },
             "icon": {
                 "dark": "./assets/icons/ios-dark.png",
