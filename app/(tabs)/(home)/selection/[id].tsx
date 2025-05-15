@@ -127,10 +127,10 @@ export default function SelectionScreen() {
                                     >
                                         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
                                             <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{songData[item].title}</Text>
+                                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songData[item].title}</Text>
                                             </View>
                                             <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item}</Text>
+                                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</Text>
                                             </View>
                                         </View>
                                         

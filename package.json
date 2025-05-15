@@ -49,6 +49,7 @@
     "react-native": "0.79.2",
     "react-native-blob-util": "^0.21.2",
     "react-native-draggable-flatlist": "^4.0.2",
+    "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-ios-context-menu": "^3.1.0",
     "react-native-ios-utilities": "^5.1.2",
@@ -56,13 +57,15 @@
     "react-native-pdf-page-image": "^0.2.1",
     "react-native-pdf-renderer": "^1.6.0",
     "react-native-pdf-to-image": "^3.3.0",
+    "react-native-platform-searchbar": "^1.2.3",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
-    "zeego": "^3.0.6"
+    "zeego": "^3.0.6",
+    "react-native-svg": "15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
