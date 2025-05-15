@@ -7,6 +7,7 @@ interface HymnalContextType {
 
     onLayoutHomeView: () => void;
     setSortMode?: (mode: SortMode) => void;
+    deleteHymnal?: (book: string) => Promise<void>;
 
     downloadProgressValues: Record<string, number>;
     setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>

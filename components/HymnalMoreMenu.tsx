@@ -5,8 +5,13 @@ import { Colors } from '@/constants/Colors';
 import { useContext } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { SortMode } from '@/constants/types';
+import { router } from 'expo-router';
 
-export function HymnalMoreMenu() {
+interface HymnalMoreMenuProps {
+    bookId: string;
+}
+
+export function HymnalMoreMenu({ bookId }: HymnalMoreMenuProps) {
   const theme = useColorScheme() ?? 'light';
   const context = useContext(HymnalContext);
   
@@ -45,10 +50,14 @@ export function HymnalMoreMenu() {
             </DropdownMenu.Group>
             
             <DropdownMenu.Group>
-                <DropdownMenu.Item key="share-action">
-                    <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
-                    <DropdownMenu.ItemIcon ios={{ name: 'square.and.arrow.up'}}>
-                        <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                <DropdownMenu.Item key="delete-action" destructive={true} onSelect={async () => {
+                        await context?.deleteHymnal?.(bookId);
+                        // navigate back
+                        router.back();
+                    }}>
+                    <DropdownMenu.ItemTitle>Remove Hymnal</DropdownMenu.ItemTitle>
+                    <DropdownMenu.ItemIcon ios={{ name: 'trash'}}>
+                        <IconSymbol name='trash' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                     </DropdownMenu.ItemIcon>
                 </DropdownMenu.Item>
             </DropdownMenu.Group>

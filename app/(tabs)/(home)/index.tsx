@@ -29,10 +29,26 @@ export default function HomeScreen() {
         if(!context)
             return;
 
+        context.deleteHymnal = deleteHymnal;
+
         const books = context.BOOK_DATA;
         setBookData(books);
     }, [context?.BOOK_DATA]);
 
+    async function deleteHymnal(bookKey: string) {
+        // remove hymnal from context
+        await removeHymnal(bookKey);
+
+        // remove progress values
+        context?.setDownloadProgressValues((prev) => {
+            const newValues = { ...prev };
+            delete newValues[bookKey];
+            return newValues;
+        });
+
+        const books = await loadHymnals();
+        context?.SET_BOOK_DATA(books);
+    }
 
     const renderHymnalItem = ({ item: bookKey }: { item: string }) => {
         return (
@@ -62,12 +78,7 @@ export default function HomeScreen() {
                     </ContextMenu.Trigger>
                     <ContextMenu.Content>
                         <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
-
-                                // remove hymnal from context
-                                await removeHymnal(bookKey);
-
-                                const books = await loadHymnals();
-                                context?.SET_BOOK_DATA(books);
+                                deleteHymnal(bookKey);
                             }}>
                             <ContextMenu.ItemTitle>
                                 <Text style={{ color: 'red' }}>Delete</Text>

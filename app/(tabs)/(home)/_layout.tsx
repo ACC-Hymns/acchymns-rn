@@ -33,10 +33,7 @@ export default function HomeLayout() {
                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                             />
                         </TouchableOpacity>
-                    ),
-                    headerRight: () => (
-                        <HymnalMoreMenu />
-                    ),
+                    )
                 }}
             />
         </Stack>

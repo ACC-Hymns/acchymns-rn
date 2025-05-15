@@ -7,6 +7,7 @@ import { BookSummary, SongList, SortMode } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { Gesture, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
+import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
@@ -30,7 +31,10 @@ export default function SelectionScreen() {
         const bData = context.BOOK_DATA[id as string];
         setBookData(bData);
         if (!bookData) return;
-        navigation.setOptions({ title: bookData.name.medium });
+        navigation.setOptions({ title: bookData.name.medium, 
+            headerRight: () => (
+                <HymnalMoreMenu bookId={id as string} />
+            ), });
 
         const fetchData = async () => {
             try {

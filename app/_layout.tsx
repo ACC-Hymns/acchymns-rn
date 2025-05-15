@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider, useRoute, RouteProp } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,7 +10,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
-import { Button, Pressable, TouchableOpacity, View } from 'react-native';
+import { Button, Pressable, TouchableOpacity, View, Text } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
@@ -103,7 +103,7 @@ export default function RootLayout() {
                                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                                             />
                                         </TouchableOpacity>
-                                    ),
+                                    )
                                 }}
                             />
                             <Stack.Screen name="+not-found" />

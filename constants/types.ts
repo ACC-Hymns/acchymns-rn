@@ -35,6 +35,12 @@ type SongReference = {
     number: string;
 };
 
+type SongSearchInfo = Song & {
+    stripped_title?: string;
+    stripped_first_line?: string;
+    book: BookSummary;
+};
+
 enum SortMode {
     NUMERICAL = 'NUMERICAL',
     ALPHABETICAL = 'ALPHABETICAL',
@@ -45,6 +51,7 @@ export type {
     BookSummary,
     Song,
     SongList,
+    SongSearchInfo,
     SongReference
 };
 
