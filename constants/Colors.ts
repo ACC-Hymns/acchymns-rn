@@ -19,6 +19,7 @@ export const Colors = {
     searchBarBackground: '#E3E3E9',
     iosBlue: '#007AFF',
     border: 'rgba(0, 0, 0, 0.12)',
+    handleBar: '#0a0a0a'
   },
   dark: {
     text: '#FFFFFF',
@@ -33,5 +34,6 @@ export const Colors = {
     searchBarBackground: '#1C1C1E',
     iosBlue: '#007AFF',
     border: 'rgba(255, 255, 255, 0.4)',
+    handleBar: '#dcdcdc'
   },
 };

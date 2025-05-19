@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, Image, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
@@ -22,6 +23,7 @@ import {
   } from '@gorhom/bottom-sheet';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
+import FastImage from '@d11/react-native-fast-image'
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -35,8 +37,8 @@ export default function DisplayScreen() {
     const [imageURI, setImageURI] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
+    const styles = makeStyles(theme);
 
-    
     const scrollRef = useRef<ScrollView | null>(null);
 
 
@@ -93,6 +95,10 @@ export default function DisplayScreen() {
                     <DisplayMoreMenu bookId={params.id as string} songId={params.number as string} />
                 </View>
             ) });
+    }, [bookData, params.id, navigation]);
+
+    useEffect(() => {
+        
 
         const fetchData = async () => {
             try {
@@ -100,7 +106,9 @@ export default function DisplayScreen() {
                 const data = await getSongData(params.id as string);
                 setSongData(data);
 
-                const filePath = `${FileSystem.documentDirectory}${HYMNAL_FOLDER}/${bData.name.short}/songs/${params.number}.${bData.fileExtension}`.replace(/\/\//g, '/');
+                if(!bookData) return;
+
+                const filePath = `${FileSystem.documentDirectory}${HYMNAL_FOLDER}/${bookData.name.short}/songs/${params.number}.${bookData.fileExtension}`.replace(/\/\//g, '/');
 
                 const normalizedFilePath = filePath.replace(/\\/g, '/').replace(/\/\//g, '/');
 
@@ -109,7 +117,7 @@ export default function DisplayScreen() {
                 if (fileInfo.exists) {
                     const imageURI = fileInfo.exists ? normalizedFilePath : null;
                     // check if file is a PDF
-                    if (bData.fileExtension === 'pdf') {
+                    if (bookData.fileExtension === 'pdf') {
                         //console.log("File is a PDF, generating images...");
 
                         // get base64 string from file
@@ -231,9 +239,7 @@ export default function DisplayScreen() {
         };
 
         fetchData();
-    }, [bookData, params.id, navigation]);
 
-    useEffect(() => {
         // Unlock orientation on page load
         ScreenOrientation.unlockAsync();
         const handleOrientationChange = () => {
@@ -260,7 +266,7 @@ export default function DisplayScreen() {
             ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
             ScreenOrientation.removeOrientationChangeListener(subscription);
         };
-    }, []);
+    }, [bookData]);
 
 
     const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
@@ -274,7 +280,7 @@ export default function DisplayScreen() {
             }, [uri]);
     
             return (
-                <Image
+                <FastImage
                     style={{ width: '100%', height: undefined, aspectRatio: ratio }}
                     resizeMode="contain"
                     source={{ uri }}
@@ -283,36 +289,44 @@ export default function DisplayScreen() {
         };
 
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const animatedIndex = useSharedValue(1);
+    const animatedPosition = useSharedValue(0);
 
     return (
         <>
+            {imageURI ? (
+                <ScrollView
+                    minimumZoomScale={MIN_SCALE}
+                    maximumZoomScale={MAX_SCALE}
+                >
+                    <FullWidthPicture uri={imageURI} />
+                </ScrollView>
+            ) : (
+                <>
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        {loading ? (
+                            <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                        ) : (
+                            <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
+                        )}
+                    </View>
+                </>
+            )}
             <BottomSheetModalProvider>
-                {imageURI ? (
-                    <ScrollView
-                        minimumZoomScale={MIN_SCALE}
-                        maximumZoomScale={MAX_SCALE}
-                    >
-                        <FullWidthPicture uri={imageURI} />
-                    </ScrollView>
-                ) : (
-                    <>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            {loading ? (
-                                <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                            ) : (
-                                <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
-                            )}
-                        </View>
-                    </>
-                )}
                 <BottomSheetModal
                     ref={bottomSheetModalRef}
                     onChange={handleSheetChanges}
                     style={styles.bottomSheet}
+                    backgroundStyle={styles.bottomSheet}
+                    handleIndicatorStyle={styles.handleIndicator}
                 >
                     <BottomSheetView style={styles.contentContainer}>
                         <SegmentedControl
-                            values={['$', '$$', '$$$', '$$$$']}
+                            style={{
+                                width: 300,
+                                height: 32,
+                            }}
+                            values={['Notes', 'Piano', 'Details']}
                             selectedIndex={selectedIndex}
                             onChange={(event) => {
                                 setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
@@ -326,26 +340,32 @@ export default function DisplayScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: 'grey',
-    },
-    contentContainer: {
-        flex: 1,
-        padding: 36,
-        alignItems: 'center',
-    },
-    bottomSheet: {
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 7,
+function makeStyles(theme: "light" | "dark") {
+    return StyleSheet.create({
+        handleIndicator: {
+            backgroundColor: Colors[theme]['handleBar'],
         },
-        shadowOpacity: 0.43,
-        shadowRadius: 9.51,
-
-        elevation: 15,
-    }
-  });
-  
+        container: {
+            flex: 1,
+            backgroundColor: 'grey',
+        },
+        contentContainer: {
+            flex: 1,
+            padding: 8,
+            paddingBottom: 150,
+            alignItems: 'center',
+        },
+        bottomSheet: {
+            shadowColor: "#000",
+            shadowOffset: {
+                width: 0,
+                height: 7,
+            },
+            shadowOpacity: 0.43,
+            shadowRadius: 9.51,
+    
+            elevation: 15,
+            backgroundColor: Colors[theme]['background'],
+        }
+    });
+}    
