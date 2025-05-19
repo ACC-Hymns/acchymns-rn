@@ -3,11 +3,13 @@ import { HymnalContext } from '@/constants/context';
 import { BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router } from 'expo-router';
-import { useContext, useLayoutEffect, useState } from 'react';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { useContext, useLayoutEffect, useRef, useState } from 'react';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button } from 'react-native';
+import { FlatList, TextInput } from 'react-native-gesture-handler';
 import SearchBar from 'react-native-platform-searchbar';
-
+import { Divider } from 'react-native-elements'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 
 
 export default function SearchScreen() {
@@ -19,6 +21,7 @@ export default function SearchScreen() {
     const [loading, setLoading] = useState(true);
     const context = useContext(HymnalContext);
     const [songList, setSongList] = useState<SongSearchInfo[]>([]);
+    const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
 
     function stripSearchText(text: string) {
@@ -29,8 +32,25 @@ export default function SearchScreen() {
             .normalize("NFD")
             .replace(/\p{Diacritic}/gu, "");
     }
-
-
+    const RECENT_SEARCHES_KEY = 'recent_searches';
+    const saveSearches = async () => {
+        try {
+            const searches = searchHistory.filter((item) => item.trim().length > 0);
+            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
+        } catch (error) {
+            console.error("Error saving searches:", error);
+        }
+    };
+    const loadSearches = async () => {
+        try {
+            const searches = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+            if (searches !== null) {
+                setSearchHistory(JSON.parse(searches));
+            }
+        } catch (error) {
+            console.error("Error loading searches:", error);
+        }
+    };
     useLayoutEffect(() => {
         if (!context) return;
 
@@ -54,6 +74,9 @@ export default function SearchScreen() {
                     });
                 }
                 setSongList(songList);
+
+                // Load recent searches from AsyncStorage
+                await loadSearches();
                 
                 console.log("Loaded song data.");
                 setLoading(false);
@@ -65,12 +88,40 @@ export default function SearchScreen() {
 
         fetchData();
     }, [context?.BOOK_DATA]);
+
+
+    const [searchHistory, setSearchHistory] = useState<string[]>([]);
+    const searchInputRef = useRef<TextInput>(null);
+    
+    function addToSearchHistory(search: string) {
+        setSearchHistory((prevHistory) => {
+            const newHistory = [...prevHistory];
+            if (newHistory.includes(search)) {
+                // remove the search from the history if it exists
+                newHistory.splice(newHistory.indexOf(search), 1);
+            }
+
+            // move the search to the top
+            newHistory.unshift(search);
+            
+            // save the searches to AsyncStorage
+            saveSearches();
+
+            return newHistory.slice(0, 5); // Limit to 5 items
+        });
+    }
+
+    const scrollViewRef = useRef<FlatList>(null);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+
     return (
         <>
             {loading ? (
             <ActivityIndicator size="large" color={Colors[theme]['text']} />
             ) : (
             <FlatList 
+                ref={scrollViewRef}
+                scrollEnabled={scrollEnabled}
                 data={[...(search.trim().length > 0 ? songList : [])]
                 .filter((s) => 
                     s.stripped_title?.includes(stripSearchText(search)) ||
@@ -110,13 +161,13 @@ export default function SearchScreen() {
                         activeOpacity={0.7}
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                        <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
-                        </View>
-                        <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
-                        </View>
+                            <View style={{ width: '80%', alignSelf: 'flex-start' }}>
+                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
+                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
+                            </View>
+                            <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
+                            </View>
                         </View>
                         
                     </TouchableOpacity>
@@ -128,12 +179,81 @@ export default function SearchScreen() {
                         <Text style={styles.textStyle}>Search</Text>
                         </View>
                         <SearchBar
-                        value={search}
-                        onChangeText={setSearch}
-                        inputStyle={styles.searchBarContainer}
-                        placeholder="Search"
-                        style={styles.searchBar}
+                            ref={searchInputRef}
+                            value={search}
+                            onChangeText={setSearch}
+                            onFocus={() => {
+                                setSearchBarFocused(true);
+                            }}
+                            onCancel={() => {
+                                setSearchBarFocused(false);
+                            }}
+                            onEndEditing={() => {
+                                // when user searches, add to search history
+                                if (search.trim().length > 0) {
+                                    addToSearchHistory(search);
+                                } else {
+                                    // cancel the search
+                                    if(searchInputRef.current) {
+                                        searchInputRef.current.blur();
+                                    }
+                                }
+                            }}
+                            inputStyle={styles.searchBarContainer}
+                            placeholder="Search"
+                            style={styles.searchBar}
                         />
+
+                        {
+                            (searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
+                                <View style={styles.searchHistoryContainer}>
+                                    <View style={styles.searchHistoryHeader}>
+                                        <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
+                                        <Button
+                                            onPress={() => {
+                                                setSearchHistory([]);
+                                            }}
+                                            accessibilityLabel={"Clear Search History"}
+                                            title="Clear All"
+                                        />
+                                    </View>
+                                    <Divider />
+                                    <FlatList
+                                        style={{ maxHeight: 300 }}
+                                        scrollEnabled={scrollEnabled}
+                                        data={searchHistory}
+                                        keyboardShouldPersistTaps='handled'
+                                        renderItem={({ item }) => (
+                                            <SearchHistoryItem
+                                                item={item}
+                                                onPress={() => {
+                                                    setSearch(item);
+                                                    addToSearchHistory(item);
+                                                }}
+                                                onGestureStart={() => {
+                                                    // disable scrolling when user is dragging
+                                                    setScrollEnabled(false);
+                                                }}
+                                                onGestureEnd={() => {
+                                                    // enable scrolling when user is done dragging
+                                                    setScrollEnabled(true);
+                                                }}
+                                                onDelete={() => {
+                                                    console.log('Deleting item:', item);
+                                                    setSearchHistory((prevHistory) => {
+                                                        const newHistory = [...prevHistory];
+                                                        newHistory.splice(newHistory.indexOf(item), 1);
+                                                        return newHistory;
+                                                    });
+                                                }}
+                                                isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                            />
+                                        )}
+                                    >
+                                    </FlatList>
+                                </View>
+                            )
+                        }
                     </>
                 }
             />
@@ -144,13 +264,28 @@ export default function SearchScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        searchHistoryTitle: {
+            fontSize: 18,
+            fontWeight: 'medium',
+            color: Colors[theme]['fadedText'],
+        },
+        searchHistoryHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        searchHistoryContainer: {
+            backgroundColor: Colors[theme]['background'],
+            borderRadius: 16,
+        },
         searchBar: {
             marginBottom: 20
         },
         searchBarContainer: {
-            backgroundColor: '#EEEEF0',
+            backgroundColor: Colors[theme].searchBarBackground,
+            color: Colors[theme].text,
             fontSize: 18,
-            height: 35,
+            height: 38,
         },
         rowItem: {
             height: 100,
@@ -169,7 +304,7 @@ function makeStyles(theme: "light" | "dark") {
             paddingBottom: 15,
             paddingRight: 20,
             paddingLeft: 20,
-            backgroundColor: Colors[theme]['background']
+            backgroundColor: Colors[theme].background
         },
         button: {
             paddingVertical: 20,
@@ -186,7 +321,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         screenContainer: {
             flex: 1, // Ensures the container takes up the full screen
-            backgroundColor: Colors[theme]['background'] // Dynamically set background color using useThemeColor
+            backgroundColor: Colors[theme].background // Dynamically set background color using useThemeColor
         },
         titleContainer: {
             marginTop: 80,

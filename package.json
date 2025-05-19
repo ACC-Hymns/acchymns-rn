@@ -65,7 +65,8 @@
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
     "zeego": "^3.0.6",
-    "react-native-svg": "15.11.2"
+    "react-native-svg": "15.11.2",
+    "@react-native-async-storage/async-storage": "2.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

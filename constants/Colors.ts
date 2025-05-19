@@ -16,6 +16,9 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     primary: '#007AFF',
     headerBackground: '#F8F8F8',
+    searchBarBackground: '#E3E3E9',
+    iosBlue: '#007AFF',
+    border: 'rgba(0, 0, 0, 0.12)',
   },
   dark: {
     text: '#FFFFFF',
@@ -27,5 +30,8 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     primary: '#007AFF',
     headerBackground: '#1C1C1E',
+    searchBarBackground: '#1C1C1E',
+    iosBlue: '#007AFF',
+    border: 'rgba(255, 255, 255, 0.4)',
   },
 };
