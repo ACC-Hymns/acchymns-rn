@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, Image, ActivityIndicator, useColorScheme } from 'react-native';
+import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { View, Text, Image, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
-import { ScrollView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
 import { BookSummary, SongList } from '@/constants/types';
 import { getSongData, HYMNAL_FOLDER } from '@/scripts/hymnals';
 import PdfPageImage from 'react-native-pdf-page-image';
@@ -13,6 +13,15 @@ import { convert, convertB64 } from 'react-native-pdf-to-image';
 import { Colors } from '@/constants/Colors';
 import { Zoomable } from '@likashefqet/react-native-image-zoom';
 import ZoomableScrollView from '@/components/ZoomableScrollView';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import {
+    BottomSheetModal,
+    BottomSheetView,
+    BottomSheetModalProvider,
+  } from '@gorhom/bottom-sheet';
+import { Picker } from '@expo/ui/swift-ui';
+import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -30,6 +39,7 @@ export default function DisplayScreen() {
     
     const scrollRef = useRef<ScrollView | null>(null);
 
+
     async function loadSkiaImageFromUri(uri: string) {
         try {
           const base64 = await FileSystem.readAsStringAsync(uri, {
@@ -44,6 +54,25 @@ export default function DisplayScreen() {
         }
       }
 
+    const [isPresenting, setIsPresenting] = useState(false);
+
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const isModalOpenRef = useRef(false);
+
+    const handlePress = useCallback(() => {
+        if (!bottomSheetModalRef.current) return;
+        
+        if (isModalOpenRef.current) {
+            bottomSheetModalRef.current.dismiss();
+        } else {
+            bottomSheetModalRef.current.present();
+        }
+    }, []);
+    
+    const handleSheetChanges = useCallback((index: number) => {
+      isModalOpenRef.current = index === 0;
+    }, []);
+
     useLayoutEffect(() => {
         if (!context) return;
 
@@ -51,7 +80,19 @@ export default function DisplayScreen() {
         setBookData(bData);
         if (!bookData) return;
 
-        navigation.setOptions({ title: params.number });
+        navigation.setOptions({ title: params.number, 
+            headerRight: () => (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
+                    <TouchableOpacity onPress={handlePress}>
+                        <IconSymbol
+                            name="music.quarternote.3"
+                            size={24}
+                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                        />
+                    </TouchableOpacity>
+                    <DisplayMoreMenu bookId={params.id as string} songId={params.number as string} />
+                </View>
+            ) });
 
         const fetchData = async () => {
             try {
@@ -91,8 +132,53 @@ export default function DisplayScreen() {
                         }
                         const images = (await Promise.all(imageUris.map((i) => loadSkiaImageFromUri(i.uri)))).filter((img): img is SkImage => img !== null);
 
-                        // Measure total size
-                        const totalHeight = images.reduce((acc, img) => acc + img.height(), 0);
+                        // read PDF file using pdf-lib
+                        const pdf = await PDFDocument.load(base64Input);
+                        // for each skiimage
+                        const pages = pdf.getPages();
+
+                        
+                        let yOffset = 0;
+                        const srcRects = [];
+                        const dstRects = [];
+
+                        for (let i = 0; i < pages.length; i++) {
+                            const page = pages[i];
+                            const { x: cropX, y: cropY, width: cropWidth, height: cropHeight } = page.getCropBox();
+                            const img = images[i];
+
+                            const scaleMultiplier = img.width() / cropWidth;
+                            const adjustedCropX = cropX * scaleMultiplier;
+                            const adjustedCropY = img.height() - (cropY + cropHeight) * scaleMultiplier;
+                            const adjustedCropHeight = cropHeight * scaleMultiplier;
+
+                            if (img) {
+                                // Define source rect (from the original image)
+                                const srcRect = {
+                                    x: adjustedCropX,
+                                    y: adjustedCropY,
+                                    width: img.width(),
+                                    height: adjustedCropHeight,
+                                };
+
+                                // Define destination rect (where to draw on canvas)
+                                const dstRect = {
+                                    x: 0,
+                                    y: yOffset,
+                                    width: img.width(),
+                                    height: adjustedCropHeight,
+                                };
+
+                                srcRects.push(srcRect);
+                                dstRects.push(dstRect);
+
+                                // Increment Y offset for next image
+                                yOffset += adjustedCropHeight;
+                            }
+                        }
+
+                        // final image height
+                        const totalHeight = yOffset;
                         const maxWidth = Math.max(...images.map((img) => img.width()));
 
                         // Create offscreen surface
@@ -103,12 +189,20 @@ export default function DisplayScreen() {
                         }
                         const canvas = surface.getCanvas();
 
-                        // Draw each image stacked vertically
-                        let yOffset = 0;
-                        for (const img of images) {
-                            canvas.drawImage(img, 0, yOffset);
-                            yOffset += img.height();
+                        // Draw images on canvas
+                        for (let i = 0; i < images.length; i++) {
+                            const img = images[i];
+                            const srcRect = srcRects[i];
+                            const dstRect = dstRects[i];
+
+                            if (img) {
+                                // Draw only the cropped portion
+                                const paint = Skia.Paint(); // Create a SkPaint instance
+                                canvas.drawImageRect(img, srcRect, dstRect, paint);
+                            }
                         }
+
+                        // Draw each image stacked vertically
 
                         // Get the final image
                         const resultImage = surface.makeImageSnapshot();
@@ -188,24 +282,67 @@ export default function DisplayScreen() {
             );
         };
 
+    const [selectedIndex, setSelectedIndex] = useState(0);
+
     return (
         <>
-            {imageURI ? (
-                <ScrollView
-                    minimumZoomScale={MIN_SCALE}
-                    maximumZoomScale={MAX_SCALE}
+            <BottomSheetModalProvider>
+                {imageURI ? (
+                    <ScrollView
+                        minimumZoomScale={MIN_SCALE}
+                        maximumZoomScale={MAX_SCALE}
+                    >
+                        <FullWidthPicture uri={imageURI} />
+                    </ScrollView>
+                ) : (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        {loading ? (
+                            <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                        ) : (
+                            <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
+                        )}
+                    </View>
+                )}
+                <BottomSheetModal
+                    ref={bottomSheetModalRef}
+                    onChange={handleSheetChanges}
+                    style={styles.bottomSheet}
                 >
-                    <FullWidthPicture uri={imageURI} />
-                </ScrollView>
-            ) : (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    {loading ? (
-                        <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                    ) : (
-                        <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
-                    )}
-                </View>
-            )}
+                    <BottomSheetView style={styles.contentContainer}>
+                        <Picker
+                            options={['$', '$$', '$$$', '$$$$']}
+                            selectedIndex={selectedIndex}
+                            onOptionSelected={({ nativeEvent: { index } }) => {
+                                setSelectedIndex(index);
+                            }}
+                        />
+                    </BottomSheetView>
+                </BottomSheetModal>
+            </BottomSheetModalProvider>
         </>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'grey',
+    },
+    contentContainer: {
+        flex: 1,
+        padding: 36,
+        alignItems: 'center',
+    },
+    bottomSheet: {
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 7,
+        },
+        shadowOpacity: 0.43,
+        shadowRadius: 9.51,
+
+        elevation: 15,
+    }
+  });
+  

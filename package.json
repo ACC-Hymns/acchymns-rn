@@ -18,6 +18,7 @@
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-menu/menu": "^1.2.2",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
@@ -44,6 +45,7 @@
     "expo-updates": "~0.28.12",
     "expo-web-browser": "~14.1.6",
     "patch-package": "^8.0.0",
+    "pdf-lib": "^1.17.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
@@ -61,12 +63,13 @@
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
+    "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
     "zeego": "^3.0.6",
-    "react-native-svg": "15.11.2",
-    "@react-native-async-storage/async-storage": "2.1.2"
+    "@gorhom/bottom-sheet": "^5",
+    "@expo/ui": "~0.1.1-alpha.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

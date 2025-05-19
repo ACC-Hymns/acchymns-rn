@@ -58,7 +58,6 @@ export default function HomeScreen() {
                         <Pressable
                         unstable_pressDelay={0}
                         onPress={() => {
-                            console.log('Pressed', bookKey);
                             router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
                         }}
                         style={({ pressed }) => [

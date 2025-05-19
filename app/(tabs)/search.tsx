@@ -3,7 +3,7 @@ import { HymnalContext } from '@/constants/context';
 import { BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router } from 'expo-router';
-import { useContext, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import SearchBar from 'react-native-platform-searchbar';
@@ -33,9 +33,8 @@ export default function SearchScreen() {
             .replace(/\p{Diacritic}/gu, "");
     }
     const RECENT_SEARCHES_KEY = 'recent_searches';
-    const saveSearches = async () => {
+    const saveSearches = async (searches: string[]) => {
         try {
-            const searches = searchHistory.filter((item) => item.trim().length > 0);
             await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
         } catch (error) {
             console.error("Error saving searches:", error);
@@ -77,6 +76,7 @@ export default function SearchScreen() {
 
                 // Load recent searches from AsyncStorage
                 await loadSearches();
+                console.log("Loaded recent searches:", searchHistory);
                 
                 console.log("Loaded song data.");
                 setLoading(false);
@@ -103,9 +103,8 @@ export default function SearchScreen() {
 
             // move the search to the top
             newHistory.unshift(search);
-            
-            // save the searches to AsyncStorage
-            saveSearches();
+
+            saveSearches(newHistory); // Save the updated search history to AsyncStorage
 
             return newHistory.slice(0, 5); // Limit to 5 items
         });
