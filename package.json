@@ -71,7 +71,8 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
-    "zeego": "^3.0.6"
+    "zeego": "^3.0.6",
+    "expo-audio": "~0.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

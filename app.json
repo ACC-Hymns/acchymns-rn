@@ -1,78 +1,79 @@
 {
-    "expo": {
-        "name": "Hymnal",
-        "slug": "acchymns",
-        "version": "5.0.0",
-        "orientation": "portrait",
-        "icon": "./assets/images/icon.png",
-        "scheme": "myapp",
-        "userInterfaceStyle": "automatic",
-        "newArchEnabled": true,
-        "ios": {
-            "supportsTablet": true,
-            "bundleIdentifier": "com.ChristopherW.acchmns",
-            "appleTeamId": "AVS62V4S24",
-            "infoPlist": {
-                "ITSAppUsesNonExemptEncryption": false,
-                "NSAllowsArbitraryLoads": true
-            },
-            "icon": {
-                "dark": "./assets/icons/ios-dark.png",
-                "light": "./assets/icons/ios-light.png",
-                "tinted": "./assets/icons/ios-tinted.png"
-            }
-        },
-        "android": {
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/icons/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            }
-        },
-        "web": {
-            "bundler": "metro",
-            "output": "static",
-            "favicon": "./assets/images/favicon.png",
-            "meta": {
-                "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-            }
-        },
-        "plugins": [
-            "expo-router",
-            [
-                "expo-splash-screen",
-                {
-                    "image": "./assets/icons/splash-icon-dark.png",
-                    "backgroundColor": "#FFFFFF",
-                    "imageWidth": 200,
-                    "resizeMode": "contain",
-                    "dark": {
-                        "image": "./assets/icons/splash-icon-light.png",
-                        "backgroundColor": "#000000"
-                    }
-                }
-            ],
-            "expo-font",
-            [
-                "expo-image-picker",
-                {
-                    "photosPermission": "The app accesses your photos to let you share them with your friends."
-                }
-            ]
-        ],
-        "experiments": {
-            "typedRoutes": true
-        },
-        "extra": {
-            "router": {},
-            "eas": {
-                "projectId": "dce778e0-a059-408f-a380-56d56a777daf"
-            }
-        },
-        "runtimeVersion": {
-            "policy": "appVersion"
-        },
-        "updates": {
-            "url": "https://u.expo.dev/dce778e0-a059-408f-a380-56d56a777daf"
+  "expo": {
+    "name": "Hymnal",
+    "slug": "acchymns",
+    "version": "5.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ChristopherW.acchmns",
+      "appleTeamId": "AVS62V4S24",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAllowsArbitraryLoads": true
+      },
+      "icon": {
+        "dark": "./assets/icons/ios-dark.png",
+        "light": "./assets/icons/ios-light.png",
+        "tinted": "./assets/icons/ios-tinted.png"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png",
+      "meta": {
+        "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-icon-dark.png",
+          "backgroundColor": "#FFFFFF",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "dark": {
+            "image": "./assets/icons/splash-icon-light.png",
+            "backgroundColor": "#000000"
+          }
         }
+      ],
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dce778e0-a059-408f-a380-56d56a777daf"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/dce778e0-a059-408f-a380-56d56a777daf"
     }
+  }
 }
