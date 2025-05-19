@@ -20,7 +20,7 @@ import {
     BottomSheetView,
     BottomSheetModalProvider,
   } from '@gorhom/bottom-sheet';
-import { Picker } from '@expo/ui/swift-ui';
+import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 
 export default function DisplayScreen() {
@@ -295,13 +295,15 @@ export default function DisplayScreen() {
                         <FullWidthPicture uri={imageURI} />
                     </ScrollView>
                 ) : (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        {loading ? (
-                            <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                        ) : (
-                            <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
-                        )}
-                    </View>
+                    <>
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            {loading ? (
+                                <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                            ) : (
+                                <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
+                            )}
+                        </View>
+                    </>
                 )}
                 <BottomSheetModal
                     ref={bottomSheetModalRef}
@@ -309,13 +311,14 @@ export default function DisplayScreen() {
                     style={styles.bottomSheet}
                 >
                     <BottomSheetView style={styles.contentContainer}>
-                        <Picker
-                            options={['$', '$$', '$$$', '$$$$']}
+                        <SegmentedControl
+                            values={['$', '$$', '$$$', '$$$$']}
                             selectedIndex={selectedIndex}
-                            onOptionSelected={({ nativeEvent: { index } }) => {
-                                setSelectedIndex(index);
+                            onChange={(event) => {
+                                setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
                             }}
                         />
+                        
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>

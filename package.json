@@ -16,10 +16,13 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@expo/ui": "~0.1.1-alpha.7",
     "@expo/vector-icons": "^14.1.0",
+    "@gorhom/bottom-sheet": "^5",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-menu/menu": "^1.2.2",
+    "@react-native-segmented-control/segmented-control": "^2.5.7",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
@@ -67,9 +70,7 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
-    "zeego": "^3.0.6",
-    "@gorhom/bottom-sheet": "^5",
-    "@expo/ui": "~0.1.1-alpha.7"
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
