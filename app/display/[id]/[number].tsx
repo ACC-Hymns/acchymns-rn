@@ -10,6 +10,7 @@ import PdfPageImage from 'react-native-pdf-page-image';
 import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
+import * as Haptics from 'expo-haptics';
 import { convert, convertB64 } from 'react-native-pdf-to-image';
 import { Colors } from '@/constants/Colors';
 import { Zoomable } from '@likashefqet/react-native-image-zoom';
@@ -25,7 +26,7 @@ import SegmentedControl from '@react-native-segmented-control/segmented-control'
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs, trebleNotePngs } from '@/constants/assets';
-import { useAudioPlayer } from 'expo-audio';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -39,6 +40,7 @@ export default function DisplayScreen() {
     const [songNotes, setSongNotes] = useState<string[]>([]);
     const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
     const [loading, setLoading] = useState(false);
+    const audioPlayers = useRef<AudioPlayer[]>([]);
     const navigation = useNavigation();
     const styles = makeStyles(theme);
 
@@ -84,20 +86,6 @@ export default function DisplayScreen() {
         const bData = context.BOOK_DATA[params.id as string];
         setBookData(bData);
         if (!bookData) return;
-
-        navigation.setOptions({ title: params.number, 
-            headerRight: () => (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                    <TouchableOpacity onPress={handlePress}>
-                        <IconSymbol
-                            name="music.quarternote.3"
-                            size={24}
-                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                        />
-                    </TouchableOpacity>
-                    <DisplayMoreMenu bookId={params.id as string} songId={params.number as string} />
-                </View>
-            ) });
     }, [bookData, params.id, navigation]);
 
     useEffect(() => {
@@ -112,6 +100,38 @@ export default function DisplayScreen() {
                 // reverse notes
                 const reversedNotes = songNotes?.slice().reverse();
                 setSongNotes(reversedNotes || []);
+                for(const note of reversedNotes || []) {
+                    const assetId = getNoteMp3(note);
+                    console.log("Loading asset:", assetId);
+                    const player = createAudioPlayer(assetId);
+                    audioPlayers.current.push(player);
+                }
+
+                
+
+                navigation.setOptions({ title: params.number, 
+                    headerRight: () => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
+                            {songNotes && songNotes.length > 0 && (
+                                <TouchableOpacity onPress={handlePress}>
+                                    <IconSymbol
+                                        name="music.note"
+                                        size={24}
+                                        color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                                    />
+                                </TouchableOpacity>
+                            )}
+                            <DisplayMoreMenu bookId={params.id as string} songId={params.number as string} />
+                        </View>
+                    ) 
+                });
+
+                await setAudioModeAsync({
+                    playsInSilentMode: true,
+                    interruptionMode: 'mixWithOthers',
+                    interruptionModeAndroid: 'duckOthers'
+                })
+
 
                 if(!bookData) return;
 
@@ -291,45 +311,35 @@ export default function DisplayScreen() {
 
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-    const useImageRatio = (uri: string) => {
-        const ratioRef = useRef<number | null>(null);
-        const [, forceUpdate] = useState(0); // force re-render once ratio is ready
-    
-        useEffect(() => {
-            if (uri && ratioRef.current === null) {
-                Image.getSize(uri, (width, height) => {
-                    ratioRef.current = width / height;
-                    forceUpdate(x => x + 1);
-                });
-            }
-        }, [uri]);
-    
-        return ratioRef.current;
-    };
-
     function getClef(note: string) {
-        console.log("Note:", note);
         const modified_note = note.replace("#", "").replace("b", "");
-        console.log("Modified note:", modified_note);
-
-        console.log("Song notes:", songNotes);
-        console.log("index: ", songNotes.indexOf(note));
-        console.log("notePngs includes:", Object.keys(notePngs).includes(modified_note));
         if (songNotes.indexOf(note) > 1 || !Object.keys(notePngs).includes(modified_note)) {
-            console.log("Clef: treble");
             return 'treble'
         }
-        console.log("Clef: bass");
         return 'bass';
     }
 
-    const player = useAudioPlayer();
+    const DELAY = 200;
+    function playAllNotes() {
+        for (const [index, note] of songNotes.entries()) {
+            const timeout = setTimeout(() => {
+                const player = audioPlayers.current[index];
+                if (player) {
+                    player.seekTo(0);
+                    player.play();
+                }
+            }, index * DELAY);
+        }
+    }
+
     function playNote(note: string) {
-        const assetId = getNoteMp3(note);
-        console.log("assetId: ", assetId)
-        player.replace(assetId);
-        player.play();
-        console.log("Playing note:", note);
+        const id = songNotes.indexOf(note);
+        if (id < 0) return;
+        const player = audioPlayers.current[id];
+        if (player) {
+            player.seekTo(0);
+            player.play();
+        }
     }
 
     return (
@@ -373,7 +383,7 @@ export default function DisplayScreen() {
                             values={['Notes', 'Piano', 'Details']}
                             onChange={(event) => {
                                 setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
-                                console.log("Selected index:", selectedIndex);
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             }}
                         />
                         {selectedIndex === 0 && (
@@ -388,13 +398,13 @@ export default function DisplayScreen() {
                                 {songData && songData[params.number] && (
                                 <>
                                     <View style={styles.noteButton}>
-                                        <NoteButton note={"" as Note} clef={'none'} onClick={() => {}} />
-                                        <Text style={{fontSize: 18}}>All</Text>
+                                        <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
+                                        <Text style={{fontSize: 18, color: Colors[theme].text}}>All</Text>
                                     </View>
                                     {songNotes.map((note, index) => (
                                     <View key={index} style={styles.noteButton}>
                                         <NoteButton note={note as Note} clef={getClef(note)} onClick={() => playNote(note)} />
-                                        <Text style={{fontSize: 18}}>{note}</Text>
+                                        <Text style={{fontSize: 18, color: Colors[theme].text}}>{note}</Text>
                                     </View>
                                     ))}
                                 </>
@@ -418,7 +428,7 @@ function makeStyles(theme: "light" | "dark") {
             gap: 16,
         },
         handleIndicator: {
-            backgroundColor: Colors[theme]['handleBar'],
+            backgroundColor: Colors[theme]['border'],
         },
         container: {
             flex: 1,
@@ -441,6 +451,8 @@ function makeStyles(theme: "light" | "dark") {
     
             elevation: 15,
             backgroundColor: Colors[theme]['background'],
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
         }
     });
 }    

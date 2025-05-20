@@ -71,55 +71,55 @@ export const trebleNotePngs = {
 } as const;
 
 export const noteMp3s = {
-    C2: require('../assets/sounds/C2.mp3'),
-    Db2: require('../assets/sounds/Db2.mp3'),
-    D2: require('../assets/sounds/D2.mp3'),
-    Eb2: require('../assets/sounds/Eb2.mp3'),
-    E2: require('../assets/sounds/E2.mp3'),
-    F2: require('../assets/sounds/F2.mp3'),
-    Gb2: require('../assets/sounds/Gb2.mp3'),
-    G2: require('../assets/sounds/G2.mp3'),
-    Ab2: require('../assets/sounds/Ab2.mp3'),
-    A2: require('../assets/sounds/A2.mp3'),
-    Bb2: require('../assets/sounds/Bb2.mp3'),
-    B2: require('../assets/sounds/B2.mp3'),
-    C3: require('../assets/sounds/C3.mp3'),
-    Db3: require('../assets/sounds/Db3.mp3'),
-    D3: require('../assets/sounds/D3.mp3'),
-    Eb3: require('../assets/sounds/Eb3.mp3'),
-    E3: require('../assets/sounds/E3.mp3'),
-    F3: require('../assets/sounds/F3.mp3'),
-    Gb3: require('../assets/sounds/Gb3.mp3'),
-    G3: require('../assets/sounds/G3.mp3'),
-    Ab3: require('../assets/sounds/Ab3.mp3'),
-    A3: require('../assets/sounds/A3.mp3'),
-    Bb3: require('../assets/sounds/Bb3.mp3'),
-    B3: require('../assets/sounds/B3.mp3'),
-    C4: require('../assets/sounds/C4.mp3'),
-    Db4: require('../assets/sounds/Db4.mp3'),
-    D4: require('../assets/sounds/D4.mp3'),
-    Eb4: require('../assets/sounds/Eb4.mp3'),
-    E4: require('../assets/sounds/E4.mp3'),
-    F4: require('../assets/sounds/F4.mp3'),
-    Gb4: require('../assets/sounds/Gb4.mp3'),
-    G4: require('../assets/sounds/G4.mp3'),
-    Ab4: require('../assets/sounds/Ab4.mp3'),
-    A4: require('../assets/sounds/A4.mp3'),
-    Bb4: require('../assets/sounds/Bb4.mp3'),
-    B4: require('../assets/sounds/B4.mp3'),
-    C5: require('../assets/sounds/C5.mp3'),
-    Db5: require('../assets/sounds/Db5.mp3'),
-    D5: require('../assets/sounds/D5.mp3'),
-    Eb5: require('../assets/sounds/Eb5.mp3'),
-    E5: require('../assets/sounds/E5.mp3'),
-    F5: require('../assets/sounds/F5.mp3'),
-    Gb5: require('../assets/sounds/Gb5.mp3'),
-    G5: require('../assets/sounds/G5.mp3'),
-    Ab5: require('../assets/sounds/Ab5.mp3'),
-    A5: require('../assets/sounds/A5.mp3'),
-    Bb5: require('../assets/sounds/Bb5.mp3'),
-    B5: require('../assets/sounds/B5.mp3'),
-    C6: require('../assets/sounds/C6.mp3'),
+    'C2': require('@/assets/sounds/C2.mp3'),
+    'Db2': require('@/assets/sounds/Db2.mp3'),
+    'D2': require('@/assets/sounds/D2.mp3'),
+    'Eb2': require('@/assets/sounds/Eb2.mp3'),
+    'E2': require('@/assets/sounds/E2.mp3'),
+    'F2': require('@/assets/sounds/F2.mp3'),
+    'Gb2': require('@/assets/sounds/Gb2.mp3'),
+    'G2': require('@/assets/sounds/G2.mp3'),
+    'Ab2': require('@/assets/sounds/Ab2.mp3'),
+    'A2': require('@/assets/sounds/A2.mp3'),
+    'Bb2': require('@/assets/sounds/Bb2.mp3'),
+    'B2': require('@/assets/sounds/B2.mp3'),
+    'C3': require('@/assets/sounds/C3.mp3'),
+    'Db3': require('@/assets/sounds/Db3.mp3'),
+    'D3': require('@/assets/sounds/D3.mp3'),
+    'Eb3': require('@/assets/sounds/Eb3.mp3'),
+    'E3': require('@/assets/sounds/E3.mp3'),
+    'F3': require('@/assets/sounds/F3.mp3'),
+    'Gb3': require('@/assets/sounds/Gb3.mp3'),
+    'G3': require('@/assets/sounds/G3.mp3'),
+    'Ab3': require('@/assets/sounds/Ab3.mp3'),
+    'A3': require('@/assets/sounds/A3.mp3'),
+    'Bb3': require('@/assets/sounds/Bb3.mp3'),
+    'B3': require('@/assets/sounds/B3.mp3'),
+    'C4': require('@/assets/sounds/C4.mp3'),
+    'Db4': require('@/assets/sounds/Db4.mp3'),
+    'D4': require('@/assets/sounds/D4.mp3'),
+    'Eb4': require('@/assets/sounds/Eb4.mp3'),
+    'E4': require('@/assets/sounds/E4.mp3'),
+    'F4': require('@/assets/sounds/F4.mp3'),
+    'Gb4': require('@/assets/sounds/Gb4.mp3'),
+    'G4': require('@/assets/sounds/G4.mp3'),
+    'Ab4': require('@/assets/sounds/Ab4.mp3'),
+    'A4': require('@/assets/sounds/A4.mp3'),
+    'Bb4': require('@/assets/sounds/Bb4.mp3'),
+    'B4': require('@/assets/sounds/B4.mp3'),
+    'C5': require('@/assets/sounds/C5.mp3'),
+    'Db5': require('@/assets/sounds/Db5.mp3'),
+    'D5': require('@/assets/sounds/D5.mp3'),
+    'Eb5': require('@/assets/sounds/Eb5.mp3'),
+    'E5': require('@/assets/sounds/E5.mp3'),
+    'F5': require('@/assets/sounds/F5.mp3'),
+    'Gb5': require('@/assets/sounds/Gb5.mp3'),
+    'G5': require('@/assets/sounds/G5.mp3'),
+    'Ab5': require('@/assets/sounds/Ab5.mp3'),
+    'A5': require('@/assets/sounds/A5.mp3'),
+    'Bb5': require('@/assets/sounds/Bb5.mp3'),
+    'B5': require('@/assets/sounds/B5.mp3'),
+    'C6': require('@/assets/sounds/C6.mp3'),
 }
 
 const enharmonicNotes = {
@@ -139,7 +139,7 @@ export function getNoteMp3(note: string) {
         const noteOctave = note.replace(/[^\d]/g, '');
         return noteMp3s[enharmonicNoteName + noteOctave as keyof typeof noteMp3s];
     }
-    return noteMp3s[noteName as keyof typeof noteMp3s];
+    return noteMp3s[note as keyof typeof noteMp3s];
 }
 
 type Clef = 'bass' | 'treble' | 'none';
@@ -153,10 +153,11 @@ export const getNoteSvg = (note: Note, clef: Clef = 'bass') => {
 };
 
 export const getNotePng = (note: Note, clef: Clef = 'bass') => {
+    const modified_note = note.replace("#", "").replace("b", "")
     if (clef === 'treble') {
-        return trebleNotePngs[note as keyof typeof trebleNotePngs];
+        return trebleNotePngs[modified_note as keyof typeof trebleNotePngs];
     }
-    return notePngs[note as keyof typeof notePngs];
+    return notePngs[modified_note as keyof typeof notePngs];
 }
 
 export type { Clef, Note };

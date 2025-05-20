@@ -2,19 +2,30 @@ import { Button, TouchableOpacity, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
-import { SortMode } from '@/constants/types';
+import { Song, SortMode } from '@/constants/types';
 import { router } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import { getSongData } from '@/scripts/hymnals';
 
 interface DisplayMoreMenuProps {
     bookId: string;
     songId?: string;
 }
 
-export function DisplayMoreMenu({ bookId }: DisplayMoreMenuProps) {
-  const theme = useColorScheme() ?? 'light';
-  const context = useContext(HymnalContext);
+export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
+    const theme = useColorScheme() ?? 'light';
+    const context = useContext(HymnalContext);
+
+    const [songData, setSongData] = useState<Song | null>(null);
+    useEffect(() => {
+        if (songId) {
+            getSongData(bookId).then((data) => {
+                setSongData(data[songId]);
+            });
+        }
+    }, [bookId, songId]);
   
     return (
       <DropdownMenu.Root>
@@ -35,7 +46,11 @@ export function DisplayMoreMenu({ bookId }: DisplayMoreMenuProps) {
                         <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                     </DropdownMenu.ItemIcon>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item key="share" onSelect={() => {}}>
+                <DropdownMenu.Item key="share" onSelect={async () => {
+                    await Sharing.shareAsync(`https://acchymns.app/display/${bookId}/${songId}`, {
+                        dialogTitle: songData?.title
+                    })
+                }}>
                     <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
                     <DropdownMenu.ItemIcon ios={{ name: 'square.and.arrow.up'}}>
                         <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
