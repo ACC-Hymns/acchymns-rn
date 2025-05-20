@@ -24,6 +24,8 @@ import {
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
+import { getNoteMp3, Note, notePngs, trebleNotePngs } from '@/constants/assets';
+import { useAudioPlayer } from 'expo-audio';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -34,7 +36,8 @@ export default function DisplayScreen() {
     const context = useContext(HymnalContext);
     const [bookData, setBookData] = useState<BookSummary | null>(null);
     const [songData, setSongData] = useState<SongList | null>(null);
-    const [imageURI, setImageURI] = useState<string | null>(null);
+    const [songNotes, setSongNotes] = useState<string[]>([]);
+    const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
     const styles = makeStyles(theme);
@@ -103,6 +106,12 @@ export default function DisplayScreen() {
                 setLoading(true);
                 const data = await getSongData(params.id as string);
                 setSongData(data);
+
+                // set song notes
+                const songNotes = data?.[params.number]?.notes;
+                // reverse notes
+                const reversedNotes = songNotes?.slice().reverse();
+                setSongNotes(reversedNotes || []);
 
                 if(!bookData) return;
 
@@ -220,9 +229,21 @@ export default function DisplayScreen() {
                         const duration = endTime - startTime;
                         //console.log(`Image stitching took ${duration} milliseconds`);
 
-                        setImageURI(dataUri);
+                        Image.getSize(dataUri, (width, height) => {
+                            setImageData({
+                                uri: dataUri,
+                                aspectRatio: width / height,
+                            });
+                        });
                     } else {
-                        setImageURI(imageURI);
+                        if (imageURI) {
+                            Image.getSize(imageURI, (width, height) => {
+                                setImageData({
+                                    uri: imageURI,
+                                    aspectRatio: width / height,
+                                });
+                            });
+                        }
                     }
 
                     //console.log("Image URI:", imageURI);
@@ -241,9 +262,9 @@ export default function DisplayScreen() {
         // Unlock orientation on page load
         ScreenOrientation.unlockAsync();
         const handleOrientationChange = () => {
-            if(!imageURI) return;
+            if(!imageData) return;
 
-            Image.getSize(imageURI, (width, height) => {
+            Image.getSize(imageData.uri, (width, height) => {
                 // reset zoom scale to 1 on orientation change
                 if (scrollRef.current) {
                     scrollRef.current.scrollResponderZoomTo({
@@ -268,41 +289,71 @@ export default function DisplayScreen() {
 
 
 
-    const selectedIndex = useRef(0);
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-    const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
-            const [ratio, setRatio] = useState(0);
-            useEffect(() => {
-                if (uri) {
-                    Image.getSize(uri, (width, height) => {
-                        setRatio(width / height);
-                    });
-                }
-            }, [uri]);
+    const useImageRatio = (uri: string) => {
+        const ratioRef = useRef<number | null>(null);
+        const [, forceUpdate] = useState(0); // force re-render once ratio is ready
     
-            return (
-                <Image
-                    style={{ width: '100%', height: undefined, aspectRatio: ratio }}
-                    resizeMode="contain"
-                    source={{ uri }}
-                />
-            );
-        };
+        useEffect(() => {
+            if (uri && ratioRef.current === null) {
+                Image.getSize(uri, (width, height) => {
+                    ratioRef.current = width / height;
+                    forceUpdate(x => x + 1);
+                });
+            }
+        }, [uri]);
+    
+        return ratioRef.current;
+    };
+
+    function getClef(note: string) {
+        console.log("Note:", note);
+        const modified_note = note.replace("#", "").replace("b", "");
+        console.log("Modified note:", modified_note);
+
+        console.log("Song notes:", songNotes);
+        console.log("index: ", songNotes.indexOf(note));
+        console.log("notePngs includes:", Object.keys(notePngs).includes(modified_note));
+        if (songNotes.indexOf(note) > 1 || !Object.keys(notePngs).includes(modified_note)) {
+            console.log("Clef: treble");
+            return 'treble'
+        }
+        console.log("Clef: bass");
+        return 'bass';
+    }
+
+    const player = useAudioPlayer();
+    function playNote(note: string) {
+        const assetId = getNoteMp3(note);
+        console.log("assetId: ", assetId)
+        player.replace(assetId);
+        player.play();
+        console.log("Playing note:", note);
+    }
+
     return (
         <>
-            {imageURI ? (
-                <ScrollView
-                    minimumZoomScale={MIN_SCALE}
-                    maximumZoomScale={MAX_SCALE}
-                >
-                    <FullWidthPicture uri={imageURI} />
-                </ScrollView>
+            {imageData ? (
+            <ScrollView
+                minimumZoomScale={1}
+                maximumZoomScale={5}
+                contentContainerStyle={{ flexGrow: 1 }}
+            >
+                <Image
+                source={{ uri: imageData.uri }}
+                resizeMode="contain"
+                style={{
+                    width: '100%',
+                    height: undefined,
+                    aspectRatio: imageData.aspectRatio,
+                }}
+                />
+            </ScrollView>
             ) : (
-                <>
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                    </View>
-                </>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" />
+            </View>
             )}
             <BottomSheetModalProvider>
                 <BottomSheetModal
@@ -318,16 +369,38 @@ export default function DisplayScreen() {
                                 width: 300,
                                 height: 32,
                             }}
+                            selectedIndex={selectedIndex}
                             values={['Notes', 'Piano', 'Details']}
-                            selectedIndex={selectedIndex.current}
                             onChange={(event) => {
-                                selectedIndex.current = event.nativeEvent.selectedSegmentIndex;
+                                setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
+                                console.log("Selected index:", selectedIndex);
                             }}
                         />
-
-                        <View>
-                            <NoteButton note="C5" clef={'treble'} onClick={() => {}} />
-                        </View>
+                        {selectedIndex === 0 && (
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8,
+                                flexWrap: 'wrap',
+                                marginVertical: 16,
+                            }}>
+                                {songData && songData[params.number] && (
+                                <>
+                                    <View style={styles.noteButton}>
+                                        <NoteButton note={"" as Note} clef={'none'} onClick={() => {}} />
+                                        <Text style={{fontSize: 18}}>All</Text>
+                                    </View>
+                                    {songNotes.map((note, index) => (
+                                    <View key={index} style={styles.noteButton}>
+                                        <NoteButton note={note as Note} clef={getClef(note)} onClick={() => playNote(note)} />
+                                        <Text style={{fontSize: 18}}>{note}</Text>
+                                    </View>
+                                    ))}
+                                </>
+                                )}
+                            </View>
+                        )}
                         
                     </BottomSheetView>
                 </BottomSheetModal>
@@ -339,15 +412,10 @@ export default function DisplayScreen() {
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
         noteButton: {
-            flexDirection: 'row',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 16,
-            borderRadius: 8,
-            backgroundColor: Colors[theme]['background'],
-            marginVertical: 8,
-            borderWidth: 1,
-            borderColor: Colors[theme]['border'],
+            gap: 16,
         },
         handleIndicator: {
             backgroundColor: Colors[theme]['handleBar'],
@@ -359,7 +427,7 @@ function makeStyles(theme: "light" | "dark") {
         contentContainer: {
             flex: 1,
             padding: 8,
-            paddingBottom: 150,
+            paddingBottom: 50,
             alignItems: 'center',
         },
         bottomSheet: {
