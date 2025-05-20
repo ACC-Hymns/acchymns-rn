@@ -23,7 +23,7 @@ import {
   } from '@gorhom/bottom-sheet';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
-import FastImage from '@d11/react-native-fast-image'
+import NoteButton from '@/components/NoteButton';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -98,8 +98,6 @@ export default function DisplayScreen() {
     }, [bookData, params.id, navigation]);
 
     useEffect(() => {
-        
-
         const fetchData = async () => {
             try {
                 setLoading(true);
@@ -269,6 +267,9 @@ export default function DisplayScreen() {
     }, [bookData]);
 
 
+
+    const selectedIndex = useRef(0);
+
     const FullWidthPicture: React.FC<{ uri: string }> = ({ uri }) => {
             const [ratio, setRatio] = useState(0);
             useEffect(() => {
@@ -280,18 +281,13 @@ export default function DisplayScreen() {
             }, [uri]);
     
             return (
-                <FastImage
+                <Image
                     style={{ width: '100%', height: undefined, aspectRatio: ratio }}
                     resizeMode="contain"
                     source={{ uri }}
                 />
             );
         };
-
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const animatedIndex = useSharedValue(1);
-    const animatedPosition = useSharedValue(0);
-
     return (
         <>
             {imageURI ? (
@@ -304,11 +300,7 @@ export default function DisplayScreen() {
             ) : (
                 <>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        {loading ? (
-                            <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                        ) : (
-                            <Text style={{ color: Colors[theme]['text'] }}>Image not available</Text>
-                        )}
+                        <ActivityIndicator size="large" color={Colors[theme]['text']} />
                     </View>
                 </>
             )}
@@ -327,11 +319,15 @@ export default function DisplayScreen() {
                                 height: 32,
                             }}
                             values={['Notes', 'Piano', 'Details']}
-                            selectedIndex={selectedIndex}
+                            selectedIndex={selectedIndex.current}
                             onChange={(event) => {
-                                setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
+                                selectedIndex.current = event.nativeEvent.selectedSegmentIndex;
                             }}
                         />
+
+                        <View>
+                            <NoteButton note="C5" clef={'treble'} onClick={() => {}} />
+                        </View>
                         
                     </BottomSheetView>
                 </BottomSheetModal>
@@ -342,6 +338,17 @@ export default function DisplayScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        noteButton: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            borderRadius: 8,
+            backgroundColor: Colors[theme]['background'],
+            marginVertical: 8,
+            borderWidth: 1,
+            borderColor: Colors[theme]['border'],
+        },
         handleIndicator: {
             backgroundColor: Colors[theme]['handleBar'],
         },
