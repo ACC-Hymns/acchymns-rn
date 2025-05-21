@@ -4,7 +4,7 @@ import { BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router } from 'expo-router';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import SearchBar from 'react-native-platform-searchbar';
 import { Divider } from 'react-native-elements'
@@ -77,7 +77,7 @@ export default function SearchScreen() {
                 // Load recent searches from AsyncStorage
                 await loadSearches();
                 console.log("Loaded recent searches:", searchHistory);
-                
+
                 console.log("Loaded song data.");
                 setLoading(false);
             } catch (error) {
@@ -92,7 +92,7 @@ export default function SearchScreen() {
 
     const [searchHistory, setSearchHistory] = useState<string[]>([]);
     const searchInputRef = useRef<TextInput>(null);
-    
+
     function addToSearchHistory(search: string) {
         setSearchHistory((prevHistory) => {
             const newHistory = [...prevHistory];
@@ -112,150 +112,174 @@ export default function SearchScreen() {
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
+    const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
+    useEffect(() => {
+        setDataSource([...(search.trim().length > 0 ? songList : [])]
+            .filter((s) =>
+                s.stripped_title?.includes(stripSearchText(search)) ||
+                s?.stripped_first_line?.includes(stripSearchText(search)) ||
+                s?.number == stripSearchText(search)
+            )
+            .sort((a, b) =>
+                a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
+                    b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
+                )
+        ));
+    }, [search, songList]);
 
     return (
         <>
             {loading ? (
-            <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                <ActivityIndicator size="large" color={Colors[theme]['text']} />
             ) : (
-            <FlatList 
-                ref={scrollViewRef}
-                scrollEnabled={scrollEnabled}
-                data={[...(search.trim().length > 0 ? songList : [])]
-                .filter((s) => 
-                    s.stripped_title?.includes(stripSearchText(search)) ||
-                    s?.stripped_first_line?.includes(stripSearchText(search)) ||
-                    s?.number == stripSearchText(search)
-                )
-                .sort((a, b) => 
-                    a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
-                    b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-                    )
-                )}
-                keyboardShouldPersistTaps='always'
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={{
-                        margin: 4,
-                        width: Dimensions.get('window').width - 60,
-                        borderRadius: 12,
-                        backgroundColor: item.book.primaryColor,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingVertical: 10, // Add padding to allow content to grow
-                        minHeight: 60, // Ensure a minimum height of 60
-                        }}
-
-                        onPress={() => {
-                        if (isNavigating) return;
-                        if (item.book.name.short && item.number) {
-                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                        } else {
-                            console.error("Invalid item data: ", item);
-                        }
-                        setIsNavigating(true);
-                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
-                        }}
-
-                        activeOpacity={0.7}
-                    >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                            <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
-                            </View>
-                            <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
-                            </View>
-                        </View>
-                        
-                    </TouchableOpacity>
-                )}
-                style={[styles.scrollView]}
-                ListHeaderComponent={
-                    <>
-                        <View style={styles.titleContainer}>
-                        <Text style={styles.textStyle}>Search</Text>
-                        </View>
-                        <SearchBar
-                            ref={searchInputRef}
-                            value={search}
-                            onChangeText={setSearch}
-                            onFocus={() => {
-                                setSearchBarFocused(true);
+                <FlatList
+                    ref={scrollViewRef}
+                    scrollEnabled={scrollEnabled}
+                    data={dataSource}
+                    keyboardShouldPersistTaps='always'
+                    renderItem={({ item, index }) => (
+                        <TouchableOpacity
+                            style={{
+                                margin: 4,
+                                width: Dimensions.get('window').width - 60,
+                                borderRadius: 12,
+                                backgroundColor: item.book.primaryColor,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingVertical: 10, // Add padding to allow content to grow
+                                minHeight: 60, // Ensure a minimum height of 60
+                                marginBottom: index === dataSource.length - 1 ? 100 : 4, // Add margin only to the last item
                             }}
-                            onCancel={() => {
-                                setSearchBarFocused(false);
-                            }}
-                            onEndEditing={() => {
-                                // when user searches, add to search history
-                                if (search.trim().length > 0) {
-                                    addToSearchHistory(search);
+
+                            onPress={() => {
+                                if (isNavigating) return;
+                                if (item.book.name.short && item.number) {
+                                    router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
                                 } else {
-                                    // cancel the search
-                                    if(searchInputRef.current) {
-                                        searchInputRef.current.blur();
-                                    }
+                                    console.error("Invalid item data: ", item);
                                 }
+                                setIsNavigating(true);
+                                setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                             }}
-                            inputStyle={styles.searchBarContainer}
-                            placeholder="Search"
-                            style={styles.searchBar}
-                        />
 
-                        {
-                            (searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
-                                <View style={styles.searchHistoryContainer}>
-                                    <View style={styles.searchHistoryHeader}>
-                                        <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
-                                        <Button
-                                            onPress={() => {
-                                                setSearchHistory([]);
-                                            }}
-                                            accessibilityLabel={"Clear Search History"}
-                                            title="Clear All"
-                                        />
-                                    </View>
-                                    <Divider />
-                                    <FlatList
-                                        style={{ maxHeight: 300 }}
-                                        scrollEnabled={scrollEnabled}
-                                        data={searchHistory}
-                                        keyboardShouldPersistTaps='handled'
-                                        renderItem={({ item }) => (
-                                            <SearchHistoryItem
-                                                item={item}
-                                                onPress={() => {
-                                                    setSearch(item);
-                                                    addToSearchHistory(item);
-                                                }}
-                                                onGestureStart={() => {
-                                                    // disable scrolling when user is dragging
-                                                    setScrollEnabled(false);
-                                                }}
-                                                onGestureEnd={() => {
-                                                    // enable scrolling when user is done dragging
-                                                    setScrollEnabled(true);
-                                                }}
-                                                onDelete={() => {
-                                                    console.log('Deleting item:', item);
-                                                    setSearchHistory((prevHistory) => {
-                                                        const newHistory = [...prevHistory];
-                                                        newHistory.splice(newHistory.indexOf(item), 1);
-                                                        return newHistory;
-                                                    });
-                                                }}
-                                                isLastItem={item === searchHistory[searchHistory.length - 1]}
-                                            />
-                                        )}
-                                    >
-                                    </FlatList>
+                            activeOpacity={0.7}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                <View style={{ width: '80%', alignSelf: 'flex-start' }}>
+                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
+                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
                                 </View>
-                            )
-                        }
-                    </>
-                }
-            />
+                                <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
+                                </View>
+                            </View>
+
+                        </TouchableOpacity>
+                    )}
+                    style={[styles.scrollView]}
+                    ListHeaderComponent={
+                        <>
+                            <View style={styles.titleContainer}>
+                                <Text style={styles.textStyle}>Search</Text>
+                            </View>
+                            <SearchBar
+                                ref={searchInputRef}
+                                value={search}
+                                onChangeText={setSearch}
+                                onFocus={() => {
+                                    setSearchBarFocused(true);
+                                }}
+                                onCancel={() => {
+                                    setSearchBarFocused(false);
+                                }}
+                                onEndEditing={() => {
+                                    // when user searches, add to search history
+                                    if (search.trim().length > 0) {
+                                        addToSearchHistory(search);
+                                    } else {
+                                        // cancel the search
+                                        if (searchInputRef.current) {
+                                            searchInputRef.current.blur();
+                                        }
+                                    }
+                                }}
+                                inputStyle={styles.searchBarContainer}
+                                placeholder="Search"
+                                style={styles.searchBar}
+                            />
+
+                            {
+                                (searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
+                                    <View style={styles.searchHistoryContainer}>
+                                        <View style={styles.searchHistoryHeader}>
+                                            <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
+                                            <Button
+                                                onPress={() => {
+                                                    Alert.alert('Clear History', 'You cannot undo this action', [
+                                                        {
+                                                            text: 'Cancel',
+                                                            onPress: () => {
+
+                                                            },
+                                                            style: 'cancel',
+                                                            isPreferred: true
+                                                        },
+                                                        {
+                                                            text: 'Clear All',
+                                                            onPress: () => {
+                                                                setSearchHistory([]);
+                                                                saveSearches([]);
+                                                            },
+                                                            style: 'destructive'
+                                                        },
+                                                    ]);
+                                                }}
+                                                accessibilityLabel={"Clear Search History"}
+                                                title="Clear All"
+                                            />
+                                        </View>
+                                        <Divider />
+                                        <FlatList
+                                            style={{ maxHeight: 300 }}
+                                            scrollEnabled={scrollEnabled}
+                                            data={searchHistory}
+                                            keyboardShouldPersistTaps='handled'
+                                            renderItem={({ item }) => (
+                                                <SearchHistoryItem
+                                                    item={item}
+                                                    onPress={() => {
+                                                        setSearch(item);
+                                                        addToSearchHistory(item);
+                                                    }}
+                                                    onGestureStart={() => {
+                                                        // disable scrolling when user is dragging
+                                                        setScrollEnabled(false);
+                                                    }}
+                                                    onGestureEnd={() => {
+                                                        // enable scrolling when user is done dragging
+                                                        setScrollEnabled(true);
+                                                    }}
+                                                    onDelete={() => {
+                                                        console.log('Deleting item:', item);
+                                                        setSearchHistory((prevHistory) => {
+                                                            const newHistory = [...prevHistory];
+                                                            newHistory.splice(newHistory.indexOf(item), 1);
+
+                                                            saveSearches(newHistory); // Save the updated search history to AsyncStorage
+                                                            return newHistory;
+                                                        });
+                                                    }}
+                                                    isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                                />
+                                            )}
+                                        >
+                                        </FlatList>
+                                    </View>
+                                )
+                            }
+                        </>
+                    }
+                />
             )}
         </>
     );

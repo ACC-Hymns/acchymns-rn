@@ -5,8 +5,8 @@ import { HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import FileSystem from 'expo-file-system';
-import { hashFolder } from '@/scripts/hash';
+import * as FileSystem from 'expo-file-system';
+import { hashFile, hashFolder } from '@/scripts/hash';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
 import { useNavigation, useRouter } from 'expo-router';
 import { use, useContext, useEffect, useState } from 'react';
@@ -52,14 +52,6 @@ export default function HomeScreen() {
         context?.SET_BOOK_DATA(books);
     }
 
-    async function checkHash(bookId: string) {
-        console.log('Checking hash for book:', bookId);
-        if(bookData && bookData[bookId]) {
-            let hash = await hashFolder(FileSystem.documentDirectory + 'hymnals/' + bookId);
-            console.log(hash);
-        }
-    }
-
     const renderHymnalItem = ({ item: bookKey }: { item: string }) => {
         return (
             <View style={{ marginBottom: 15 }}>
@@ -68,7 +60,6 @@ export default function HomeScreen() {
                         <Pressable
                         unstable_pressDelay={0}
                         onPress={() => {
-                            checkHash(bookKey);
                             router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
                         }}
                         style={({ pressed }) => [

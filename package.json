@@ -22,6 +22,7 @@
     "@gorhom/bottom-sheet": "^5",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-community/slider": "^4.5.6",
     "@react-native-menu/menu": "^1.2.2",
     "@react-native-segmented-control/segmented-control": "^2.5.7",
     "@react-navigation/bottom-tabs": "^7.3.10",
@@ -33,6 +34,7 @@
     "expo-audio": "~0.4.5",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.5",
+    "expo-crypto": "~14.1.4",
     "expo-dev-client": "~5.1.8",
     "expo-font": "~13.3.1",
     "expo-haptics": "~14.1.4",
@@ -49,6 +51,7 @@
     "expo-system-ui": "~5.0.7",
     "expo-updates": "~0.28.12",
     "expo-web-browser": "~14.1.6",
+    "js-sha1": "^0.7.0",
     "patch-package": "^8.0.0",
     "pdf-lib": "^1.17.1",
     "react": "19.0.0",
@@ -72,8 +75,7 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
-    "zeego": "^3.0.6",
-    "expo-crypto": "~14.1.4"
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

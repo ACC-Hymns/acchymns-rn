@@ -1,11 +1,11 @@
 import React, { use, useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions, Button } from 'react-native';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookSummary, SongList, SortMode } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
-import { Gesture, GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
+import { Gesture, GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
 
@@ -83,16 +83,13 @@ export default function SelectionScreen() {
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                     }}
-
-                                    onPress={() => {
-                                        // check if im already navigating 
-                                        if (isNavigating) return;
-                                        router.push({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
-                                        setIsNavigating(true);
-                                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                    onPressIn={() => {
+                                        router.prefetch({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
                                     }}
-
-                                    activeOpacity={0.7}
+                                    onPress={() => {
+                                        // check if im already navigating
+                                        router.navigate({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                    }}
                                 >
                                     <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>
                                 </TouchableOpacity>

@@ -10,7 +10,6 @@ const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: 
 	const theme = useColorScheme() ?? 'light';
 
 	useEffect(() => {
-		console.log('Loading image for note:', note, 'clef:', clef);
 
 		if(note.length === 0)
 			return;

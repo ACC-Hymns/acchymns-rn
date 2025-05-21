@@ -1,32 +1,32 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
-import { GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, Pressable, ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import { BookSummary, SongList } from '@/constants/types';
-import { getSongData, HYMNAL_FOLDER } from '@/scripts/hymnals';
-import PdfPageImage from 'react-native-pdf-page-image';
+import { getSongData } from '@/scripts/hymnals';
 import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
 import * as Haptics from 'expo-haptics';
 import { convert, convertB64 } from 'react-native-pdf-to-image';
 import { Colors } from '@/constants/Colors';
 import { Zoomable } from '@likashefqet/react-native-image-zoom';
 import ZoomableScrollView from '@/components/ZoomableScrollView';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetModalProvider,
-  } from '@gorhom/bottom-sheet';
+} from '@gorhom/bottom-sheet';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs, trebleNotePngs } from '@/constants/assets';
-import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { AudioPlayer, AudioSample, createAudioPlayer, setAudioModeAsync, useAudioSampleListener } from 'expo-audio';
+import { getImageData } from '@/scripts/image_handler';
+import { useIsFocused } from '@react-navigation/native';
+import Slider from '@react-native-community/slider';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -41,26 +41,10 @@ export default function DisplayScreen() {
     const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
     const [loading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
+    const pianoAudioPlayer = useRef<AudioPlayer | null>(null);
     const navigation = useNavigation();
     const styles = makeStyles(theme);
-
     const scrollRef = useRef<ScrollView | null>(null);
-
-
-    async function loadSkiaImageFromUri(uri: string) {
-        try {
-          const base64 = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          const imageBytes = Skia.Data.fromBase64(base64);
-          const image = Skia.Image.MakeImageFromEncoded(imageBytes);
-          return image;
-        } catch (e) {
-          console.error("Error loading image:", e);
-          return null;
-        }
-      }
-
     const [isPresenting, setIsPresenting] = useState(false);
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -68,25 +52,53 @@ export default function DisplayScreen() {
 
     const handlePress = useCallback(() => {
         if (!bottomSheetModalRef.current) return;
-        
+
         if (isModalOpenRef.current) {
             bottomSheetModalRef.current.dismiss();
         } else {
             bottomSheetModalRef.current.present();
         }
     }, []);
-    
+
     const handleSheetChanges = useCallback((index: number) => {
-      isModalOpenRef.current = index === 0;
+        isModalOpenRef.current = index === 0;
     }, []);
 
     useLayoutEffect(() => {
-        if (!context) return;
+        if (!context || !params.id || !params.number) return;
+        const bData = context.BOOK_DATA[params.id];
+        if (!bData) return;
 
-        const bData = context.BOOK_DATA[params.id as string];
-        setBookData(bData);
-        if (!bookData) return;
-    }, [bookData, params.id, navigation]);
+        setBookData(bData); // still update state for image use later
+    }, [context, params.id, params.number]);
+
+    function setHeaderOptions() {
+        navigation.setOptions({
+            title: params.number,
+            headerRight: () => (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
+                    { (
+                        <TouchableOpacity onPress={handlePress}>
+                            <IconSymbol
+                                name="music.note"
+                                size={24}
+                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                            />
+                        </TouchableOpacity>
+                    )}
+                    <DisplayMoreMenu bookId={params.id} songId={params.number} />
+                </View>
+            ),
+        });
+    }
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            setHeaderOptions();
+        });
+
+        return unsubscribe;
+    }, [navigation]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -100,31 +112,11 @@ export default function DisplayScreen() {
                 // reverse notes
                 const reversedNotes = songNotes?.slice().reverse();
                 setSongNotes(reversedNotes || []);
-                for(const note of reversedNotes || []) {
+                for (const note of reversedNotes || []) {
                     const assetId = getNoteMp3(note);
-                    console.log("Loading asset:", assetId);
                     const player = createAudioPlayer(assetId);
                     audioPlayers.current.push(player);
                 }
-
-                
-
-                navigation.setOptions({ title: params.number, 
-                    headerRight: () => (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                            {songNotes && songNotes.length > 0 && (
-                                <TouchableOpacity onPress={handlePress}>
-                                    <IconSymbol
-                                        name="music.note"
-                                        size={24}
-                                        color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                                    />
-                                </TouchableOpacity>
-                            )}
-                            <DisplayMoreMenu bookId={params.id as string} songId={params.number as string} />
-                        </View>
-                    ) 
-                });
 
                 await setAudioModeAsync({
                     playsInSilentMode: true,
@@ -132,144 +124,39 @@ export default function DisplayScreen() {
                     interruptionModeAndroid: 'duckOthers'
                 })
 
-
-                if(!bookData) return;
-
-                const filePath = `${FileSystem.documentDirectory}${HYMNAL_FOLDER}/${bookData.name.short}/songs/${params.number}.${bookData.fileExtension}`.replace(/\/\//g, '/');
-
-                const normalizedFilePath = filePath.replace(/\\/g, '/').replace(/\/\//g, '/');
-
-                const fileInfo = await FileSystem.getInfoAsync(normalizedFilePath);
-
-                if (fileInfo.exists) {
-                    const imageURI = fileInfo.exists ? normalizedFilePath : null;
-                    // check if file is a PDF
-                    if (bookData.fileExtension === 'pdf') {
-                        //console.log("File is a PDF, generating images...");
-
-                        // get base64 string from file
-                        const base64Input = await FileSystem.readAsStringAsync(normalizedFilePath, {
-                            encoding: FileSystem.EncodingType.Base64,
-                        });
-
-                        if(!imageURI) 
-                            return;
-
-                        // start milliseconds
-                        const startTime = Date.now();
-                        const imageUris = await PdfPageImage.generateAllPages(`data:application/pdf;base64,${base64Input}`, 1).catch((error) => {
-                            console.error("Error generating images from PDF:", error);
-                        });
-
-                        if (!imageUris || imageUris?.length === 0) {
-                            console.error("No images generated from PDF");
-                            return;
-                        }
-                        const images = (await Promise.all(imageUris.map((i) => loadSkiaImageFromUri(i.uri)))).filter((img): img is SkImage => img !== null);
-
-                        // read PDF file using pdf-lib
-                        const pdf = await PDFDocument.load(base64Input);
-                        // for each skiimage
-                        const pages = pdf.getPages();
-
-                        
-                        let yOffset = 0;
-                        const srcRects = [];
-                        const dstRects = [];
-
-                        for (let i = 0; i < pages.length; i++) {
-                            const page = pages[i];
-                            const { x: cropX, y: cropY, width: cropWidth, height: cropHeight } = page.getCropBox();
-                            const img = images[i];
-
-                            const scaleMultiplier = img.width() / cropWidth;
-                            const adjustedCropX = cropX * scaleMultiplier;
-                            const adjustedCropY = img.height() - (cropY + cropHeight) * scaleMultiplier;
-                            const adjustedCropHeight = cropHeight * scaleMultiplier;
-
-                            if (img) {
-                                // Define source rect (from the original image)
-                                const srcRect = {
-                                    x: adjustedCropX,
-                                    y: adjustedCropY,
-                                    width: img.width(),
-                                    height: adjustedCropHeight,
-                                };
-
-                                // Define destination rect (where to draw on canvas)
-                                const dstRect = {
-                                    x: 0,
-                                    y: yOffset,
-                                    width: img.width(),
-                                    height: adjustedCropHeight,
-                                };
-
-                                srcRects.push(srcRect);
-                                dstRects.push(dstRect);
-
-                                // Increment Y offset for next image
-                                yOffset += adjustedCropHeight;
-                            }
-                        }
-
-                        // final image height
-                        const totalHeight = yOffset;
-                        const maxWidth = Math.max(...images.map((img) => img.width()));
-
-                        // Create offscreen surface
-                        const surface = Skia.Surface.MakeOffscreen(maxWidth, totalHeight);
-                        if (!surface) {
-                            console.error("Failed to create offscreen surface");
-                            return;
-                        }
-                        const canvas = surface.getCanvas();
-
-                        // Draw images on canvas
-                        for (let i = 0; i < images.length; i++) {
-                            const img = images[i];
-                            const srcRect = srcRects[i];
-                            const dstRect = dstRects[i];
-
-                            if (img) {
-                                // Draw only the cropped portion
-                                const paint = Skia.Paint(); // Create a SkPaint instance
-                                canvas.drawImageRect(img, srcRect, dstRect, paint);
-                            }
-                        }
-
-                        // Draw each image stacked vertically
-
-                        // Get the final image
-                        const resultImage = surface.makeImageSnapshot();
-                        const base64 = resultImage.encodeToBase64();
-                        const dataUri = `data:image/png;base64,${base64}`;
-
-                        // end time
-                        const endTime = Date.now();
-                        const duration = endTime - startTime;
-                        //console.log(`Image stitching took ${duration} milliseconds`);
-
-                        Image.getSize(dataUri, (width, height) => {
-                            setImageData({
-                                uri: dataUri,
-                                aspectRatio: width / height,
-                            });
-                        });
-                    } else {
-                        if (imageURI) {
-                            Image.getSize(imageURI, (width, height) => {
-                                setImageData({
-                                    uri: imageURI,
-                                    aspectRatio: width / height,
-                                });
-                            });
-                        }
-                    }
-
-                    //console.log("Image URI:", imageURI);
-                } else {
-                    console.error("File does not exist:", filePath);
+                // if pianoAudioPlayer is already created, release it
+                if (pianoAudioPlayer.current) {
+                    pianoAudioPlayer.current.release();
                 }
+
+                // try and load piano sound
+                const URL = `https://acchymnsmedia.s3.us-east-2.amazonaws.com/${params.id}/${params.number}.mp3`;
+                // Check if the mp3 exists before creating the player
+                try {
+                    const response = await fetch(URL, { method: 'HEAD' });
+                    if (response.ok) {
+                        pianoAudioPlayer.current = createAudioPlayer(URL);
+                        pianoAudioPlayer.current.addListener('playbackStatusUpdate', (status) => {
+                            if (status.isLoaded) {
+                                setCurrentTime(status.currentTime);
+                                setDuration(status.duration);
+                            }
+                        });
+                        console.log(`Piano mp3 found and player created: ${URL}`);
+                    } else {
+                        pianoAudioPlayer.current = null;
+                        console.log(`Piano mp3 not found: ${URL}`);
+                    }
+                } catch (e) {
+                    pianoAudioPlayer.current = null;
+                    console.error(`Error fetching piano mp3: ${URL}`, e);
+                }
+
+                if (!bookData) return;
+
+                const imageData = await getImageData(bookData, params.number);
+                if (!imageData) return;
+                setImageData(imageData);
             } catch (error) {
                 console.error("Error loading song data:", error);
             } finally {
@@ -282,7 +169,7 @@ export default function DisplayScreen() {
         // Unlock orientation on page load
         ScreenOrientation.unlockAsync();
         const handleOrientationChange = () => {
-            if(!imageData) return;
+            if (!imageData) return;
 
             Image.getSize(imageData.uri, (width, height) => {
                 // reset zoom scale to 1 on orientation change
@@ -304,10 +191,16 @@ export default function DisplayScreen() {
             // Lock orientation back to default on exit
             ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
             ScreenOrientation.removeOrientationChangeListener(subscription);
+
+            // Clean up audio players
+            audioPlayers.current.forEach(player => {
+                player.release();
+            });
+            if (pianoAudioPlayer.current) {
+                pianoAudioPlayer.current.release();
+            }
         };
     }, [bookData]);
-
-
 
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
@@ -319,16 +212,18 @@ export default function DisplayScreen() {
         return 'bass';
     }
 
+    // Play all notes in sequence with accurate timing using async/await and setTimeout wrapped in a Promise
     const DELAY = 200;
-    function playAllNotes() {
-        for (const [index, note] of songNotes.entries()) {
-            const timeout = setTimeout(() => {
-                const player = audioPlayers.current[index];
-                if (player) {
-                    player.seekTo(0);
-                    player.play();
-                }
-            }, index * DELAY);
+
+    async function playAllNotes() {
+        for (let index = 0; index < songNotes.length; index++) {
+            const player = audioPlayers.current[index];
+            if (player) {
+                player.seekTo(0);
+                player.play();
+            }
+            // Wait for DELAY ms before playing the next note
+            await new Promise(resolve => setTimeout(resolve, DELAY));
         }
     }
 
@@ -342,28 +237,160 @@ export default function DisplayScreen() {
         }
     }
 
+    // Notes tab
+    const NotesTab = () => {
+        return (
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-end',
+                    justifyContent: 'center',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    marginVertical: 16,
+                    minHeight: 100, // Ensures consistent height
+                }}
+            >
+                {songData && songData[params.number] && (
+                    <>
+                        <View style={styles.noteButton}>
+                            <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
+                            <Text style={{ fontSize: 18, color: Colors[theme].text }}>All</Text>
+                        </View>
+                        {songNotes.map((note, index) => (
+                            <View key={index} style={styles.noteButton}>
+                                <NoteButton note={note as Note} clef={getClef(note)} onClick={() => playNote(note)} />
+                                <Text style={{ fontSize: 18, color: Colors[theme].text }}>{note}</Text>
+                            </View>
+                        ))}
+                    </>
+                )}
+            </View>
+        )
+    };
+
+    const [isPianoPlaying, setIsPianoPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    function audioPlayerListener(data: AudioSample) {
+        
+    }
+
+    // Piano tab
+    const PianoTab = () => {
+        return (
+            <View
+                style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    flexWrap: 'wrap',
+                    marginVertical: 16,
+                    minHeight: 100, // Ensures consistent height
+                }}
+            >
+                <TouchableOpacity
+                    onPress={() => {
+                        if (pianoAudioPlayer.current) {
+                            if(pianoAudioPlayer.current.playing) {
+                                pianoAudioPlayer.current.pause();
+                                setIsPianoPlaying(false);
+                            } else {
+                                pianoAudioPlayer.current.play();
+                                setIsPianoPlaying(true);
+                            }
+                        }
+                    }}
+                >
+                    {pianoAudioPlayer.current && (
+                        <IconSymbol
+                            name={isPianoPlaying ? 'pause.fill' : 'play.fill'}
+                            size={48}
+                            color={theme === 'light' ? Colors.light.text : Colors.dark.text}
+                        />
+                    )}
+                </TouchableOpacity>
+                <View style={{ width: '70%', paddingHorizontal: 0 }}>
+                    <Slider
+                        value={Math.round(currentTime * 100)}
+                        minimumValue={0}
+                        maximumValue={Math.round(duration * 100)}
+                        step={1}
+                        onValueChange={(value: number) => {
+                            console.log('duration', duration * 100);
+                            console.log('value', value);
+                            pianoAudioPlayer.current?.pause();
+                            setIsPianoPlaying(false);
+                            
+                            pianoAudioPlayer.current?.seekTo(value / 100);
+                        }}
+                        minimumTrackTintColor={Colors[theme].tint}
+                        maximumTrackTintColor={Colors[theme].border}
+                        style={{ width: '100%' }}
+                    />
+                </View>
+            </View>
+        )
+    };
+
+    // Details tab
+    const DetailsTab = () => {
+        return (
+            <View style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+                marginVertical: 16,
+                minHeight: 100, // Ensures consistent height
+            }}>
+                {songData && songData[params.number] ? (
+                    <>
+                        <Text style={{ fontSize: 18, color: Colors[theme].text, marginBottom: 8 }}>
+                            {songData[params.number].title}
+                        </Text>
+                        {songData[params.number] && (
+                            <Text style={{ fontSize: 16, color: Colors[theme].text }}>
+                                Author: none
+                            </Text>
+                        )}
+                        {songData[params.number] && (
+                            <Text style={{ fontSize: 14, color: Colors[theme].text, marginTop: 4 }}>
+                                © 2024
+                            </Text>
+                        )}
+                    </>
+                ) : (
+                    <Text style={{ color: Colors[theme].text }}>No details available.</Text>
+                )}
+            </View>
+        )
+    }
+
     return (
         <>
             {imageData ? (
-            <ScrollView
-                minimumZoomScale={1}
-                maximumZoomScale={5}
-                contentContainerStyle={{ flexGrow: 1 }}
-            >
-                <Image
-                source={{ uri: imageData.uri }}
-                resizeMode="contain"
-                style={{
-                    width: '100%',
-                    height: undefined,
-                    aspectRatio: imageData.aspectRatio,
-                }}
-                />
-            </ScrollView>
+                <ScrollView
+                    minimumZoomScale={1}
+                    maximumZoomScale={5}
+                    contentContainerStyle={{ flexGrow: 1 }}
+                >
+                    <Image
+                        source={{ uri: imageData.uri }}
+                        resizeMode="contain"
+                        style={{
+                            width: '100%',
+                            height: undefined,
+                            aspectRatio: imageData.aspectRatio,
+                        }}
+                    />
+                </ScrollView>
             ) : (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" />
-            </View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" />
+                </View>
             )}
             <BottomSheetModalProvider>
                 <BottomSheetModal
@@ -372,6 +399,7 @@ export default function DisplayScreen() {
                     style={styles.bottomSheet}
                     backgroundStyle={styles.bottomSheet}
                     handleIndicatorStyle={styles.handleIndicator}
+                    enableContentPanningGesture={false}
                 >
                     <BottomSheetView style={styles.contentContainer}>
                         <SegmentedControl
@@ -380,38 +408,24 @@ export default function DisplayScreen() {
                                 height: 32,
                             }}
                             selectedIndex={selectedIndex}
-                            values={['Notes', 'Piano', 'Details']}
+                            values={pianoAudioPlayer.current ? ['Notes', 'Piano', 'Details'] : ['Notes', 'Details']}
                             onChange={(event) => {
                                 setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             }}
                         />
                         {selectedIndex === 0 && (
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 8,
-                                flexWrap: 'wrap',
-                                marginVertical: 16,
-                            }}>
-                                {songData && songData[params.number] && (
-                                <>
-                                    <View style={styles.noteButton}>
-                                        <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
-                                        <Text style={{fontSize: 18, color: Colors[theme].text}}>All</Text>
-                                    </View>
-                                    {songNotes.map((note, index) => (
-                                    <View key={index} style={styles.noteButton}>
-                                        <NoteButton note={note as Note} clef={getClef(note)} onClick={() => playNote(note)} />
-                                        <Text style={{fontSize: 18, color: Colors[theme].text}}>{note}</Text>
-                                    </View>
-                                    ))}
-                                </>
-                                )}
-                            </View>
+                            NotesTab()
                         )}
-                        
+                        {selectedIndex === 1 && (
+                            pianoAudioPlayer.current
+                                ? PianoTab()
+                                : DetailsTab()
+                        )}
+                        {selectedIndex === 2 && (
+                            DetailsTab()
+                        )}
+
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
@@ -448,7 +462,7 @@ function makeStyles(theme: "light" | "dark") {
             },
             shadowOpacity: 0.43,
             shadowRadius: 9.51,
-    
+
             elevation: 15,
             backgroundColor: Colors[theme]['background'],
             borderTopLeftRadius: 24,

@@ -1,5 +1,6 @@
 import { BookSummary, SongList } from '@/constants/types';
 import * as FileSystem from 'expo-file-system';
+import { hashFolder } from './hash';
 
 const HYMNAL_FOLDER = 'hymnals'; // folder name in the document directory
 const TEMP_FOLDER = 'temp'; // folder name in the document directory
@@ -24,6 +25,7 @@ export { HYMNAL_FOLDER, GITHUB_BASE_URL, DEFAULT_HYMNALS };
         - summary.json
         - index.json
         - songs.json
+        - .signature
 */  
 
 
@@ -68,7 +70,7 @@ async function loadHymnals() {
 }
 
 
-async function downloadHymnal(book: string, onProgress?: (progress: number) => void) {
+async function downloadHymnal(book: string, onProgress?: (progress: number) => void, onFinish?: (success: boolean) => void) {
     const folderUrl = `${GITHUB_BASE_URL}/${book}/`;
     const localFolderPath = `${FileSystem.documentDirectory}/${TEMP_FOLDER}/${book}/`;
     const finalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
@@ -105,16 +107,31 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     const summaryContent = await FileSystem.readAsStringAsync(summaryFilePath);
     const summary = JSON.parse(summaryContent) as BookSummary;
 
-    // Download the index.json file if it exists
-    const indexUrl = `${folderUrl}index.json`;
-    const indexFilePath = `${localFolderPath}index.json`;
-    await FileSystem.downloadAsync(indexUrl, indexFilePath)
+    // Download the .signature file if it exists
+    const signatureURL = `${folderUrl}.signature_v2`;
+    const signatureFilePath = `${localFolderPath}.signature_v2`;
+    await FileSystem.downloadAsync(signatureURL, signatureFilePath)
         .then(({ uri }) => {
-            console.log(`Downloaded index.json to ${uri}`);
+            console.log(`Downloaded .signature_v2 to ${uri}`);
         })
         .catch(error => {
-            console.error(`Error downloading index.json: ${error}`);
+            console.error(`Error downloading .signature_v2: ${error}`);
         });
+
+    
+    if(summary.indexAvailable) {
+        // Download the index.json file if it exists
+        const indexUrl = `${folderUrl}index.json`;
+        const indexFilePath = `${localFolderPath}index.json`;
+        await FileSystem.downloadAsync(indexUrl, indexFilePath)
+            .then(({ uri }) => {
+                console.log(`Downloaded index.json to ${uri}`);
+            })
+            .catch(error => {
+                console.error(`Error downloading index.json: ${error}`);
+            });
+
+    }
 
     // Download the songs.json file
     const songsUrl = `${folderUrl}songs.json`;
@@ -180,6 +197,12 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     });
 
     console.log(`Finished downloading ${summary.name.short}.`);
+
+
+    onProgress?.(101);
+    // verify the download
+    const valid = await hashFolder(finalFolderPath);
+    onFinish?.(valid);
 }
 
 async function removeHymnal(book: string) {

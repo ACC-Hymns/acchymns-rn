@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useContext, useRef, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList } from 'react-native';
+import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert } from 'react-native';
 
 export default function HymnalImporter() {
 
@@ -166,6 +166,23 @@ export default function HymnalImporter() {
                                         context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: -1 }));
                                         await downloadHymnal(item.name.short, (progress) => {
                                             context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: progress }));
+                                        }, (success) => {
+                                            if (!success) {
+                                                Alert.alert('Verification Failed', 'Some files were unable to download properly. Please try again.', [
+                                                    {
+                                                        text: 'Ok',
+                                                        onPress: () => {
+                                                        
+                                                        },
+                                                        style: 'default'
+                                                    },
+                                                ]);
+
+                                                // delete the files
+                                                context?.deleteHymnal?.(item.name.short);
+                                            }
+                                            // reset the progress value
+                                            context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: 0 }));
                                         });
 
                                         // reload the data
@@ -188,6 +205,8 @@ export default function HymnalImporter() {
                                         <Text style={styles.buttonText}>{item.name.medium}</Text>
                                         {context?.downloadProgressValues[item.name.short] === -1 ? (
                                             <Text style={{ color: 'white', marginTop: 5 }}>{'Starting download...'}</Text>
+                                        ) : ((context?.downloadProgressValues[item.name.short] ?? 0) > 100) ? (
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Verifying...`}</Text>
                                         ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
                                             <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
                                         ) : (
