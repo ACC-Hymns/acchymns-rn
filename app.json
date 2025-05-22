@@ -14,7 +14,10 @@
       "appleTeamId": "AVS62V4S24",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSAllowsArbitraryLoads": true
+        "NSAllowsArbitraryLoads": true,
+        "UIBackgroundModes": [
+          "audio"
+        ]
       },
       "icon": {
         "dark": "./assets/icons/ios-dark.png",

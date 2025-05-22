@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
@@ -27,6 +27,7 @@ import { AudioPlayer, AudioSample, createAudioPlayer, setAudioModeAsync, useAudi
 import { getImageData } from '@/scripts/image_handler';
 import { useIsFocused } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
+import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -107,6 +108,41 @@ export default function DisplayScreen() {
                 const data = await getSongData(params.id as string);
                 setSongData(data);
 
+                // load song details
+                searchHymnary(data[params.number].title).then((detailData) => {
+                    
+                    let details = detailData.filter(d => compareTitles(d, data[params.number], 1));
+                    if(!details || details.length === 0) {
+                        console.log("No details found. Trying without special characters...");
+                        details = detailData.filter(d => compareTitles(d, data[params.number], 3));
+                        if(!details || details.length === 0) {
+                            console.log("No details found.");
+                        } else { 
+                            // if more than one, take the one with the highest instances (totalInstances)
+                            details = details.sort((a, b) => Number.parseInt(b.totalInstances) - Number.parseInt(a.totalInstances));
+                            details = details.slice(0, 1);
+                            // set song details
+                            setSongDetails(details[0]);
+                        }
+                    } else {
+                        // if one has the same first line, take it
+                        const firstLine = data[params.number].first_line;
+                        if(firstLine) {
+                            // set to lower case
+                            const lowerFirstLine = firstLine.toLowerCase();
+                            // remove special characters
+                            const specialFirstLine = lowerFirstLine.replace(/[^a-z0-9]/gi, '');
+                            details = details.filter(d => d.firstLine.toLowerCase().replace(/[^a-z0-9]/gi, '').startsWith(specialFirstLine));
+                        }
+
+                        // if more than one, take the one with the highest instances (totalInstances)
+                        details = details.sort((a, b) => Number.parseInt(b.totalInstances) - Number.parseInt(a.totalInstances));
+                        details = details.slice(0, 1);
+                        // set song details
+                        setSongDetails(details[0]);
+                    }
+                });
+
                 // set song notes
                 const songNotes = data?.[params.number]?.notes;
                 // reverse notes
@@ -140,12 +176,14 @@ export default function DisplayScreen() {
                             if (status.isLoaded) {
                                 setCurrentTime(status.currentTime);
                                 setDuration(status.duration);
+
+                                if (status.didJustFinish) {
+                                    setIsPianoPlaying(false);
+                                }
                             }
                         });
-                        console.log(`Piano mp3 found and player created: ${URL}`);
                     } else {
                         pianoAudioPlayer.current = null;
-                        console.log(`Piano mp3 not found: ${URL}`);
                     }
                 } catch (e) {
                     pianoAudioPlayer.current = null;
@@ -217,11 +255,7 @@ export default function DisplayScreen() {
 
     async function playAllNotes() {
         for (let index = 0; index < songNotes.length; index++) {
-            const player = audioPlayers.current[index];
-            if (player) {
-                player.seekTo(0);
-                player.play();
-            }
+            playNote(songNotes[index]);
             // Wait for DELAY ms before playing the next note
             await new Promise(resolve => setTimeout(resolve, DELAY));
         }
@@ -232,8 +266,16 @@ export default function DisplayScreen() {
         if (id < 0) return;
         const player = audioPlayers.current[id];
         if (player) {
-            player.seekTo(0);
-            player.play();
+            try {
+                player.seekTo(0);
+                player.play();
+            } catch (error) {
+                console.log("Error playing note. Attempting to recreate player...");
+                // try to release and reset the players
+                player.release();
+                audioPlayers.current[id] = createAudioPlayer(getNoteMp3(note));
+                audioPlayers.current[id].play();
+            }
         }
     }
 
@@ -273,18 +315,18 @@ export default function DisplayScreen() {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
 
-    function audioPlayerListener(data: AudioSample) {
-        
+    function formatTime(currentTime: number) {
+        const minutes = Math.floor(currentTime / 60);
+        const seconds = Math.floor(currentTime % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
-
     // Piano tab
     const PianoTab = () => {
+
         return (
             <View
                 style={{
-                    flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
                     gap: 8,
                     flexWrap: 'wrap',
                     marginVertical: 16,
@@ -292,15 +334,26 @@ export default function DisplayScreen() {
                 }}
             >
                 <TouchableOpacity
+                    style={{
+                        marginTop: 8
+                    }}
                     onPress={() => {
                         if (pianoAudioPlayer.current) {
                             if(pianoAudioPlayer.current.playing) {
                                 pianoAudioPlayer.current.pause();
                                 setIsPianoPlaying(false);
                             } else {
+                                // if track is at the end, seek to start
+                                if (currentTime >= duration) {
+                                    pianoAudioPlayer.current.seekTo(0);
+                                    setCurrentTime(0);
+                                }
+
                                 pianoAudioPlayer.current.play();
                                 setIsPianoPlaying(true);
                             }
+                            // taptic
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         }
                     }}
                 >
@@ -312,31 +365,38 @@ export default function DisplayScreen() {
                         />
                     )}
                 </TouchableOpacity>
-                <View style={{ width: '70%', paddingHorizontal: 0 }}>
+                <View style={{ width: 350, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }}>
+                    <Text style={{ width: 32, textAlign: 'left', color: Colors[theme].text}}>
+                        {formatTime(currentTime)}
+                    </Text>
                     <Slider
                         value={Math.round(currentTime * 100)}
                         minimumValue={0}
                         maximumValue={Math.round(duration * 100)}
                         step={1}
                         onValueChange={(value: number) => {
-                            console.log('duration', duration * 100);
-                            console.log('value', value);
                             pianoAudioPlayer.current?.pause();
                             setIsPianoPlaying(false);
-                            
                             pianoAudioPlayer.current?.seekTo(value / 100);
                         }}
+                        tapToSeek={true}
                         minimumTrackTintColor={Colors[theme].tint}
                         maximumTrackTintColor={Colors[theme].border}
-                        style={{ width: '100%' }}
+                        style={{ flex: 1 }}
                     />
+                    <Text style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>
+                        {formatTime(duration)}
+                    </Text>
                 </View>
             </View>
         )
     };
 
+    const [songDetails, setSongDetails] = useState<SearchResult | null>(null);
+
     // Details tab
     const DetailsTab = () => {
+
         return (
             <View style={{
                 alignItems: 'center',
@@ -348,18 +408,31 @@ export default function DisplayScreen() {
             }}>
                 {songData && songData[params.number] ? (
                     <>
-                        <Text style={{ fontSize: 18, color: Colors[theme].text, marginBottom: 8 }}>
+                        <Text style={{ fontSize: 20, fontWeight: '600', color: Colors[theme].text, marginBottom: 8 }}>
                             {songData[params.number].title}
                         </Text>
                         {songData[params.number] && (
-                            <Text style={{ fontSize: 16, color: Colors[theme].text }}>
-                                Author: none
+                            <Text style={{ fontSize: 16, color: Colors[theme].text, textAlign: 'center' }}>
+                                Author: {songDetails ? (!/\S/.test(songDetails.authors) ? 'Unknown' : songDetails.authors) : "Unknown"}
                             </Text>
                         )}
                         {songData[params.number] && (
-                            <Text style={{ fontSize: 14, color: Colors[theme].text, marginTop: 4 }}>
-                                © 2024
+                            <Text style={{ fontSize: 14, color: Colors[theme].text, marginVertical: 4, textAlign: 'center' }}>
+                                {songDetails
+                                    ? (songDetails.textSources
+                                        ? songDetails.textSources.replace(/<[^>]+>/g, '')
+                                        : "No details available.")
+                                    : "No details available."}
                             </Text>
+                        )}
+                        {songDetails && songDetails.textAuthNumber && (
+                            <Button
+                                title="View on Hymnary.org"
+                                onPress={() => {
+                                    const url = `https://hymnary.org/text/${songDetails.textAuthNumber}`;
+                                    Linking.openURL(url);
+                                }}>
+                            </Button>
                         )}
                     </>
                 ) : (
