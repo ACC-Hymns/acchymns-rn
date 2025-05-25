@@ -7,6 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
@@ -33,28 +34,28 @@ export default function TabLayout() {
                 name="(home)"
                 options={{
                     title: 'Home',
-                    tabBarIcon: ({ color, focused }) => <IconSymbol size={28} name={focused ? "house.fill" : 'house'} color={color} />,
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "home" : 'home-outline'} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="search"
                 options={{
                     title: 'Search',
-                    tabBarIcon: ({ color, focused }) => <IconSymbol size={28} name="magnifyingglass" color={color} />,
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "search" : 'search-outline'} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="bookmarks"
                 options={{
                     title: 'Bookmarks',
-                    tabBarIcon: ({ color, focused }) => <IconSymbol size={28} name={focused ? "bookmark.fill" : 'bookmark'} color={color} />,
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "bookmarks" : 'bookmarks-outline'} color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="settings"
                 options={{
                     title: 'Settings',
-                    tabBarIcon: ({ color, focused }) => <IconSymbol size={28} name="gear" color={color} />,
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "settings" : 'settings-outline'} color={color} />,
                 }}
             />
         </Tabs>

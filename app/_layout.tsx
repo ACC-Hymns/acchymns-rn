@@ -103,7 +103,8 @@ export default function RootLayout() {
                                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                                             />
                                         </TouchableOpacity>
-                                    )
+                                    ),
+                                    animation: 'none'
                                 }}
                             />
                             <Stack.Screen name="+not-found" />

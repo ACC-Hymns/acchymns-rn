@@ -14,6 +14,7 @@ import { Text, View, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { RenderItemParams } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
 import * as ContextMenu from 'zeego/context-menu';
+import { ContextMenuView } from 'react-native-ios-context-menu';
 
 export default function HomeScreen() {
 
@@ -55,9 +56,40 @@ export default function HomeScreen() {
     const renderHymnalItem = ({ item: bookKey }: { item: string }) => {
         return (
             <View style={{ marginBottom: 15 }}>
-                <ContextMenu.Root key={bookKey}>
-                    <ContextMenu.Trigger>
-                        <Pressable
+                <ContextMenuView
+                    style={{ borderRadius: 16 }}
+                    menuConfig={{
+                        menuTitle: '',
+                        menuItems: [
+                            {
+                                actionTitle: 'Delete',
+                                actionKey: 'delete',
+                                menuAttributes: ['destructive'],
+                                icon: {
+                                    type: 'IMAGE_SYSTEM',
+                                    imageValue: {
+                                        systemName: 'trash',
+                                    },
+                                    imageOptions: {
+                                        tint: 'red',
+                                        renderingMode: 'alwaysOriginal'
+                                    }
+                                },
+                                
+                            }
+                        ],
+                    }}
+                    onPressMenuItem={({nativeEvent}) => {
+                        switch (nativeEvent.actionKey) {
+                            case 'delete':
+                                deleteHymnal(bookKey);
+                                break;
+                            default:
+                                break;
+                        }
+                    }}
+                >
+                    <Pressable
                         unstable_pressDelay={0}
                         onPress={() => {
                             router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
@@ -65,29 +97,19 @@ export default function HomeScreen() {
                         style={({ pressed }) => [
                             {
                                 opacity: pressed ? 0.7 : 1,
+                                borderRadius: 16,
                             },
                         ]}
-                        >
-                            <GradientButton
-                                key={bookKey}
-                                title={bookData![bookKey].name.medium}
-                                primaryColor={bookData![bookKey].primaryColor}
-                                secondaryColor={bookData![bookKey].secondaryColor}
-                                //onLongPress={drag}
-                            />
-                        </Pressable>
-                    </ContextMenu.Trigger>
-                    <ContextMenu.Content>
-                        <ContextMenu.Item key='1' destructive={true} textValue='Remove Hymnal' onSelect={async () => {
-                                deleteHymnal(bookKey);
-                            }}>
-                            <ContextMenu.ItemTitle>
-                                <Text style={{ color: 'red' }}>Delete</Text>
-                            </ContextMenu.ItemTitle>
-                            <ContextMenu.ItemIcon ios={{ name: 'trash'}} />
-                        </ContextMenu.Item>
-                    </ContextMenu.Content>
-                </ContextMenu.Root>
+                    >
+                        <GradientButton
+                            key={bookKey}
+                            title={bookData![bookKey].name.medium}
+                            primaryColor={bookData![bookKey].primaryColor}
+                            secondaryColor={bookData![bookKey].secondaryColor}
+                            //onLongPress={drag}
+                        />
+                    </Pressable>
+                </ContextMenuView>
             </View>
         )
     }

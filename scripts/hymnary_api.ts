@@ -61,8 +61,8 @@ async function searchHymnary(query: string, options?: SearchOptions): Promise<Se
         const jsonData = convert(data) as SearchResult[];
         return jsonData;
     } catch (error) {
-        console.error('Error fetching data:', error);
-        throw error;
+        console.log('Error fetching data:', error);
+        return [];
     }
 }
 

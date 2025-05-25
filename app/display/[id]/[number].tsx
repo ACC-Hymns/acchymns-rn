@@ -1,9 +1,9 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
-import { useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, NativeModules } from 'react-native';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
-import { GestureHandlerRootView, Pressable, ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView, Pressable, ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
 import { BookSummary, SongList } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import * as FileSystem from 'expo-file-system';
@@ -28,6 +28,7 @@ import { getImageData } from '@/scripts/image_handler';
 import { useIsFocused } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -80,8 +81,8 @@ export default function DisplayScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
                     { (
                         <TouchableOpacity onPress={handlePress}>
-                            <IconSymbol
-                                name="music.note"
+                            <Ionicons
+                                name="musical-notes"
                                 size={24}
                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                             />
@@ -107,6 +108,19 @@ export default function DisplayScreen() {
                 setLoading(true);
                 const data = await getSongData(params.id as string);
                 setSongData(data);
+
+                // prefetch adjecent songs
+                
+                const songNumbers = Object.keys(songData || {});
+                const currentIndex = songNumbers.indexOf(params.number);
+                const nextIndex = currentIndex + 1;
+                const prevIndex = currentIndex - 1;
+                if (nextIndex < songNumbers.length) {
+                    router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[nextIndex] } });
+                }
+                if (prevIndex >= 0) {
+                    router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[prevIndex] } });
+                }
 
                 // load song details
                 searchHymnary(data[params.number].title).then((detailData) => {
@@ -225,10 +239,26 @@ export default function DisplayScreen() {
 
         const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
-        return () => {
-            // Lock orientation back to default on exit
-            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        navigation.addListener('beforeRemove', async (e) => {
+            console.log("trying to leave");
+            if(e.data.action.type == 'GO_BACK') {
+                console.log('Locking orientation to portrait');
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+            }
+
+            const nextRoute = (e.data?.action?.payload as { name?: string, params: {[key: string]: string}, singular: any });
+            console.log('Navigating to:', nextRoute.name);
+            if(!nextRoute.name?.startsWith('display')) {
+                console.log('Locking orientation to portrait');
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+            } else {
+                console.log('Unlocking orientation');
+                ScreenOrientation.unlockAsync();
+            }
             ScreenOrientation.removeOrientationChangeListener(subscription);
+        });
+
+        return () => {
 
             // Clean up audio players
             audioPlayers.current.forEach(player => {
@@ -442,24 +472,142 @@ export default function DisplayScreen() {
         )
     }
 
+    const offset = useSharedValue(0);    
+    const MAX_OFFSET = 75;
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                {
+                    translateX: offset.value,
+                },
+            ],
+        }
+    });
+    const isSwipingRight = useSharedValue(false);
+    const isSwipingLeft = useSharedValue(false);
+
+    function haptic() {
+        'worklet';
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    const swipeGesture = Gesture.Pan()
+        .onStart(() => {
+        })
+        .onUpdate((event) => {
+            if (event.translationX > 0) {
+                offset.value = Math.min(event.translationX, MAX_OFFSET);
+            } else {
+                offset.value = Math.max(event.translationX, -MAX_OFFSET);
+            }
+            const distance = Math.abs(offset.value);
+            if(distance > MAX_OFFSET/2) {
+                // if swiping left, set to 0
+                if (offset.value < 0) {
+                    if(!isSwipingLeft.value) {
+                        haptic()
+                        isSwipingLeft.value = true;
+                    }
+                } else {
+                    if(!isSwipingRight.value) {
+                        haptic()
+                        isSwipingRight.value = true;
+                    }
+                }
+            } else {
+                if(isSwipingLeft.value || isSwipingRight.value) {
+                    haptic();
+                }
+                isSwipingLeft.value = false;
+                isSwipingRight.value = false;
+            }
+        })
+        .onEnd(() => {
+            if (Math.abs(offset.value) > MAX_OFFSET / 2) {
+                if (offset.value > 0) {
+                    // Swipe right
+                    console.log("Swipe left");
+                    const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    const currentIndex = songNumbers.indexOf(params.number);
+                    if (currentIndex > 0) {
+                        runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex - 1] } });
+                    }
+
+                } else {
+                    // Swipe left
+                    console.log("Swipe right");
+                    const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    const currentIndex = songNumbers.indexOf(params.number);
+                    if (currentIndex < songNumbers.length - 1) {
+                        runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex + 1] } });
+                    }
+                }
+            }
+            offset.value = withSpring(0, { damping: 100, mass: 0.1 },);
+        })
+        .requireExternalGestureToFail();
+
     return (
-        <>
+        <View style={[styles.container]}>
             {imageData ? (
-                <ScrollView
-                    minimumZoomScale={1}
-                    maximumZoomScale={5}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                >
-                    <Image
-                        source={{ uri: imageData.uri }}
-                        resizeMode="contain"
-                        style={{
-                            width: '100%',
-                            height: undefined,
-                            aspectRatio: imageData.aspectRatio,
-                        }}
-                    />
-                </ScrollView>
+                <GestureDetector gesture={swipeGesture}>
+                    <Animated.View
+                        style={[
+                            animatedStyle,
+                            {
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                width: '100%',
+                            },
+                        ]}
+                    >
+                        {/* Offscreen left text */}
+                        {(() => {
+                            const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                            const currentIndex = songNumbers.indexOf(params.number);
+                            if (currentIndex <= 0) return null;
+                            return (
+                                <View style={{ position: 'absolute', left: -60, top: 0, bottom: 0, justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
+                                        {songNumbers[currentIndex - 1]}
+                                    </Text>
+                                </View>
+                            );
+                        })()}
+                        {/* Main ScrollView takes full width */}
+                        <ScrollView
+                            ref={scrollRef}
+                            minimumZoomScale={1}
+                            maximumZoomScale={5}
+                            contentContainerStyle={{ flexGrow: 1 }}
+                            style={{ flex: 1, width: '100%' }}
+                        >
+                            <Image
+                                source={{ uri: imageData.uri }}
+                                resizeMode="contain"
+                                style={{
+                                    width: '100%',
+                                    height: undefined,
+                                    aspectRatio: imageData.aspectRatio,
+                                }}
+                            />
+                        </ScrollView>
+                        {(() => {
+                            const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                            const currentIndex = songNumbers.indexOf(params.number);
+                            if (currentIndex >= songNumbers.length - 1) return null;
+                            return (
+                                <View style={{ position: 'absolute', right: -60, top: 0, bottom: 0, justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
+                                        {songNumbers[currentIndex + 1]}
+                                    </Text>
+                                </View>
+                            );
+                        })()}
+                        
+                    </Animated.View>
+                </GestureDetector>
             ) : (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" />
@@ -502,7 +650,7 @@ export default function DisplayScreen() {
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
-        </>
+        </View>
     );
 }
 
@@ -519,7 +667,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         container: {
             flex: 1,
-            backgroundColor: 'grey',
+            backgroundColor: 'white',
         },
         contentContainer: {
             flex: 1,
