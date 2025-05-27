@@ -16,6 +16,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@christoffyw/react-native-directed-scrollview": "^2.1.21",
     "@d11/react-native-fast-image": "^8.9.2",
     "@expo/ui": "~0.1.1-alpha.7",
     "@expo/vector-icons": "^14.1.0",
