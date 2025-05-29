@@ -22,6 +22,7 @@ const MAPPING = {
   'book': 'book-outline',
   'book.fill': 'book',
   'square.and.arrow.up': 'share-outline',
+  'trash': 'trash-outline',
   'plus.circle': 'add-circle-outline',
   'network.slash': 'cloud-offline-outline'
 } as Partial<

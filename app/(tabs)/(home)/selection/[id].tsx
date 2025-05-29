@@ -33,8 +33,9 @@ export default function SelectionScreen() {
         if (!bookData) return;
         navigation.setOptions({
             title: bookData.name.medium,
+            headerTitleAlign: 'center',
             headerRight: () => (
-                <HymnalMoreMenu bookId={id as string} />
+                <HymnalMoreMenu bookSummary={bookData} />
             ),
         });
 

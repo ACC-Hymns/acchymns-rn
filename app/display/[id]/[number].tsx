@@ -1,18 +1,14 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, NativeModules } from 'react-native';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView } from 'react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
-import { Gesture, GestureDetector, GestureHandlerRootView, Pressable, ScrollView, TapGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { BookSummary, SongList } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
-import * as FileSystem from 'expo-file-system';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Haptics from 'expo-haptics';
-import { convert, convertB64 } from 'react-native-pdf-to-image';
 import { Colors } from '@/constants/Colors';
-import { Zoomable } from '@likashefqet/react-native-image-zoom';
-import ZoomableScrollView from '@/components/ZoomableScrollView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import {
     BottomSheetModal,
@@ -22,19 +18,18 @@ import {
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
-import { getNoteMp3, Note, notePngs, trebleNotePngs } from '@/constants/assets';
-import { AudioPlayer, AudioSample, createAudioPlayer, setAudioModeAsync, useAudioSampleListener } from 'expo-audio';
+import { getNoteMp3, Note, notePngs } from '@/constants/assets';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { getImageData } from '@/scripts/image_handler';
-import { useIsFocused } from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { Ionicons } from '@expo/vector-icons';
+import { error } from 'pdf-lib';
+
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';
-    const MIN_SCALE = 1;
-    const MAX_SCALE = 5;
 
     const context = useContext(HymnalContext);
     const [bookData, setBookData] = useState<BookSummary | null>(null);
@@ -201,7 +196,7 @@ export default function DisplayScreen() {
                     }
                 } catch (e) {
                     pianoAudioPlayer.current = null;
-                    console.error(`Error fetching piano mp3: ${URL}`, e);
+                    console.error(`Error fetching piano mp3`);
                 }
 
                 if (!bookData) return;
@@ -210,7 +205,7 @@ export default function DisplayScreen() {
                 if (!imageData) return;
                 setImageData(imageData);
             } catch (error) {
-                console.error("Error loading song data:", error);
+                console.error("Error loading song data");
             } finally {
                 setLoading(false);
             }
@@ -220,22 +215,9 @@ export default function DisplayScreen() {
 
         // Unlock orientation on page load
         ScreenOrientation.unlockAsync();
-        const handleOrientationChange = () => {
-            if (!imageData) return;
-
-            Image.getSize(imageData.uri, (width, height) => {
-                // reset zoom scale to 1 on orientation change
-                if (scrollRef.current) {
-                    scrollRef.current.scrollResponderZoomTo({
-                        x: 0,
-                        y: 0,
-                        width: width,
-                        height: height,
-                        animated: true,
-                    });
-                }
-            });
-        };
+        const handleOrientationChange = async () => {
+            setIsHorizontal(await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_LEFT || await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_RIGHT);
+        }
 
         const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
@@ -270,6 +252,7 @@ export default function DisplayScreen() {
         };
     }, [bookData]);
 
+    const [isHorizontal, setIsHorizontal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
     function getClef(note: string) {
@@ -578,6 +561,7 @@ export default function DisplayScreen() {
                         {/* Main ScrollView takes full width */}
                         <ScrollView
                             ref={scrollRef}
+                            key={isHorizontal ? 'horizontal' : 'vertical'} // Force re-render on orientation change
                             minimumZoomScale={1}
                             maximumZoomScale={5}
                             contentContainerStyle={{ flexGrow: 1 }}

@@ -76,7 +76,7 @@ export default function RootLayout() {
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <HymnalContext.Provider value={context}>
                     <QueryClientProvider client={new QueryClient()}>
-                        <Stack>
+                        <Stack screenOptions={{headerTitleAlign: 'center'}}>
                             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                             <Stack.Screen 
                                 name="hymnal_importer" 
@@ -93,6 +93,7 @@ export default function RootLayout() {
                                     headerStyle: {
                                         backgroundColor: Colors[theme].headerBackground,
                                     },
+                                    headerTitleAlign: 'center',
                                     headerBackVisible: false,
                                     headerLeft: () => (
                                         <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>

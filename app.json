@@ -29,7 +29,14 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.ChristopherW.acchmns"
     },
     "web": {
       "bundler": "metro",
@@ -72,9 +79,7 @@
         "projectId": "dce778e0-a059-408f-a380-56d56a777daf"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/dce778e0-a059-408f-a380-56d56a777daf"
     }

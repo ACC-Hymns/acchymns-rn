@@ -212,9 +212,11 @@ export default function HymnalImporter() {
                                         ) : (
                                             <Text style={{ color: 'white', marginTop: 5 }}>{`Size: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
                                         )}
-                                        <View style={{ position: 'absolute', right: 20 }}>
-                                            <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
-                                        </View>
+                                        {(context?.downloadProgressValues[item.name.short] ?? 0) === 0 && (
+                                            <View style={{ position: 'absolute', right: 20 }}>
+                                                <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
+                                            </View>
+                                        )}
                                     </LinearGradient>
                                 </TouchableOpacity>
                             )}

@@ -26,7 +26,7 @@ export default function SearchScreen() {
 
     function stripSearchText(text: string) {
         return text
-            .replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
+            .replace(/[.,/#!$%^&*;:{}=\-_'’"`~()]/g, "")
             .replace(/s{2,}/g, " ")
             .toLowerCase()
             .normalize("NFD")
@@ -114,11 +114,12 @@ export default function SearchScreen() {
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
     useEffect(() => {
+        const stripped_search = stripSearchText(search);
         setDataSource([...(search.trim().length > 0 ? songList : [])]
             .filter((s) =>
-                s.stripped_title?.includes(stripSearchText(search)) ||
-                s?.stripped_first_line?.includes(stripSearchText(search)) ||
-                s?.number == stripSearchText(search)
+                s.stripped_title?.includes(stripped_search) ||
+                s?.stripped_first_line?.includes(stripped_search) ||
+                s?.number == stripped_search
             )
             .sort((a, b) =>
                 a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
@@ -126,7 +127,11 @@ export default function SearchScreen() {
                 )
         ));
     }, [search, songList]);
-
+    // Select 10 random songs from songList as featured songs
+    const featuredList = songList
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 10);
+    const numColumns = Math.ceil(featuredList.length / 2);
     return (
         <>
             {loading ? (
@@ -140,8 +145,7 @@ export default function SearchScreen() {
                     renderItem={({ item, index }) => (
                         <TouchableOpacity
                             style={{
-                                margin: 4,
-                                width: Dimensions.get('window').width - 60,
+                                marginHorizontal: 20,
                                 borderRadius: 12,
                                 backgroundColor: item.book.primaryColor,
                                 justifyContent: 'center',
@@ -207,76 +211,129 @@ export default function SearchScreen() {
                                 placeholder="Search"
                                 style={styles.searchBar}
                             />
+                            {(searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
+                                <View style={styles.searchHistoryContainer}>
+                                    <View style={styles.searchHistoryHeader}>
+                                        <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
+                                        <Button
+                                            onPress={() => {
+                                                Alert.alert('Clear History', 'You cannot undo this action', [
+                                                    {
+                                                        text: 'Cancel',
+                                                        onPress: () => {
 
-                            {
-                                (searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
-                                    <View style={styles.searchHistoryContainer}>
-                                        <View style={styles.searchHistoryHeader}>
-                                            <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
-                                            <Button
-                                                onPress={() => {
-                                                    Alert.alert('Clear History', 'You cannot undo this action', [
-                                                        {
-                                                            text: 'Cancel',
-                                                            onPress: () => {
-
-                                                            },
-                                                            style: 'cancel',
-                                                            isPreferred: true
                                                         },
-                                                        {
-                                                            text: 'Clear All',
-                                                            onPress: () => {
-                                                                setSearchHistory([]);
-                                                                saveSearches([]);
-                                                            },
-                                                            style: 'destructive'
+                                                        style: 'cancel',
+                                                        isPreferred: true
+                                                    },
+                                                    {
+                                                        text: 'Clear All',
+                                                        onPress: () => {
+                                                            setSearchHistory([]);
+                                                            saveSearches([]);
                                                         },
-                                                    ]);
-                                                }}
-                                                accessibilityLabel={"Clear Search History"}
-                                                title="Clear All"
-                                            />
-                                        </View>
-                                        <Divider />
-                                        <FlatList
-                                            style={{ maxHeight: 300 }}
-                                            scrollEnabled={scrollEnabled}
-                                            data={searchHistory}
-                                            keyboardShouldPersistTaps='handled'
-                                            renderItem={({ item }) => (
-                                                <SearchHistoryItem
-                                                    item={item}
-                                                    onPress={() => {
-                                                        setSearch(item);
-                                                        addToSearchHistory(item);
-                                                    }}
-                                                    onGestureStart={() => {
-                                                        // disable scrolling when user is dragging
-                                                        setScrollEnabled(false);
-                                                    }}
-                                                    onGestureEnd={() => {
-                                                        // enable scrolling when user is done dragging
-                                                        setScrollEnabled(true);
-                                                    }}
-                                                    onDelete={() => {
-                                                        console.log('Deleting item:', item);
-                                                        setSearchHistory((prevHistory) => {
-                                                            const newHistory = [...prevHistory];
-                                                            newHistory.splice(newHistory.indexOf(item), 1);
-
-                                                            saveSearches(newHistory); // Save the updated search history to AsyncStorage
-                                                            return newHistory;
-                                                        });
-                                                    }}
-                                                    isLastItem={item === searchHistory[searchHistory.length - 1]}
-                                                />
-                                            )}
-                                        >
-                                        </FlatList>
+                                                        style: 'destructive'
+                                                    },
+                                                ]);
+                                            }}
+                                            accessibilityLabel={"Clear Search History"}
+                                            title="Clear All"
+                                        />
                                     </View>
-                                )
-                            }
+                                    <Divider />
+                                    <FlatList
+                                        style={{ maxHeight: 300 }}
+                                        scrollEnabled={scrollEnabled}
+                                        data={searchHistory}
+                                        keyboardShouldPersistTaps='handled'
+                                        renderItem={({ item }) => (
+                                            <SearchHistoryItem
+                                                item={item}
+                                                onPress={() => {
+                                                    setSearch(item);
+                                                    addToSearchHistory(item);
+                                                }}
+                                                onGestureStart={() => {
+                                                    // disable scrolling when user is dragging
+                                                    setScrollEnabled(false);
+                                                }}
+                                                onGestureEnd={() => {
+                                                    // enable scrolling when user is done dragging
+                                                    setScrollEnabled(true);
+                                                }}
+                                                onDelete={() => {
+                                                    console.log('Deleting item:', item);
+                                                    setSearchHistory((prevHistory) => {
+                                                        const newHistory = [...prevHistory];
+                                                        newHistory.splice(newHistory.indexOf(item), 1);
+
+                                                        saveSearches(newHistory); // Save the updated search history to AsyncStorage
+                                                        return newHistory;
+                                                    });
+                                                }}
+                                                isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                            />
+                                        )}
+                                    >
+                                    </FlatList>
+                                </View>
+                            )}
+                            {(!searchBarFocused) && (
+                                <View style={{ marginTop: 24 }}>
+                                    <Text style={[styles.headerText, {marginHorizontal: 30}]}>Featured Songs</Text>
+                                    <ScrollView
+                                    horizontal
+                                    showsVerticalScrollIndicator={false}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ padding: 20 }}>
+                                        <FlatList
+                                            scrollEnabled={false}
+                                            contentContainerStyle={{
+                                            alignSelf: 'flex-start',
+                                            }}
+                                            numColumns={numColumns}
+                                            showsVerticalScrollIndicator={false}
+                                            showsHorizontalScrollIndicator={false}
+                                            data={featuredList}
+                                            renderItem={({item}) => (
+                                                <TouchableOpacity
+                                                    style={{
+                                                        margin: 4,
+                                                        width: Dimensions.get('window').width/1.5,
+                                                        borderRadius: 12,
+                                                        backgroundColor: item.book.primaryColor,
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        paddingVertical: 10, // Add padding to allow content to grow
+                                                        minHeight: 100, // Ensure a minimum height of 60
+                                                    }}
+
+                                                    onPress={() => {
+                                                        if (isNavigating) return;
+                                                        if (item.book.name.short && item.number) {
+                                                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
+                                                        } else {
+                                                            console.error("Invalid item data: ", item);
+                                                        }
+                                                        setIsNavigating(true);
+                                                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                                    }}
+
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                                        <View style={{ width: '100%', alignSelf: 'flex-start' }}>
+                                                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
+                                                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
+                                                        </View>
+                                                    </View>
+
+                                                </TouchableOpacity>
+                                            )}
+                                        />
+                                    </ScrollView>
+                                </View>
+                            )}
                         </>
                     }
                 />
@@ -300,8 +357,10 @@ function makeStyles(theme: "light" | "dark") {
         searchHistoryContainer: {
             backgroundColor: Colors[theme]['background'],
             borderRadius: 16,
+            paddingHorizontal: 20 
         },
         searchBar: {
+            marginHorizontal: 20,
             marginBottom: 20
         },
         searchBarContainer: {
@@ -316,6 +375,11 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: "center",
             justifyContent: "center",
         },
+        headerText: {
+            color: Colors[theme]['text'],
+            fontWeight: "bold",
+            fontSize: 24,
+        },
         text: {
             color: "black",
             fontSize: 24,
@@ -325,8 +389,6 @@ function makeStyles(theme: "light" | "dark") {
         scrollView: {
             paddingTop: 15,
             paddingBottom: 15,
-            paddingRight: 20,
-            paddingLeft: 20,
             backgroundColor: Colors[theme].background
         },
         button: {
@@ -349,7 +411,7 @@ function makeStyles(theme: "light" | "dark") {
         titleContainer: {
             marginTop: 80,
             marginBottom: 20,
-            marginLeft: 10,
+            marginLeft: 30,
         },
         stepContainer: {
             gap: 8,

@@ -9,7 +9,7 @@ export default function HomeLayout() {
     const theme = useColorScheme() ?? 'light';
 
     return (
-        <Stack screenOptions={{ headerShown: false }}
+        <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}
             initialRouteName="index">
             <Stack.Screen
                 name="index"
@@ -20,6 +20,7 @@ export default function HomeLayout() {
                 options={{
                     title: 'Selection',
                     headerShown: true,
+                    headerTitleAlign: 'center',
                     headerStyle: {
                         backgroundColor: Colors[theme].headerBackground,
                     },

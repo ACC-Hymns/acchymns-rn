@@ -1,17 +1,17 @@
-import { Button, TouchableOpacity, useColorScheme } from 'react-native'
+import { Alert, Button, TouchableOpacity, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
 import { useContext } from 'react';
 import { HymnalContext } from '@/constants/context';
-import { SortMode } from '@/constants/types';
+import { BookSummary, SortMode } from '@/constants/types';
 import { router } from 'expo-router';
 
 interface HymnalMoreMenuProps {
-    bookId: string;
+    bookSummary: BookSummary;
 }
 
-export function HymnalMoreMenu({ bookId }: HymnalMoreMenuProps) {
+export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
   const theme = useColorScheme() ?? 'light';
   const context = useContext(HymnalContext);
   
@@ -51,11 +51,27 @@ export function HymnalMoreMenu({ bookId }: HymnalMoreMenuProps) {
             
             <DropdownMenu.Group>
                 <DropdownMenu.Item key="delete-action" destructive={true} onSelect={async () => {
-                        await context?.deleteHymnal?.(bookId);
-                        // navigate back
-                        router.back();
+                        Alert.alert(`Delete "${bookSummary.name.medium}"`, 'You can always download the hymnal again later.', [
+                            {
+                                text: 'Cancel',
+                                onPress: () => {
+                                    
+                                },
+                                style: 'cancel',
+                                isPreferred: true
+                            },
+                            {
+                                text: 'Delete',
+                                onPress: async () => {
+                                    // navigate back
+                                    router.back();
+                                    await context?.deleteHymnal?.(bookSummary.name.short);
+                                },
+                                style: 'destructive'
+                            },
+                        ]);
                     }}>
-                    <DropdownMenu.ItemTitle>Remove Hymnal</DropdownMenu.ItemTitle>
+                    <DropdownMenu.ItemTitle>Delete Hymnal</DropdownMenu.ItemTitle>
                     <DropdownMenu.ItemIcon ios={{ name: 'trash'}}>
                         <IconSymbol name='trash' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                     </DropdownMenu.ItemIcon>
