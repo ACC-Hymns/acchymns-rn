@@ -1,9 +1,9 @@
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
-import { BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
+import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
-import { router } from 'expo-router';
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import SearchBar from 'react-native-platform-searchbar';
@@ -11,7 +11,11 @@ import { Divider } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import DefaultPreference from 'react-native-default-preference';
-
+import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
+import { store } from 'expo-router/build/global-state/router-store';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { padStart } from 'pdf-lib';
 
 export default function BookmarkScreen() {
 
@@ -24,6 +28,7 @@ export default function BookmarkScreen() {
     const [songList, setSongList] = useState<SongSearchInfo[]>([]);
     const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
     function stripSearchText(text: string) {
         return text
@@ -34,53 +39,56 @@ export default function BookmarkScreen() {
             .replace(/\p{Diacritic}/gu, "");
     }
     const BOOKMARKS_KEY = 'bookmarks';
-    const saveBookmarks = async (searches: string[]) => {
+    const saveBookmarks = async (searches: Bookmark[]) => {
         try {
             await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(searches));
         } catch (error) {
-            console.error("Error saving searches:", error);
+            console.error("Error saving bookmarks:", error);
         }
     };
     const loadBookmarks = async () => {
         try {
-            const bookmarks = await DefaultPreference.get('bookmarks');
-            if (bookmarks !== null) {
-                console.log(bookmarks)
+            const storedBookmarks = await AsyncStorage.getItem(BOOKMARKS_KEY);
+            console.log(storedBookmarks == null);
+            console.log(JSON.parse(storedBookmarks ?? '')?.length);
+            if (storedBookmarks !== null) {
+                console.log("Loading bookmarks from AsyncStorage");
+                const parsedBookmarks = JSON.parse(storedBookmarks) as Bookmark[];
+                setBookmarks(parsedBookmarks);
+            } else {
+                console.log("No bookmarks found in AsyncStorage, checking DefaultPreference");
+                const oldBookmarks = await DefaultPreference.get("CapacitorStorage.bookmarks");
+                if (oldBookmarks) {
+                    const parsedBookmarks = JSON.parse(oldBookmarks) as Bookmark[];
+                    setBookmarks(parsedBookmarks);
+                    await saveBookmarks(parsedBookmarks);
+                } else {
+                    setBookmarks([]);
+                }
             }
         } catch (error) {
-            console.error("Error loading searches:", error);
+            console.error("Error loading bookmarks:", error);
         }
     };
+
+    useFocusEffect(
+        useCallback(() => {
+            // This runs every time the screen comes into focus
+            loadBookmarks(); // or any other logic
+
+            return () => {
+                // Optional cleanup when screen loses focus
+            };
+        }, [])
+    );
+
     useLayoutEffect(() => {
         if (!context) return;
 
         const fetchData = async () => {
             try {
-                let songList: SongSearchInfo[] = [];
-                for (const id in context.BOOK_DATA) {
-                    const songData = await getSongData(id);
-                    Object.keys(songData).forEach((key: string) => {
-                        const song: Song = songData[key];
-                        const book: BookSummary = context.BOOK_DATA[id];
-                        const searchInfo: SongSearchInfo = {
-                            stripped_title: stripSearchText(song.title ?? ""),
-                            stripped_first_line: stripSearchText(song.first_line ?? ""),
-                            title: song.title,
-                            first_line: song.first_line,
-                            number: key,
-                            book: book,
-                        };
-                        songList.push(searchInfo);
-                    });
-                }
-                setSongList(songList);
-
                 // Load recent searches from AsyncStorage
                 await loadBookmarks();
-                console.log("Loaded recent searches:", searchHistory);
-
-                console.log("Loaded song data.");
-                setLoading(false);
             } catch (error) {
                 console.error("Error loading song data:", error);
             } finally {
@@ -90,33 +98,50 @@ export default function BookmarkScreen() {
         fetchData();
     }, [context?.BOOK_DATA]);
 
+    useEffect(() => {
+        if (!context) return;
+        const fetch = async () => {
+            const allSongs = await Promise.all(
+                bookmarks.map(async (bookmark) => {
+                    const bookData = context.BOOK_DATA[bookmark.book];
+                    const songData = await getSongData(bookmark.book);
+                    if (songData && bookData) {
+                        const song = songData[bookmark.number];
+                        if (song) {
+                            return {
+                                ...song,
+                                book: bookData,
+                                number: bookmark.number,
+                                stripped_title: stripSearchText(song.title),
+                                stripped_first_line: stripSearchText(song.first_line ?? "")
+                            } as SongSearchInfo;
+                        } else {
+                            console.warn(`Song number ${bookmark.number} not found in book ${bookmark.book}`);
+                        }
+                    } else {
+                        console.warn(`Book data for ${bookmark.book} not found`);
+                    }
+                    return null;
+                })
+            );
 
-    const [searchHistory, setSearchHistory] = useState<string[]>([]);
+            const validSongs = allSongs.filter((s): s is SongSearchInfo => s !== null);
+            setSongList(validSongs);
+
+
+            console.log("Loaded song data.");
+            setLoading(false);
+        }
+        fetch();
+    }, [bookmarks]);
+
     const searchInputRef = useRef<TextInput>(null);
-
-    function addToSearchHistory(search: string) {
-        setSearchHistory((prevHistory) => {
-            const newHistory = [...prevHistory];
-            if (newHistory.includes(search)) {
-                // remove the search from the history if it exists
-                newHistory.splice(newHistory.indexOf(search), 1);
-            }
-
-            // move the search to the top
-            newHistory.unshift(search);
-
-            saveBookmarks(newHistory); // Save the updated search history to AsyncStorage
-
-            return newHistory.slice(0, 5); // Limit to 5 items
-        });
-    }
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
-    useEffect(() => {
-        setDataSource([...(search.trim().length > 0 ? songList : [])]
-            .filter((s) => 
+    const filteredData = useMemo(() => {
+        return songList
+            .filter((s) =>
                 s.stripped_title?.includes(stripSearchText(search)) ||
                 s?.stripped_first_line?.includes(stripSearchText(search)) ||
                 s?.number == stripSearchText(search)
@@ -125,8 +150,115 @@ export default function BookmarkScreen() {
                 a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
                     b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
                 )
-        ));
+            );
     }, [search, songList]);
+
+    const UnderlayRight = () => {
+        const { close, percentOpen, item } = useSwipeableItemParams<string>();
+        const animatedStyles = useAnimatedStyle(() => ({
+            transform: [{ translateX: (1 - (percentOpen.value)) * 100 }],
+            opacity: percentOpen.value,
+        }));
+        return (
+            <Animated.View style={[styles.deleteButtonContainer, animatedStyles]}>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={async () => {
+                        // fetch song information
+                        if (!item) {
+                            console.error("No item to delete");
+                            return;
+                        }
+                        const [bookShort, number] = item.split(',');
+                        const bookData = context?.BOOK_DATA[bookShort];
+                        if (!bookData) {
+                            console.error(`Book data for ${bookShort} not found`);
+                            return;
+                        }
+                        const songData = await getSongData(bookShort);
+                        const song = songData[number];
+
+                        Alert.alert(
+                            `Remove "${song.title}"`,
+                            `Are you sure you want to remove this bookmark?`,
+                            [
+                                {
+                                    text: 'Cancel',
+                                    style: 'cancel',
+                                },
+                                {
+                                    text: 'Delete',
+                                    style: 'destructive',
+                                    onPress: () => {
+                                        // Remove the item from the bookmarks
+                                        setBookmarks((prev) => {
+                                            const newBookmarks = prev.filter(b => b.book + ',' + b.number !== item);
+                                            saveBookmarks(newBookmarks);
+                                            return newBookmarks;
+                                        });
+                                        close();
+                                    }
+                                }
+                            ]
+                        )
+                    }}
+                    style={[styles.deleteButton]}
+                >
+                    <IconSymbol
+                        name="trash"
+                        size={24}
+                        weight='light'
+                        color='white' />
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+    const renderItem = ({ item, index }: { item: SongSearchInfo, index: number }) => {
+        return (
+            <SwipeableItem
+                item={item.book.name.short + ',' + item.number}
+                key={item.book.name.short + ',' + item.number}
+                renderUnderlayLeft={() => <UnderlayRight />}
+                snapPointsLeft={[80]}
+            >
+                <TouchableOpacity
+                    style={{
+                        borderRadius: 12,
+                        backgroundColor: item.book.primaryColor,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingVertical: 10, // Add padding to allow content to grow
+                        minHeight: 60, // Ensure a minimum height of 60
+                        marginBottom: index === filteredData.length - 1 ? 100 : 4, // Add margin only to the last item
+                    }}
+
+                    onPress={() => {
+                        if (isNavigating) return;
+                        if (item.book.name.short && item.number) {
+                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
+                        } else {
+                            console.error("Invalid item data: ", item);
+                        }
+                        setIsNavigating(true);
+                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                    }}
+
+                    activeOpacity={0.7}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                        <View style={{ width: '80%', alignSelf: 'flex-start' }}>
+                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
+                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
+                        </View>
+                        <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
+                        </View>
+                    </View>
+
+                </TouchableOpacity>
+            </SwipeableItem>
+        );
+    };
 
     return (
         <>
@@ -136,47 +268,9 @@ export default function BookmarkScreen() {
                 <FlatList
                     ref={scrollViewRef}
                     scrollEnabled={scrollEnabled}
-                    data={dataSource}
+                    data={filteredData}
                     keyboardShouldPersistTaps='always'
-                    renderItem={({ item, index }) => (
-                        <TouchableOpacity
-                            style={{
-                                margin: 4,
-                                width: Dimensions.get('window').width - 60,
-                                borderRadius: 12,
-                                backgroundColor: item.book.primaryColor,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                paddingVertical: 10, // Add padding to allow content to grow
-                                minHeight: 60, // Ensure a minimum height of 60
-                                marginBottom: index === dataSource.length - 1 ? 100 : 4, // Add margin only to the last item
-                            }}
-
-                            onPress={() => {
-                                if (isNavigating) return;
-                                if (item.book.name.short && item.number) {
-                                    router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                                } else {
-                                    console.error("Invalid item data: ", item);
-                                }
-                                setIsNavigating(true);
-                                setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
-                            }}
-
-                            activeOpacity={0.7}
-                        >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
-                                </View>
-                                <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
-                                </View>
-                            </View>
-
-                        </TouchableOpacity>
-                    )}
+                    renderItem={renderItem}
                     style={[styles.scrollView]}
                     ListHeaderComponent={
                         <>
@@ -193,91 +287,10 @@ export default function BookmarkScreen() {
                                 onCancel={() => {
                                     setSearchBarFocused(false);
                                 }}
-                                onEndEditing={() => {
-                                    // when user searches, add to search history
-                                    if (search.trim().length > 0) {
-                                        addToSearchHistory(search);
-                                    } else {
-                                        // cancel the search
-                                        if (searchInputRef.current) {
-                                            searchInputRef.current.blur();
-                                        }
-                                    }
-                                }}
                                 inputStyle={styles.searchBarContainer}
                                 placeholder="Search"
                                 style={styles.searchBar}
                             />
-
-                            {
-                                (searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
-                                    <View style={styles.searchHistoryContainer}>
-                                        <View style={styles.searchHistoryHeader}>
-                                            <Text style={styles.searchHistoryTitle}>Recent Searches</Text>
-                                            <Button
-                                                onPress={() => {
-                                                    Alert.alert('Clear History', 'You cannot undo this action', [
-                                                        {
-                                                            text: 'Cancel',
-                                                            onPress: () => {
-
-                                                            },
-                                                            style: 'cancel',
-                                                            isPreferred: true
-                                                        },
-                                                        {
-                                                            text: 'Clear All',
-                                                            onPress: () => {
-                                                                setSearchHistory([]);
-                                                                saveSearches([]);
-                                                            },
-                                                            style: 'destructive'
-                                                        },
-                                                    ]);
-                                                }}
-                                                accessibilityLabel={"Clear Search History"}
-                                                title="Clear All"
-                                            />
-                                        </View>
-                                        <Divider />
-                                        <FlatList
-                                            style={{ maxHeight: 300 }}
-                                            scrollEnabled={scrollEnabled}
-                                            data={searchHistory}
-                                            keyboardShouldPersistTaps='handled'
-                                            renderItem={({ item }) => (
-                                                <SearchHistoryItem
-                                                    item={item}
-                                                    onPress={() => {
-                                                        setSearch(item);
-                                                        addToSearchHistory(item);
-                                                    }}
-                                                    onGestureStart={() => {
-                                                        // disable scrolling when user is dragging
-                                                        setScrollEnabled(false);
-                                                    }}
-                                                    onGestureEnd={() => {
-                                                        // enable scrolling when user is done dragging
-                                                        setScrollEnabled(true);
-                                                    }}
-                                                    onDelete={() => {
-                                                        console.log('Deleting item:', item);
-                                                        setSearchHistory((prevHistory) => {
-                                                            const newHistory = [...prevHistory];
-                                                            newHistory.splice(newHistory.indexOf(item), 1);
-
-                                                            saveSearches(newHistory); // Save the updated search history to AsyncStorage
-                                                            return newHistory;
-                                                        });
-                                                    }}
-                                                    isLastItem={item === searchHistory[searchHistory.length - 1]}
-                                                />
-                                            )}
-                                        >
-                                        </FlatList>
-                                    </View>
-                                )
-                            }
                         </>
                     }
                 />
@@ -288,6 +301,23 @@ export default function BookmarkScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        deleteButtonContainer: {
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 70,
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+        },
+        deleteButton: {
+            backgroundColor: '#fd3b31',
+            width: 70,
+            height: '95%',
+            borderRadius: 16,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
         searchHistoryTitle: {
             fontSize: 18,
             fontWeight: 'medium',

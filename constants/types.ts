@@ -47,12 +47,18 @@ enum SortMode {
     TOPICAL = 'TOPICAL',
 };
 
+type Bookmark = {
+    book: string;
+    number: string;
+}
+
 export type {
     BookSummary,
     Song,
     SongList,
     SongSearchInfo,
-    SongReference
+    SongReference,
+    Bookmark
 };
 
 export { BookSourceType, SortMode }
