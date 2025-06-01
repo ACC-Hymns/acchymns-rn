@@ -10,6 +10,7 @@ import SearchBar from 'react-native-platform-searchbar';
 import { Divider } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
+import DefaultPreference from 'react-native-default-preference';
 
 
 export default function BookmarkScreen() {
@@ -32,19 +33,19 @@ export default function BookmarkScreen() {
             .normalize("NFD")
             .replace(/\p{Diacritic}/gu, "");
     }
-    const RECENT_SEARCHES_KEY = 'recent_searches';
-    const saveSearches = async (searches: string[]) => {
+    const BOOKMARKS_KEY = 'bookmarks';
+    const saveBookmarks = async (searches: string[]) => {
         try {
-            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
+            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(searches));
         } catch (error) {
             console.error("Error saving searches:", error);
         }
     };
-    const loadSearches = async () => {
+    const loadBookmarks = async () => {
         try {
-            const searches = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
-            if (searches !== null) {
-                setSearchHistory(JSON.parse(searches));
+            const bookmarks = await DefaultPreference.get('bookmarks');
+            if (bookmarks !== null) {
+                console.log(bookmarks)
             }
         } catch (error) {
             console.error("Error loading searches:", error);
@@ -75,7 +76,7 @@ export default function BookmarkScreen() {
                 setSongList(songList);
 
                 // Load recent searches from AsyncStorage
-                await loadSearches();
+                await loadBookmarks();
                 console.log("Loaded recent searches:", searchHistory);
 
                 console.log("Loaded song data.");
@@ -104,7 +105,7 @@ export default function BookmarkScreen() {
             // move the search to the top
             newHistory.unshift(search);
 
-            saveSearches(newHistory); // Save the updated search history to AsyncStorage
+            saveBookmarks(newHistory); // Save the updated search history to AsyncStorage
 
             return newHistory.slice(0, 5); // Limit to 5 items
         });
@@ -115,7 +116,7 @@ export default function BookmarkScreen() {
     const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
     useEffect(() => {
         setDataSource([...(search.trim().length > 0 ? songList : [])]
-            .filter((s) =>
+            .filter((s) => 
                 s.stripped_title?.includes(stripSearchText(search)) ||
                 s?.stripped_first_line?.includes(stripSearchText(search)) ||
                 s?.number == stripSearchText(search)
