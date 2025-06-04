@@ -52,13 +52,16 @@ type Bookmark = {
     number: string;
 }
 
+type BookIndex = Record<string, string[]>;
+
 export type {
     BookSummary,
     Song,
     SongList,
     SongSearchInfo,
     SongReference,
-    Bookmark
+    Bookmark,
+    BookIndex
 };
 
 export { BookSourceType, SortMode }

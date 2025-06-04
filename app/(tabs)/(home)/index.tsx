@@ -20,6 +20,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from 'react-native-elements';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { getLocales } from 'expo-localization';
+import { I18n } from 'i18n-js'
+import React from 'react';
 
 export default function HomeScreen() {
 
@@ -29,6 +32,75 @@ export default function HomeScreen() {
     const router = useRouter();
 
     const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
+
+    const translations = {
+        en: {
+            home: 'Home',
+            noHymnals: 'No Hymnals',
+            addHymnal: 'Add Hymnal',
+            deleteAlertTitle: 'Delete ',
+            deleteAlertMessage: 'You can always download the hymnal again later.',
+            cancel: 'Cancel',
+            delete: 'Delete',
+        },
+        es: {
+            home: 'Inicio',
+            noHymnals: 'No hay Himnarios',
+            addHymnal: 'Agregar Himnarios',
+            deleteAlertTitle: 'Borrar ',
+            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
+            cancel: 'Cancelar',
+            delete: 'Borrar',
+        },
+        fr: {
+            home: 'Accueil',
+            noHymnals: 'Aucun Livre de Hymnes',
+            addHymnal: 'Ajouter un Livre de Hymnes',
+            deleteAlertTitle: 'Supprimer ',
+            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
+            cancel: 'Annuler',
+            delete: 'Supprimer',
+        },
+        de: {
+            home: 'Startseite',
+            noHymnals: 'Keine Gesangbücher',
+            addHymnal: 'Gesangbuch hinzufügen',
+            deleteAlertTitle: 'Löschen ',
+            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
+            cancel: 'Stornieren',
+            delete: 'Löschen',
+        },
+        ja: {
+            home: 'ホーム',
+            noHymnals: '賛美歌集なし',
+            addHymnal: '賛美歌集を追加',
+            deleteAlertTitle: '削除 ',
+            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
+            cancel: 'キャンセル',
+            delete: '削除',
+        },
+        pt: {
+            home: 'Início',
+            noHymnals: 'Sem hinários',
+            addHymnal: 'Adicionar Hinário',
+            deleteAlertTitle: 'Deletar ',
+            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
+            cancel: 'Cancelar',
+            delete: 'Deletar',
+        },
+        sr: {
+            home: 'Почетна',
+            noHymnals: 'Нема химнала',
+            addHymnal: 'Додајте химнала',
+            deleteAlertTitle: 'Обриши ',
+            deleteAlertMessage: 'Можете у любом тренутку поново преузети гимнолог.',
+            cancel: 'Откажи',
+            delete: 'Обриши',
+        }
+    }
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = getLocales()[0].languageCode ?? 'en';
 
     // before rendering, check if the user has any books
     // if not, push the user to the hymnal importer
@@ -94,9 +166,9 @@ export default function HomeScreen() {
                 <TouchableOpacity 
                     activeOpacity={0.7}
                     onPress={() => {
-                        Alert.alert(`Delete "${bookData![item].name.medium}"`, 'You can always download the hymnal again later.', [
+                        Alert.alert(`${i18n.t('deleteAlertTitle')}"${bookData![item].name.medium}"`, i18n.t('deleteAlertMessage'), [
                             {
-                                text: 'Cancel',
+                                text: i18n.t('cancel'),
                                 onPress: () => {
                                     close();
                                 },
@@ -104,7 +176,7 @@ export default function HomeScreen() {
                                 isPreferred: true
                             },
                             {
-                                text: 'Delete',
+                                text: i18n.t('delete'),
                                 onPress: () => {
                                     close();
                                     deleteHymnal(item);
@@ -195,7 +267,7 @@ export default function HomeScreen() {
                     renderItem={renderDraggableHymnalItem}
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
-                            <Text style={styles.textStyle}>Home</Text>
+                            <Text style={styles.textStyle}>{i18n.t('home')}</Text>
                         </View>
                     }
                     ListFooterComponent={
@@ -214,9 +286,9 @@ export default function HomeScreen() {
                     }
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
-                            <Text style={styles.fadedText}>No Hymnals</Text>
+                            <Text style={styles.fadedText}>{i18n.t('noHymnals')}</Text>
                             <View style={{ height: 5 }} />
-                            <Text style={styles.descriptionText}>To add a hymnal, tap the "+" button below.</Text>
+                            <Text style={styles.descriptionText}>{i18n.t('addHymnal')}</Text>
                         </View>
                     }
                 />

@@ -1,4 +1,4 @@
-import { BookSummary, SongList } from '@/constants/types';
+import { BookIndex, BookSummary, SongList } from '@/constants/types';
 import * as FileSystem from 'expo-file-system';
 import { hashFolder } from './hash';
 
@@ -240,4 +240,12 @@ async function getSongData(book: string) {
     return songsList;
 }
 
-export { loadHymnals, downloadHymnal, getSongData, removeHymnal };
+async function getBookIndex(book: string) {
+    const hymnalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/${book}/`;
+    const indexFilePath = `${hymnalFolderPath}index.json`;
+    const indexContent = await cachedReadFile(indexFilePath);
+    const index = JSON.parse(indexContent) as BookIndex;
+    return index;
+}
+
+export { loadHymnals, downloadHymnal, getSongData, removeHymnal, getBookIndex };

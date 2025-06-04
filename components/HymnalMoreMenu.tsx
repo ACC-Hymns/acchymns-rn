@@ -41,12 +41,14 @@ export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
                         <IconSymbol name='textformat.abc' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                     </DropdownMenu.ItemIcon>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item key="topical-sort" onSelect={() => {context?.setSortMode?.(SortMode.TOPICAL)}}>
-                    <DropdownMenu.ItemTitle>Topical</DropdownMenu.ItemTitle>
-                    <DropdownMenu.ItemIcon ios={{ name: 'book'}}>
-                        <IconSymbol name='book' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                    </DropdownMenu.ItemIcon>
-                </DropdownMenu.Item>
+                {bookSummary.indexAvailable && (
+                    <DropdownMenu.Item key="topical-sort" onSelect={() => {context?.setSortMode?.(SortMode.TOPICAL)}}>
+                        <DropdownMenu.ItemTitle>Topical</DropdownMenu.ItemTitle>
+                        <DropdownMenu.ItemIcon ios={{ name: 'book'}}>
+                            <IconSymbol name='book' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </DropdownMenu.ItemIcon>
+                    </DropdownMenu.Item>
+                )}
             </DropdownMenu.Group>
             
             <DropdownMenu.Group>

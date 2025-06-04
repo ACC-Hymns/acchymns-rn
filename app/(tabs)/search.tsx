@@ -10,6 +10,7 @@ import SearchBar from 'react-native-platform-searchbar';
 import { Divider } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
+import React from 'react';
 
 
 export default function SearchScreen() {

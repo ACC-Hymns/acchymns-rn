@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import React from 'react';
 
 export default function SettingsScreen() {
 

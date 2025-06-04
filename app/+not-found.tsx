@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router';
+import React from 'react';
 
 export default function NotFoundScreen() {
   const router = useRouter();

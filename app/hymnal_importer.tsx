@@ -9,8 +9,11 @@ import { downloadHymnal, loadHymnals } from '@/scripts/hymnals';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import React from 'react';
 import { useContext, useRef, useState } from 'react';
 import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert } from 'react-native';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 export default function HymnalImporter() {
 
@@ -18,6 +21,119 @@ export default function HymnalImporter() {
     const styles = makeStyles(theme);
     const isPresented = router.canGoBack();
     const context = useContext(HymnalContext);
+
+    const translations = {
+        en: {
+            addHymnal: 'Add Hymnals',
+            subtitle: 'Download hymnals to access them offline.',
+            verifying: 'Verifying...',
+            size: 'Size',
+            progress: 'Progress',
+            back: 'Back',
+            failedToLoadHymnals: 'Failed to load Hymnals',
+            failedToLoadHymnalsMessage: 'Please check your internet connection and try again.',
+            retry: 'Retry',
+            verificationFailed: 'Verification Failed',
+            verificationFailedMessage: 'Some files were unable to download properly. Please try again.',
+            ok: 'Ok',
+            startingDownload: 'Starting download...',
+        },
+        es: {
+            addHymnal: 'Agregar himnarios',
+            subtitle: 'Descarga himnarios para acceder sin conexión.',
+            verifying: 'Verificando...',
+            size: 'Tamaño',
+            progress: 'Progreso',
+            back: 'Atrás',
+            failedToLoadHymnals: 'No se pudieron cargar los himnarios',
+            failedToLoadHymnalsMessage: 'Por favor, revisa tu conexión a internet e inténtalo de nuevo.',
+            retry: 'Reintentar',
+            verificationFailed: 'Falló la verificación',
+            verificationFailedMessage: 'Algunos archivos no se descargaron correctamente. Inténtalo de nuevo.',
+            ok: 'Aceptar',
+            startingDownload: 'Iniciando descarga...',
+        },
+        fr: {
+            addHymnal: 'Ajouter des recueils',
+            subtitle: 'Téléchargez des recueils pour y accéder hors ligne.',
+            verifying: 'Vérification...',
+            size: 'Taille',
+            progress: 'Progression',
+            back: 'Retour',
+            failedToLoadHymnals: 'Échec du chargement des recueils',
+            failedToLoadHymnalsMessage: 'Veuillez vérifier votre connexion Internet et réessayer.',
+            retry: 'Réessayer',
+            verificationFailed: 'Échec de la vérification',
+            verificationFailedMessage: 'Certains fichiers n’ont pas pu être téléchargés correctement. Veuillez réessayer.',
+            ok: 'Ok',
+            startingDownload: 'Démarrage du téléchargement...',
+        },
+        de: {
+            addHymnal: 'Gesangbücher hinzufügen',
+            subtitle: 'Lade Gesangbücher herunter, um offline darauf zuzugreifen.',
+            verifying: 'Wird überprüft...',
+            size: 'Größe',
+            progress: 'Fortschritt',
+            back: 'Zurück',
+            failedToLoadHymnals: 'Gesangbücher konnten nicht geladen werden',
+            failedToLoadHymnalsMessage: 'Bitte überprüfe deine Internetverbindung und versuche es erneut.',
+            retry: 'Wiederholen',
+            verificationFailed: 'Verifizierung fehlgeschlagen',
+            verificationFailedMessage: 'Einige Dateien konnten nicht korrekt heruntergeladen werden. Bitte versuche es erneut.',
+            ok: 'Ok',
+            startingDownload: 'Download wird gestartet...',
+        },
+        sr: {
+            addHymnal: 'Додај зборнике',
+            subtitle: 'Преузмите зборнике за приступ ван мреже.',
+            verifying: 'Проверавање...',
+            size: 'Величина',
+            progress: 'Напредак',
+            back: 'Назад',
+            failedToLoadHymnals: 'Није могуће учитати зборнике',
+            failedToLoadHymnalsMessage: 'Проверите интернет везу и покушајте поново.',
+            retry: 'Покушај поново',
+            verificationFailed: 'Провера није успела',
+            verificationFailedMessage: 'Неки фајлови нису успешно преузети. Покушајте поново.',
+            ok: 'У реду',
+            startingDownload: 'Започиње преузимање...',
+        },
+        ja: {
+            addHymnal: '賛美歌集を追加',
+            subtitle: '賛美歌集をダウンロードしてオフラインで利用できます。',
+            verifying: '確認中...',
+            size: 'サイズ',
+            progress: '進行状況',
+            back: '戻る',
+            failedToLoadHymnals: '賛美歌集の読み込みに失敗しました',
+            failedToLoadHymnalsMessage: 'インターネット接続を確認して、もう一度お試しください。',
+            retry: '再試行',
+            verificationFailed: '検証に失敗しました',
+            verificationFailedMessage: '一部のファイルが正しくダウンロードされませんでした。もう一度お試しください。',
+            ok: 'OK',
+            startingDownload: 'ダウンロードを開始しています...',
+        },
+        pt: {
+            addHymnal: 'Adicionar hinários',
+            subtitle: 'Baixe hinários para acessá-los offline.',
+            verifying: 'Verificando...',
+            size: 'Tamanho',
+            progress: 'Progresso',
+            back: 'Voltar',
+            failedToLoadHymnals: 'Falha ao carregar os hinários',
+            failedToLoadHymnalsMessage: 'Verifique sua conexão com a internet e tente novamente.',
+            retry: 'Tentar novamente',
+            verificationFailed: 'Falha na verificação',
+            verificationFailedMessage: 'Alguns arquivos não foram baixados corretamente. Tente novamente.',
+            ok: 'Ok',
+            startingDownload: 'Iniciando download...',
+        }
+    };
+
+
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = getLocales()[0].languageCode ?? 'en';
 
     const desired_sort = [
         'ZH',
@@ -85,12 +201,12 @@ export default function HymnalImporter() {
         queryFn: fetchHymnals,
     })
 
-    if(status === 'pending') {
+    if (status === 'pending') {
         return (
             <SafeAreaView style={styles.screenContainer}>
                 <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
                     <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
+                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
                 </TouchableOpacity>
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <ActivityIndicator size="large" color={Colors[theme]['text']} />
@@ -98,21 +214,21 @@ export default function HymnalImporter() {
             </SafeAreaView>
         )
     }
-    if(status === 'error') {
+    if (status === 'error') {
         return (
             <SafeAreaView style={styles.screenContainer}>
                 <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
                     <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
+                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
                 </TouchableOpacity>
 
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <IconSymbol name="network.slash" size={64} color={Colors[theme]['fadedText']} />
                     <Text style={{ color: Colors[theme]['fadedText'], fontSize: 18, marginTop: 16, fontWeight: '500' }}>
-                        Failed to load Hymnals
+                        {i18n.t('failedToLoadHymnals')}
                     </Text>
                     <Text style={{ color: Colors[theme]['fadedText'], fontSize: 14, marginTop: 8, textAlign: 'center' }}>
-                        Please check your internet connection and try again.
+                        {i18n.t('failedToLoadHymnalsMessage')}
                     </Text>
                     <TouchableOpacity
                         onPress={() => refetch()}
@@ -124,7 +240,7 @@ export default function HymnalImporter() {
                             borderRadius: 8,
                         }}
                     >
-                        <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>Retry</Text>
+                        <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>{i18n.t('retry')}</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -138,9 +254,9 @@ export default function HymnalImporter() {
                     <>
                         <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
                             <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{'Back'}</Text>
+                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
                         </TouchableOpacity>
-                        
+
                         <FlatList
                             data={data.filter((item) => {
                                 // check if the item is already in the context
@@ -151,9 +267,9 @@ export default function HymnalImporter() {
                             contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
                             ListHeaderComponent={(
                                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <Text style={styles.fadedText}>Add Hymnals</Text>
+                                    <Text style={styles.fadedText}>{i18n.t('addHymnal')}</Text>
                                     <View style={{ height: 5 }} />
-                                    <Text style={styles.descriptionText}>Download hymnals to access them offline.</Text>
+                                    <Text style={styles.descriptionText}>{i18n.t('subtitle')}</Text>
                                 </View>
                             )}
                             renderItem={({ item }) => (
@@ -168,11 +284,11 @@ export default function HymnalImporter() {
                                             context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: progress }));
                                         }, (success) => {
                                             if (!success) {
-                                                Alert.alert('Verification Failed', 'Some files were unable to download properly. Please try again.', [
+                                                Alert.alert(i18n.t('verificationFailed'), i18n.t('verificationFailedMessage'), [
                                                     {
-                                                        text: 'Ok',
+                                                        text: i18n.t('ok'),
                                                         onPress: () => {
-                                                        
+
                                                         },
                                                         style: 'default'
                                                     },
@@ -190,7 +306,7 @@ export default function HymnalImporter() {
 
                                         if (!context) return;
                                         context?.SET_BOOK_DATA(data);
-                                        
+
                                         refetch();
                                     }}
                                     style={styles.buttonContainer}
@@ -204,13 +320,13 @@ export default function HymnalImporter() {
                                     >
                                         <Text style={styles.buttonText}>{item.name.medium}</Text>
                                         {context?.downloadProgressValues[item.name.short] === -1 ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{'Starting download...'}</Text>
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</Text>
                                         ) : ((context?.downloadProgressValues[item.name.short] ?? 0) > 100) ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Verifying...`}</Text>
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</Text>
                                         ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Progress: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
                                         ) : (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`Size: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
+                                            <Text style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
                                         )}
                                         {(context?.downloadProgressValues[item.name.short] ?? 0) === 0 && (
                                             <View style={{ position: 'absolute', right: 20 }}>
