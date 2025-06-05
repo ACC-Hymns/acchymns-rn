@@ -25,6 +25,8 @@ import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { Ionicons } from '@expo/vector-icons';
 import { error } from 'pdf-lib';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 
 export default function DisplayScreen() {
@@ -44,6 +46,47 @@ export default function DisplayScreen() {
     const scrollRef = useRef<ScrollView | null>(null);
     const [isPresenting, setIsPresenting] = useState(false);
 
+    const translations = {
+        en: {
+            notes: 'Notes',
+            piano: 'Piano',
+            all: 'All',
+        },
+        es: {
+            notes: 'Notas',
+            piano: 'Piano',
+            all: 'Todas',
+        },
+        fr: {
+            notes: 'Notes',
+            piano: 'Piano',
+            all: 'Toutes',
+        },
+        de: {
+            notes: 'Noten',
+            piano: 'Piano',
+            all: 'Alle',
+        },
+        sr: {
+            notes: 'Notatke',
+            piano: 'Piano',
+            all: 'Sve',
+        },
+        ja: {
+            notes: 'ノート',
+            piano: 'ピアノ',
+            all: 'すべて',
+        },
+        pt: {
+            notes: 'Notas',
+            piano: 'Piano',
+            all: 'Todas',
+        },
+    }
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
 
@@ -61,12 +104,17 @@ export default function DisplayScreen() {
         isModalOpenRef.current = index === 0;
     }, []);
 
+    function openDetailsPage() {
+        router.navigate({ pathname: '/display/[id]/[number]/details', params: { id: params.id, number: params.number } });
+    }
+
     useLayoutEffect(() => {
         if (!context || !params.id || !params.number) return;
         const bData = context.BOOK_DATA[params.id];
         if (!bData) return;
 
         setBookData(bData); // still update state for image use later
+        context.openDetailsBottomSheet = openDetailsPage;
     }, [context, params.id, params.number]);
 
     function setHeaderOptions() {
@@ -116,41 +164,6 @@ export default function DisplayScreen() {
                 if (prevIndex >= 0) {
                     router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[prevIndex] } });
                 }
-
-                // load song details
-                searchHymnary(data[params.number].title).then((detailData) => {
-                    
-                    let details = detailData.filter(d => compareTitles(d, data[params.number], 1));
-                    if(!details || details.length === 0) {
-                        console.log("No details found. Trying without special characters...");
-                        details = detailData.filter(d => compareTitles(d, data[params.number], 3));
-                        if(!details || details.length === 0) {
-                            console.log("No details found.");
-                        } else { 
-                            // if more than one, take the one with the highest instances (totalInstances)
-                            details = details.sort((a, b) => Number.parseInt(b.totalInstances) - Number.parseInt(a.totalInstances));
-                            details = details.slice(0, 1);
-                            // set song details
-                            setSongDetails(details[0]);
-                        }
-                    } else {
-                        // if one has the same first line, take it
-                        const firstLine = data[params.number].first_line;
-                        if(firstLine) {
-                            // set to lower case
-                            const lowerFirstLine = firstLine.toLowerCase();
-                            // remove special characters
-                            const specialFirstLine = lowerFirstLine.replace(/[^a-z0-9]/gi, '');
-                            details = details.filter(d => d.firstLine.toLowerCase().replace(/[^a-z0-9]/gi, '').startsWith(specialFirstLine));
-                        }
-
-                        // if more than one, take the one with the highest instances (totalInstances)
-                        details = details.sort((a, b) => Number.parseInt(b.totalInstances) - Number.parseInt(a.totalInstances));
-                        details = details.slice(0, 1);
-                        // set song details
-                        setSongDetails(details[0]);
-                    }
-                });
 
                 // set song notes
                 const songNotes = data?.[params.number]?.notes;
@@ -310,7 +323,7 @@ export default function DisplayScreen() {
                     <>
                         <View style={styles.noteButton}>
                             <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
-                            <Text style={{ fontSize: 18, color: Colors[theme].text }}>All</Text>
+                            <Text style={{ fontSize: 18, color: Colors[theme].text }}>{i18n.t('all')}</Text>
                         </View>
                         {songNotes.map((note, index) => (
                             <View key={index} style={styles.noteButton}>
@@ -404,56 +417,6 @@ export default function DisplayScreen() {
             </View>
         )
     };
-
-    const [songDetails, setSongDetails] = useState<SearchResult | null>(null);
-
-    // Details tab
-    const DetailsTab = () => {
-
-        return (
-            <View style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                flexWrap: 'wrap',
-                marginVertical: 16,
-                minHeight: 100, // Ensures consistent height
-            }}>
-                {songData && songData[params.number] ? (
-                    <>
-                        <Text style={{ fontSize: 20, fontWeight: '600', color: Colors[theme].text, marginBottom: 8 }}>
-                            {songData[params.number].title}
-                        </Text>
-                        {songData[params.number] && (
-                            <Text style={{ fontSize: 16, color: Colors[theme].text, textAlign: 'center' }}>
-                                Author: {songDetails ? (!/\S/.test(songDetails.authors) ? 'Unknown' : songDetails.authors) : "Unknown"}
-                            </Text>
-                        )}
-                        {songData[params.number] && (
-                            <Text style={{ fontSize: 14, color: Colors[theme].text, marginVertical: 4, textAlign: 'center' }}>
-                                {songDetails
-                                    ? (songDetails.textSources
-                                        ? songDetails.textSources.replace(/<[^>]+>/g, '')
-                                        : "No details available.")
-                                    : "No details available."}
-                            </Text>
-                        )}
-                        {songDetails && songDetails.textAuthNumber && (
-                            <Button
-                                title="View on Hymnary.org"
-                                onPress={() => {
-                                    const url = `https://hymnary.org/text/${songDetails.textAuthNumber}`;
-                                    Linking.openURL(url);
-                                }}>
-                            </Button>
-                        )}
-                    </>
-                ) : (
-                    <Text style={{ color: Colors[theme].text }}>No details available.</Text>
-                )}
-            </View>
-        )
-    }
 
     const offset = useSharedValue(0);    
     const MAX_OFFSET = 75;
@@ -609,11 +572,11 @@ export default function DisplayScreen() {
                     <BottomSheetView style={styles.contentContainer}>
                         <SegmentedControl
                             style={{
-                                width: 300,
+                                width: pianoAudioPlayer.current ? 300 : 100,
                                 height: 32,
                             }}
                             selectedIndex={selectedIndex}
-                            values={pianoAudioPlayer.current ? ['Notes', 'Piano', 'Details'] : ['Notes', 'Details']}
+                            values={pianoAudioPlayer.current ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
                             onChange={(event) => {
                                 setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -623,12 +586,7 @@ export default function DisplayScreen() {
                             NotesTab()
                         )}
                         {selectedIndex === 1 && (
-                            pianoAudioPlayer.current
-                                ? PianoTab()
-                                : DetailsTab()
-                        )}
-                        {selectedIndex === 2 && (
-                            DetailsTab()
+                            PianoTab()
                         )}
 
                     </BottomSheetView>

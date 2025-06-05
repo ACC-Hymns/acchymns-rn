@@ -45,7 +45,7 @@ export default function SelectionScreen() {
             try {
                 const data = await getSongData(id as string);
                 setSongData(data);
-                if(bookData.indexAvailable) {
+                if (bookData.indexAvailable) {
                     const index = await getBookIndex(id as string);
                     setBookIndex(index);
                 }
@@ -61,11 +61,14 @@ export default function SelectionScreen() {
 
     function handleSortModeChange(mode: SortMode) {
         setSortMode(mode);
+        navigation.setOptions({
+            headerShadowVisible: false,
+        });
     }
 
-    const [openDropdowns, setOpenDropdowns] = useState<{ [key: number]: boolean }>({});
+    const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
 
-    const toggleDropdown = (index: number) => {
+    const toggleDropdown = (index: string) => {
         setOpenDropdowns(prev => ({
             ...prev,
             [index]: !prev[index]
@@ -78,153 +81,264 @@ export default function SelectionScreen() {
                 <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                     {sortMode === SortMode.NUMERICAL && (
                         <View style={{ flex: 1 }}>
-                            <FlatList
-                                data={Object.keys(songData).reduce((ranges: number[], number: string) => {
-                                    const num = parseInt(number);
-                                    let rangeStart;
-                                    if (num <= 99) {
-                                        rangeStart = 1;
-                                    } else {
-                                        rangeStart = Math.floor(num / 100) * 100;
-                                    }
-                                    const rangeEnd = rangeStart + 99;
+                            {(context?.legacyNumberGrouping) ? (
+                                <FlatList // NUMERICAL LIST
+                                    data={Object.keys(songData).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))}
+                                    keyExtractor={(item) => item}
+                                    key='legacy'
+                                    numColumns={5}
+                                    contentContainerStyle={{
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    style={{ flex: 1, width: '100%', paddingTop: 20 }}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={{
+                                                margin: 6,
+                                                width: 60,
+                                                height: 60,
+                                                borderRadius: 30,
+                                                backgroundColor: bookData.primaryColor,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                            }}
+                                            onPressIn={() => {
+                                                router.prefetch({ pathname: '/display/[id]/[number]/index', params: { id: bookData.name.short, number: item } });
+                                            }}
+                                            onPress={() => {
+                                                // check if im already navigating
+                                                router.navigate({ pathname: '/display/[id]/[number]/index', params: { id: bookData.name.short, number: item } });
+                                            }}
+                                        >
+                                            <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            ) : (
+                                <FlatList
+                                    data={Object.keys(songData).reduce((ranges: number[], number: string) => {
+                                        const num = parseInt(number);
+                                        let rangeStart;
+                                        if (num <= 99) {
+                                            rangeStart = 1;
+                                        } else {
+                                            rangeStart = Math.floor(num / 100) * 100;
+                                        }
+                                        const rangeEnd = rangeStart + 99;
 
-                                    // Check if there are any songs in this range
-                                    const songsInRange = Object.keys(songData).some(songNumber => {
-                                        const n = parseInt(songNumber);
-                                        return n >= rangeStart && n <= rangeEnd;
-                                    });
+                                        // Check if there are any songs in this range
+                                        const songsInRange = Object.keys(songData).some(songNumber => {
+                                            const n = parseInt(songNumber);
+                                            return n >= rangeStart && n <= rangeEnd;
+                                        });
 
-                                    if (!ranges.includes(rangeStart) && songsInRange) {
-                                        ranges.push(rangeStart);
-                                    }
-                                    return ranges;
-                                }, [] as number[])}
-                                contentContainerStyle={{ paddingBottom: 120 }}
-                                keyExtractor={(rangeStart) => rangeStart.toString()}
-                                renderItem={({ item: rangeStart, index }) => {
-                                    // Find the highest song number in this range
-                                    const maxInRange = Math.min(
-                                        rangeStart + 99,
-                                        Math.max(...Object.keys(songData)
-                                            .map(num => parseInt(num))
-                                            .filter(num => num >= rangeStart && num <= rangeStart + 99)
-                                        )
-                                    );
+                                        if (!ranges.includes(rangeStart) && songsInRange) {
+                                            ranges.push(rangeStart);
+                                        }
+                                        return ranges;
+                                    }, [] as number[])}
+                                    key='new'
+                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    keyExtractor={(rangeStart) => rangeStart.toString()}
+                                    renderItem={({ item: rangeStart, index }) => {
+                                        // Find the highest song number in this range
+                                        const maxInRange = Math.min(
+                                            rangeStart + 99,
+                                            Math.max(...Object.keys(songData)
+                                                .map(num => parseInt(num))
+                                                .filter(num => num >= rangeStart && num <= rangeStart + 99)
+                                            )
+                                        );
 
-                                    const songsInRange = Object.keys(songData)
-                                        .filter(num => {
-                                            const songNum = parseInt(num);
-                                            return songNum >= rangeStart && songNum <= maxInRange;
-                                        })
-                                        .sort((a, b) => parseInt(a) - parseInt(b));
+                                        const songsInRange = Object.keys(songData)
+                                            .filter(num => {
+                                                const songNum = parseInt(num);
+                                                return songNum >= rangeStart && songNum <= maxInRange;
+                                            })
+                                            .sort((a, b) => parseInt(a) - parseInt(b));
 
-                                    return (
-                                        <View key={rangeStart} style={{ marginTop: index === 0 ? 12 : 0 }}>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    toggleDropdown(index)
-                                                }}
-                                                style={{
-                                                    backgroundColor: Colors[theme].headerBackground,
-                                                    shadowColor: 'black',
-                                                    shadowOffset: { width: 0, height: 0 },
-                                                    shadowOpacity: 0.25,
-                                                    shadowRadius: 1,
-                                                    elevation: 5,
-                                                    borderRadius: 12,
-                                                    height: 60,
-                                                    marginVertical: 4,
-                                                    marginHorizontal: 15,
-                                                }}>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
-                                                    <Text style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</Text>
-                                                    <IconSymbol
-                                                        name={openDropdowns[index] ? "chevron.up" : "chevron.down"}
-                                                        size={18}
-                                                        weight="medium"
-                                                        color={Colors[theme].icon}
-                                                    />
-                                                </View>
-                                            </TouchableOpacity>
+                                        return (
+                                            <View key={rangeStart} style={{ marginTop: index === 0 ? 12 : 0 }}>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        toggleDropdown(index.toString())
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: Colors[theme].headerBackground,
+                                                        shadowColor: 'black',
+                                                        shadowOffset: { width: 0, height: 0 },
+                                                        shadowOpacity: 0.25,
+                                                        shadowRadius: 1,
+                                                        elevation: 5,
+                                                        borderRadius: 12,
+                                                        height: 60,
+                                                        marginVertical: 4,
+                                                        marginHorizontal: 15,
+                                                    }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
+                                                        <Text style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</Text>
+                                                        <IconSymbol
+                                                            name={openDropdowns[index.toString()] ? "chevron.up" : "chevron.down"}
+                                                            size={18}
+                                                            weight="medium"
+                                                            color={Colors[theme].icon}
+                                                        />
+                                                    </View>
+                                                </TouchableOpacity>
 
-                                            {openDropdowns[index] && (
-                                                <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>
-                                                    <FlatList
-                                                        data={songsInRange}
-                                                        keyExtractor={(number) => number}
-                                                        renderItem={({ item: number }) => (
-                                                            <TouchableOpacity
-                                                                key={number}
-                                                                onPress={() => {
-                                                                    if (isNavigating) return;
-                                                                    router.push({
-                                                                        pathname: '/display/[id]/[number]',
-                                                                        params: { id: bookData.name.short, number }
-                                                                    });
-                                                                    setIsNavigating(true);
-                                                                    setTimeout(() => setIsNavigating(false), 400);
-                                                                }}
-                                                                style={{
-                                                                    padding: 12,
-                                                                    borderRadius: 8,
-                                                                    backgroundColor: Colors[theme].background,
-                                                                    marginVertical: 2,
-                                                                }}>
-                                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
-                                                                        #{number}
-                                                                    </Text>
-                                                                    <Text style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
-                                                                        {songData[number].title}
-                                                                    </Text>
-                                                                </View>
-                                                            </TouchableOpacity>
-                                                        )}
-                                                    />
-                                                </View>
-                                            )}
-                                        </View>
-                                    );
-                                }}
-                            />
+                                                {openDropdowns[index.toString()] && (
+                                                    <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>
+                                                        <FlatList
+                                                            data={songsInRange}
+                                                            keyExtractor={(number) => number}
+                                                            renderItem={({ item: number }) => (
+                                                                <TouchableOpacity
+                                                                    key={number}
+                                                                    onPress={() => {
+                                                                        if (isNavigating) return;
+                                                                        router.push({
+                                                                            pathname: '/display/[id]/[number]',
+                                                                            params: { id: bookData.name.short, number }
+                                                                        });
+                                                                        setIsNavigating(true);
+                                                                        setTimeout(() => setIsNavigating(false), 400);
+                                                                    }}
+                                                                    style={{
+                                                                        padding: 12,
+                                                                        borderRadius: 8,
+                                                                        backgroundColor: Colors[theme].background,
+                                                                        marginVertical: 2,
+                                                                    }}>
+                                                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
+                                                                            #{number}
+                                                                        </Text>
+                                                                        <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                                            {songData[number].title}
+                                                                        </Text>
+                                                                    </View>
+                                                                </TouchableOpacity>
+                                                            )}
+                                                        />
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    }}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
+                                            });
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
+                                />
+                            )}
                         </View>
                     )}
                     {sortMode === SortMode.ALPHABETICAL && (
-                        <View>
-                            <FlatList // ALPHABETICAL LIST
-                                data={Object.keys(songData).sort((a, b) => songData[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songData[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
-                                keyExtractor={(number) => number}
-                                renderItem={({ item: number, index }) => (
-                                    <TouchableOpacity
-                                        key={number}
-                                        onPress={() => {
-                                            if (isNavigating) return;
-                                            router.push({
-                                                pathname: '/display/[id]/[number]',
-                                                params: { id: bookData.name.short, number }
+                        <View style={{ flex: 1 }}>
+                            {(context?.legacyNumberGrouping) ? (
+                                <FlatList // ALPHABETICAL LIST
+                                    data={Object.keys(songData).sort((a, b) => songData[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songData[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    keyExtractor={(item) => item}
+                                    key='legacy'
+                                    contentContainerStyle={{
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    style={{ flex: 1, width: '100%', paddingTop: 20 }}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={{
+                                                margin: 4,
+                                                width: Dimensions.get('window').width - 60,
+                                                borderRadius: 12,
+                                                backgroundColor: bookData.primaryColor,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                paddingVertical: 10, // Add padding to allow content to grow
+                                                minHeight: 60, // Ensure a minimum height of 60
+                                            }}
+
+                                            onPress={() => {
+                                                if (isNavigating) return;
+                                                router.push({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                                setIsNavigating(true);
+                                                setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                            }}
+
+                                            activeOpacity={0.7}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                                <View style={{ width: '80%', alignSelf: 'flex-start' }}>
+                                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songData[item].title}</Text>
+                                                </View>
+                                                <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</Text>
+                                                </View>
+                                            </View>
+
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            ) : (
+                                <FlatList // ALPHABETICAL LIST
+                                    data={Object.keys(songData).sort((a, b) => songData[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songData[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    keyExtractor={(number) => number}
+                                    key='new'
+                                    contentContainerStyle={{
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    renderItem={({ item: number, index }) => (
+                                        <TouchableOpacity
+                                            key={number}
+                                            onPress={() => {
+                                                if (isNavigating) return;
+                                                router.push({
+                                                    pathname: '/display/[id]/[number]',
+                                                    params: { id: bookData.name.short, number }
+                                                });
+                                                setIsNavigating(true);
+                                                setTimeout(() => setIsNavigating(false), 400);
+                                            }}
+                                            style={{
+                                                marginTop: index === 0 ? 12 : 0,
+                                                padding: 12,
+                                                borderRadius: 8,
+                                                backgroundColor: Colors[theme].background,
+                                                marginHorizontal: 15
+                                            }}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
+                                                    #{number}
+                                                </Text>
+                                                <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                    {songData[number].title}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
                                             });
-                                            setIsNavigating(true);
-                                            setTimeout(() => setIsNavigating(false), 400);
-                                        }}
-                                        style={{
-                                            marginTop: index === 0 ? 12 : 0,
-                                            padding: 12,
-                                            borderRadius: 8,
-                                            backgroundColor: Colors[theme].background,
-                                            marginHorizontal: 15
-                                        }}>
-                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
-                                                #{number}
-                                            </Text>
-                                            <Text style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
-                                                {songData[number].title}
-                                            </Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                )}
-                            />
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
+                                />
+                            )}
                         </View>
                     )}
                     {sortMode === SortMode.TOPICAL && (
@@ -235,13 +349,13 @@ export default function SelectionScreen() {
                                 keyExtractor={(key) => key}
                                 renderItem={({ item: key, index }) => {
 
-                                    const songsInTopic = (bookIndex || {})[key]?.map(song => ({...songData[song], number: song})) || [];
+                                    const songsInTopic = (bookIndex || {})[key]?.map(song => ({ ...songData[song], number: song })) || [];
 
                                     return (
                                         <View key={key} style={{ marginTop: index === 0 ? 12 : 0 }}>
                                             <TouchableOpacity
                                                 onPress={() => {
-                                                    toggleDropdown(index)
+                                                    toggleDropdown(key)
                                                 }}
                                                 style={{
                                                     backgroundColor: Colors[theme].headerBackground,
@@ -258,7 +372,7 @@ export default function SelectionScreen() {
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
                                                     <Text style={{ fontSize: 18, color: Colors[theme].text }}>{key}</Text>
                                                     <IconSymbol
-                                                        name={openDropdowns[index] ? "chevron.up" : "chevron.down"}
+                                                        name={openDropdowns[key] ? "chevron.up" : "chevron.down"}
                                                         size={18}
                                                         weight="medium"
                                                         color={Colors[theme].icon}
@@ -266,7 +380,7 @@ export default function SelectionScreen() {
                                                 </View>
                                             </TouchableOpacity>
 
-                                            {openDropdowns[index] && (
+                                            {openDropdowns[key] && (
                                                 <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>
                                                     <FlatList
                                                         data={songsInTopic}
@@ -293,7 +407,7 @@ export default function SelectionScreen() {
                                                                     <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
                                                                         #{song.number}
                                                                     </Text>
-                                                                    <Text style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                                    <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
                                                                         {song.title}
                                                                     </Text>
                                                                 </View>
@@ -304,6 +418,17 @@ export default function SelectionScreen() {
                                             )}
                                         </View>
                                     );
+                                }}
+                                onScroll={(event) => {
+                                    if (event.nativeEvent.contentOffset.y > 0) {
+                                        navigation.setOptions({
+                                            headerShadowVisible: true,
+                                        });
+                                    } else {
+                                        navigation.setOptions({
+                                            headerShadowVisible: false,
+                                        });
+                                    }
                                 }}
                             />
                         </View>

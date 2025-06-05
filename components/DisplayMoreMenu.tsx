@@ -9,6 +9,8 @@ import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -21,6 +23,61 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
+
+    const translations = {
+        en: {
+            details: 'Details',
+            removeBookmark: 'Remove Bookmark',
+            saveBookmark: 'Save as Bookmark',
+            share: 'Share',
+            reportIssue: 'Report Issue',
+        },
+        es: {
+            details: 'Detalles',
+            removeBookmark: 'Eliminar Marcador',
+            saveBookmark: 'Guardar como Marcador',
+            share: 'Compartir',
+            reportIssue: 'Reportar Problema',
+        },
+        fr: {
+            details: 'Détails',
+            removeBookmark: 'Supprimer le Marque-page',
+            saveBookmark: 'Enregistrer comme Marque-page',
+            share: 'Partager',
+            reportIssue: 'Signaler un Problème',
+        },
+        de: {
+            details: 'Details',
+            removeBookmark: 'Löschen',
+            saveBookmark: 'Speichern als Lesezeichen',
+            share: 'Teilen',
+            reportIssue: 'Problem melden',
+        },
+        sr: {
+            details: 'Detalji',
+            removeBookmark: 'Ukloni Bookmark',
+            saveBookmark: 'Sačuvaj kao Bookmark',
+            share: 'Podelite',
+            reportIssue: 'Prijavite Problem',
+        },
+        ja: {
+            details: '詳細',
+            removeBookmark: 'ブックマークを削除',
+            saveBookmark: 'ブックマークとして保存',
+            share: '共有',
+            reportIssue: '問題を報告',
+        },
+        pt: {
+            details: 'Detalhes',
+            removeBookmark: 'Remover Marcador',
+            saveBookmark: 'Salvar como Marcador',
+            share: 'Compartilhar',
+            reportIssue: 'Relatar Problema',
+        },
+    }
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
 
     const addBookmark = async (bookmark: Bookmark) => {
         try {
@@ -61,7 +118,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
             getSongData(bookId).then((data) => {
                 setSongData(data[songId]);
             });
-            
+
             AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
                 setExistingBookmarks(JSON.parse(data || '[]'));
             });
@@ -76,51 +133,61 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     }, [songData, existingBookmarks, bookId, songId]);
 
     return (
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-            <TouchableOpacity onPress={() => {
-                console.log(isBookmarked ? 'Is Bookmarked' : 'Not Bookmarked');
-            }}>
-                <IconSymbol
-                    name="ellipsis.circle"
-                    size={24}
-                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                />
-            </TouchableOpacity>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-            <DropdownMenu.Group>
-                <DropdownMenu.Item key="bookmark" onSelect={async () => {
-                    await addBookmark({
-                        book: bookId,
-                        number: songId ?? '',
-                    })
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                <TouchableOpacity onPress={() => {
+                    console.log(isBookmarked ? 'Is Bookmarked' : 'Not Bookmarked');
                 }}>
-                    <DropdownMenu.ItemTitle>
-                        {isBookmarked ? 'Remove Bookmark' : 'Save as Bookmark'}
-                    </DropdownMenu.ItemTitle>
-                    <DropdownMenu.ItemIcon ios={{ name: 'bookmark'}}>
-                        <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                    </DropdownMenu.ItemIcon>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item key="share" onSelect={async () => {
-                    await Sharing.shareAsync(`https://acchymns.app/display/${bookId}/${songId}`, {
-                        dialogTitle: songData?.title
-                    })
-                }}>
-                    <DropdownMenu.ItemTitle>Share</DropdownMenu.ItemTitle>
-                    <DropdownMenu.ItemIcon ios={{ name: 'square.and.arrow.up'}}>
-                        <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                    </DropdownMenu.ItemIcon>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item key="report-issue" onSelect={() => {}} destructive={true} >
-                    <DropdownMenu.ItemTitle>Report Issue</DropdownMenu.ItemTitle>
-                    <DropdownMenu.ItemIcon ios={{ name: 'exclamationmark.bubble'}}>
-                        <IconSymbol name='exclamationmark.bubble' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                    </DropdownMenu.ItemIcon>
-                </DropdownMenu.Item>
-            </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+                    <IconSymbol
+                        name="ellipsis.circle"
+                        size={24}
+                        color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                    />
+                </TouchableOpacity>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+                <DropdownMenu.Group>
+                    <DropdownMenu.Item key="details" onSelect={async () => {
+                        context?.openDetailsBottomSheet?.();
+                    }}>
+                        <DropdownMenu.ItemTitle>
+                            {i18n.t('details')}
+                        </DropdownMenu.ItemTitle>
+                        <DropdownMenu.ItemIcon ios={{ name: 'info.circle' }}>
+                            <IconSymbol name='info.circle' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </DropdownMenu.ItemIcon>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item key="bookmark" onSelect={async () => {
+                        await addBookmark({
+                            book: bookId,
+                            number: songId ?? '',
+                        })
+                    }}>
+                        <DropdownMenu.ItemTitle>
+                            {isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
+                        </DropdownMenu.ItemTitle>
+                        <DropdownMenu.ItemIcon ios={{ name: 'bookmark' }}>
+                            <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </DropdownMenu.ItemIcon>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item key="share" onSelect={async () => {
+                        await Sharing.shareAsync(`https://acchymns.app/display/${bookId}/${songId}`, {
+                            dialogTitle: songData?.title
+                        })
+                    }}>
+                        <DropdownMenu.ItemTitle>{i18n.t('share')}</DropdownMenu.ItemTitle>
+                        <DropdownMenu.ItemIcon ios={{ name: 'square.and.arrow.up' }}>
+                            <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </DropdownMenu.ItemIcon>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item key="report-issue" onSelect={() => { }} destructive={true} >
+                        <DropdownMenu.ItemTitle>{i18n.t('reportIssue')}</DropdownMenu.ItemTitle>
+                        <DropdownMenu.ItemIcon ios={{ name: 'exclamationmark.bubble' }}>
+                            <IconSymbol name='exclamationmark.bubble' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </DropdownMenu.ItemIcon>
+                    </DropdownMenu.Item>
+                </DropdownMenu.Group>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
     )
-  }
+}

@@ -84,19 +84,19 @@ export default function HymnalImporter() {
             startingDownload: 'Download wird gestartet...',
         },
         sr: {
-            addHymnal: 'Додај зборнике',
-            subtitle: 'Преузмите зборнике за приступ ван мреже.',
-            verifying: 'Проверавање...',
-            size: 'Величина',
-            progress: 'Напредак',
-            back: 'Назад',
-            failedToLoadHymnals: 'Није могуће учитати зборнике',
-            failedToLoadHymnalsMessage: 'Проверите интернет везу и покушајте поново.',
-            retry: 'Покушај поново',
-            verificationFailed: 'Провера није успела',
-            verificationFailedMessage: 'Неки фајлови нису успешно преузети. Покушајте поново.',
-            ok: 'У реду',
-            startingDownload: 'Започиње преузимање...',
+            addHymnal: 'Dodaj himnar',
+            subtitle: 'Preuzmite himnar za pristup van mreže.',
+            verifying: 'Proveravanje...',
+            size: 'Veličina',
+            progress: 'Napredak',
+            back: 'Nazad',
+            failedToLoadHymnals: 'Nije moguće učitati himnare',
+            failedToLoadHymnalsMessage: 'Proverite internet vezu i pokušajte ponovo.',
+            retry: 'Pokušaj ponovo',
+            verificationFailed: 'Provera nije uspela',
+            verificationFailedMessage: 'Neki fajlovi nisu uspešno preuzeti. Pokušajte ponovo.',
+            ok: 'U redu',
+            startingDownload: 'Započinje preuzimanje...',
         },
         ja: {
             addHymnal: '賛美歌集を追加',
@@ -133,7 +133,7 @@ export default function HymnalImporter() {
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
-    i18n.locale = getLocales()[0].languageCode ?? 'en';
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
 
     const desired_sort = [
         'ZH',
@@ -204,10 +204,6 @@ export default function HymnalImporter() {
     if (status === 'pending') {
         return (
             <SafeAreaView style={styles.screenContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
-                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
-                </TouchableOpacity>
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <ActivityIndicator size="large" color={Colors[theme]['text']} />
                 </View>
@@ -217,10 +213,6 @@ export default function HymnalImporter() {
     if (status === 'error') {
         return (
             <SafeAreaView style={styles.screenContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
-                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                    <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
-                </TouchableOpacity>
 
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <IconSymbol name="network.slash" size={64} color={Colors[theme]['fadedText']} />
@@ -252,10 +244,6 @@ export default function HymnalImporter() {
             <SafeAreaView style={styles.screenContainer}>
                 {isPresented && (
                     <>
-                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center', margin: 16 }} hitSlop={5}>
-                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
-                        </TouchableOpacity>
 
                         <FlatList
                             data={data.filter((item) => {
@@ -267,8 +255,6 @@ export default function HymnalImporter() {
                             contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
                             ListHeaderComponent={(
                                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <Text style={styles.fadedText}>{i18n.t('addHymnal')}</Text>
-                                    <View style={{ height: 5 }} />
                                     <Text style={styles.descriptionText}>{i18n.t('subtitle')}</Text>
                                 </View>
                             )}

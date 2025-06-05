@@ -17,6 +17,8 @@ import { store } from 'expo-router/build/global-state/router-store';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { padStart } from 'pdf-lib';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 export default function BookmarkScreen() {
 
@@ -30,6 +32,42 @@ export default function BookmarkScreen() {
     const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+
+    const translations = {
+        en: {
+            bookmarks: 'Bookmarks',
+            search: 'Search',
+        },
+        es: {
+            bookmarks: 'Marcadores',
+            search: 'Buscar',
+        },
+        fr: {
+            bookmarks: 'Marque-pages',
+            search: 'Rechercher',
+        },
+        de: {
+            bookmarks: 'Lesezeichen',
+            search: 'Suchen',
+        },
+        sr: {
+            bookmarks: 'Zabeleške',
+            search: 'Pretraga',
+        },
+        ja: {
+            bookmarks: 'ブックマーク',
+            search: '検索',
+        },
+        pt: {
+            bookmarks: 'Marcadores',
+            search: 'Pesquisar',
+        },
+    }
+
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    
 
     function stripSearchText(text: string) {
         return text
@@ -276,7 +314,7 @@ export default function BookmarkScreen() {
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
-                                <Text style={styles.textStyle}>Bookmarks</Text>
+                                <Text style={styles.textStyle}>{i18n.t('bookmarks')}</Text>
                             </View>
                             <SearchBar
                                 ref={searchInputRef}
@@ -289,7 +327,7 @@ export default function BookmarkScreen() {
                                     setSearchBarFocused(false);
                                 }}
                                 inputStyle={styles.searchBarContainer}
-                                placeholder="Search"
+                                placeholder={i18n.t('search')}
                                 style={styles.searchBar}
                             />
                         </>

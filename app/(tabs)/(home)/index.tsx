@@ -89,18 +89,18 @@ export default function HomeScreen() {
             delete: 'Deletar',
         },
         sr: {
-            home: 'Почетна',
-            noHymnals: 'Нема химнала',
-            addHymnal: 'Додајте химнала',
-            deleteAlertTitle: 'Обриши ',
-            deleteAlertMessage: 'Можете у любом тренутку поново преузети гимнолог.',
-            cancel: 'Откажи',
-            delete: 'Обриши',
+            home: 'Početna',
+            noHymnals: 'Nema himnala',
+            addHymnal: 'Dodajte himnala', 
+            deleteAlertTitle: 'Obriši ',
+            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
+            cancel: 'Otkaži',
+            delete: 'Obriši',
         }
     }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
-    i18n.locale = getLocales()[0].languageCode ?? 'en';
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
 
     // before rendering, check if the user has any books
     // if not, push the user to the hymnal importer

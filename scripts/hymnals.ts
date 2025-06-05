@@ -216,7 +216,7 @@ async function removeHymnal(book: string) {
     }
 }
 
-const fileCache: Record<string, string> = {};
+let fileCache: Record<string, string> = {};
 async function cachedReadFile(filePath: string): Promise<string> {
     if (fileCache[filePath]) {
         return fileCache[filePath];
@@ -248,4 +248,23 @@ async function getBookIndex(book: string) {
     return index;
 }
 
-export { loadHymnals, downloadHymnal, getSongData, removeHymnal, getBookIndex };
+async function clearCache() {
+    fileCache = {};
+    const cacheFolderPath = `${FileSystem.documentDirectory}/${TEMP_FOLDER}/`;
+    const cacheFolderInfo = await FileSystem.getInfoAsync(cacheFolderPath);
+    if (cacheFolderInfo.exists) {
+        await FileSystem.deleteAsync(cacheFolderPath, { idempotent: true });
+        console.log(`Deleted cache folder.`);
+    }
+}
+
+async function deleteAllHymnals() {
+    const hymnalFolderPath = `${FileSystem.documentDirectory}/${HYMNAL_FOLDER}/`;
+    const hymnalFolderInfo = await FileSystem.getInfoAsync(hymnalFolderPath);
+    if (hymnalFolderInfo.exists) {
+        await FileSystem.deleteAsync(hymnalFolderPath, { idempotent: true });
+        console.log(`Deleted all hymnals.`);
+    }
+}
+
+export { loadHymnals, downloadHymnal, getSongData, removeHymnal, getBookIndex, clearCache, deleteAllHymnals };

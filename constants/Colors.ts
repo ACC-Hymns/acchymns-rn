@@ -8,7 +8,7 @@ const tintColorDark = '#fff';
 export const Colors = {
   light: {
     text: '#000000',
-    fadedText: '#687076', // Slightly faded text color
+    fadedText: '#8A9199', // More faded text color
     background: '#fff',
     tint: tintColorLight,
     icon: '#687076',
@@ -16,24 +16,32 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     primary: '#007AFF',
     headerBackground: '#F8F8F8',
+    headerTransparent: 'rgba(255, 255, 255, 0.0)',
     searchBarBackground: '#E3E3E9',
     iosBlue: '#007AFF',
     border: 'rgba(0, 0, 0, 0.12)',
-    handleBar: '#0a0a0a'
+    handleBar: '#0a0a0a',
+    fadedIcon: '#C5C8CC',
+    divider: '#e8e8e8',
+    destructive: '#fd3b31'
   },
   dark: {
     text: '#FFFFFF',
-    fadedText: '#9BA1A6', // Slightly faded text color
+    fadedText: '#787E83', // More faded text color
     background: '#141414',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     primary: '#007AFF',
+    headerTransparent: 'rgba(255, 255, 255, 0.0)',
     headerBackground: '#1C1C1E',
     searchBarBackground: '#1C1C1E',
     iosBlue: '#007AFF',
     border: 'rgba(255, 255, 255, 0.4)',
-    handleBar: '#dcdcdc'
+    handleBar: '#dcdcdc',
+    fadedIcon: '#9BA1A6',
+    divider: '#333333',
+    destructive: '#fd3b31'
   },
 };

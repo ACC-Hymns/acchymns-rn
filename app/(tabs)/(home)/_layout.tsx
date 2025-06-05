@@ -21,10 +21,8 @@ export default function HomeLayout() {
                     title: 'Selection',
                     headerShown: true,
                     headerTitleAlign: 'center',
-                    headerStyle: {
-                        backgroundColor: Colors[theme].headerBackground,
-                    },
                     headerBackVisible: false,
+                    headerShadowVisible: false,
                     headerLeft: () => (
                         <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
                             <IconSymbol

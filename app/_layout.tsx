@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -15,6 +15,9 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -36,6 +39,29 @@ export default function RootLayout() {
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
 
+    const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
+    const [languageOverride, setLanguageOverride] = useState<string | null>(null);
+
+    // save preferences to async storage
+    useEffect(() => {
+
+        console.log('Saving preferences...');
+        const savePreferences = async () => {
+            try {
+                if(legacyNumberGrouping !== null)
+                    await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
+                
+                if(languageOverride !== null)
+                    await AsyncStorage.setItem('languageOverride', languageOverride);
+                
+                console.log('Saved preferences.');
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+            }
+        }
+        savePreferences();
+    }, [legacyNumberGrouping, languageOverride]);
+
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
             SplashScreen.hideAsync();
@@ -48,13 +74,59 @@ export default function RootLayout() {
             SET_BOOK_DATA,
             onLayoutHomeView: onLayoutRootView,
             downloadProgressValues,
-            setDownloadProgressValues
+            setDownloadProgressValues,
+            legacyNumberGrouping,
+            setLegacyNumberGrouping,
+            languageOverride,
+            setLanguageOverride
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride]);
     // Load hymnal data
 
-
+    const translations = {
+        en: {
+            back: 'Back',
+            addHymnal: 'Add Hymnal',
+        },
+        es: {
+            back: 'Atrás',
+            addHymnal: 'Agregar Himnario',
+        },
+        fr: {
+            back: 'Retour',
+            addHymnal: 'Ajouter un Hymnaire',
+        },
+        de: {
+            back: 'Zurück',
+            addHymnal: 'Hymnaire hinzufügen',
+        },
+        sr: {
+            back: 'Nazad',
+            addHymnal: 'Dodajte himnala',
+        },
+        ja: {
+            back: '戻る',
+            addHymnal: '賛美歌集を追加',
+        },
+        pt: {
+            back: 'Voltar',
+            addHymnal: 'Adicionar Hinário',
+        },
+    }
+    const i18n = new I18n(translations);
+    i18n.enableFallback = true;
+    i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
     useEffect(() => {
+        // load preferences from async storage
+        AsyncStorage.getItem('legacyNumberGrouping').then((value) => {
+            if(value !== null)
+                setLegacyNumberGrouping(value === 'true');
+        });
+        AsyncStorage.getItem('languageOverride').then((value) => {
+            if(value !== null)
+                setLanguageOverride(value);
+        });
+
         const data = loadHymnals();
         data.then((data) => {
             SET_BOOK_DATA(data);
@@ -76,36 +148,22 @@ export default function RootLayout() {
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <HymnalContext.Provider value={context}>
                     <QueryClientProvider client={new QueryClient()}>
-                        <Stack screenOptions={{headerTitleAlign: 'center'}}>
+                        <Stack screenOptions={{headerTitleAlign: 'center', headerShown: false}}>
                             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                             <Stack.Screen 
                                 name="hymnal_importer" 
                                 options={{ 
-                                headerShown: false, 
-                                presentation: 'modal', 
-                                }}
-                            />
-                            <Stack.Screen
-                                name="display/[id]/[number]"
-                                options={{
-                                    title: 'number',
-                                    headerShown: true,
-                                    headerStyle: {
-                                        backgroundColor: Colors[theme].headerBackground,
-                                    },
-                                    headerTitleAlign: 'center',
-                                    headerBackVisible: false,
+                                    headerShown: true, 
+                                    headerTitle: i18n.t('addHymnal'),
+                                    headerBackTitle: i18n.t('back'),
                                     headerLeft: () => (
-                                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                                            <IconSymbol
-                                                name="chevron.left"
-                                                size={18}
-                                                weight="medium"
-                                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                                            />
+                                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
+                                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
                                         </TouchableOpacity>
                                     ),
-                                    animation: 'none'
+                                    headerShadowVisible: false,
+                                    presentation: 'modal', 
                                 }}
                             />
                             <Stack.Screen name="+not-found" />
