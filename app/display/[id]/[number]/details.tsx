@@ -118,6 +118,10 @@ export default function HymnalImporter() {
                             </View>
                         )}
                     />
+                ) : loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={Colors[theme].text} />
+                    </View>
                 ) : (
                     <View style={styles.detailsContainer}>
                         <Text style={styles.fadedText}>
