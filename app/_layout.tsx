@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { PostHogProvider } from 'posthog-react-native'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -144,6 +145,9 @@ export default function RootLayout() {
     }
 
     return (
+        <PostHogProvider apiKey="phc_2naJqn1HfJICxhvf6wnp29nib7N9B0KQZDgzRQ0xLjP" options={{
+            host: "https://us.i.posthog.com",
+        }}>
         <GestureHandlerRootView style={{ flex: 1 }}>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                 <HymnalContext.Provider value={context}>
@@ -173,5 +177,6 @@ export default function RootLayout() {
                 </HymnalContext.Provider>
             </ThemeProvider>
         </GestureHandlerRootView>
+        </PostHogProvider>
     );
 }
