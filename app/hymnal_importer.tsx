@@ -14,6 +14,7 @@ import { useContext, useRef, useState } from 'react';
 import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert } from 'react-native';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { usePostHog } from 'posthog-react-native';
 
 export default function HymnalImporter() {
 
@@ -21,6 +22,7 @@ export default function HymnalImporter() {
     const styles = makeStyles(theme);
     const isPresented = router.canGoBack();
     const context = useContext(HymnalContext);
+    const posthog = usePostHog()
 
     const translations = {
         en: {
@@ -266,10 +268,16 @@ export default function HymnalImporter() {
 
 
                                         context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: -1 }));
+                                        posthog.capture('hymnal_download_started', {
+                                            hymnal_id: item.name.short,
+                                        });
                                         await downloadHymnal(item.name.short, (progress) => {
                                             context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: progress }));
                                         }, (success) => {
                                             if (!success) {
+                                                posthog.capture('hymnal_download_failed', {
+                                                    hymnal_id: item.name.short,
+                                                });
                                                 Alert.alert(i18n.t('verificationFailed'), i18n.t('verificationFailedMessage'), [
                                                     {
                                                         text: i18n.t('ok'),

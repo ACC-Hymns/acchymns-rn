@@ -105,11 +105,11 @@ export default function SelectionScreen() {
                                                 alignItems: 'center',
                                             }}
                                             onPressIn={() => {
-                                                router.prefetch({ pathname: '/display/[id]/[number]/index', params: { id: bookData.name.short, number: item } });
+                                                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
                                             }}
                                             onPress={() => {
                                                 // check if im already navigating
-                                                router.navigate({ pathname: '/display/[id]/[number]/index', params: { id: bookData.name.short, number: item } });
+                                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
                                             }}
                                         >
                                             <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>

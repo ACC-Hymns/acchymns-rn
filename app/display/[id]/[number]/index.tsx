@@ -1,10 +1,10 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView } from 'react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { BookSummary, SongList } from '@/constants/types';
+import { BookSummary, Song, SongList } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Haptics from 'expo-haptics';
@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { error } from 'pdf-lib';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { usePostHog } from 'posthog-react-native';
 
 
 export default function DisplayScreen() {
@@ -145,7 +146,21 @@ export default function DisplayScreen() {
         return unsubscribe;
     }, [navigation]);
 
+    useFocusEffect(
+        useCallback(() => {
+            if (!context || !songData) return;
+            posthog.capture('hymn_viewed', {
+                hymnal_id: params.id,
+                hymnal_name: context.BOOK_DATA[params.id]?.name?.medium,
+                song_id: params.number,
+                song_name: songData?.[params.number]?.title || '',
+            })
+        }, [params.id, params.number, songData, context])
+    )
+
+    const posthog = usePostHog()
     useEffect(() => {
+
         const fetchData = async () => {
             try {
                 setLoading(true);
@@ -209,7 +224,7 @@ export default function DisplayScreen() {
                     }
                 } catch (e) {
                     pianoAudioPlayer.current = null;
-                    console.error(`Error fetching piano mp3`);
+                    //console.error(`Error fetching piano mp3`);
                 }
 
                 if (!bookData) return;

@@ -145,7 +145,7 @@ export default function RootLayout() {
     }
 
     return (
-        <PostHogProvider apiKey="phc_2naJqn1HfJICxhvf6wnp29nib7N9B0KQZDgzRQ0xLjP" options={{
+        <PostHogProvider apiKey="phc_2ykxG0dZyno8rUEmVrwfsV2YvKjhMJH1jBMy4J8o3cg" options={{
             host: "https://us.i.posthog.com",
         }}>
         <GestureHandlerRootView style={{ flex: 1 }}>
