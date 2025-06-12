@@ -92,7 +92,6 @@ export default function HymnalImporter() {
                         // set song details
                         setSongDetails(details[0]);
                     }
-                    console.log(details);
                 });
             } catch (error) {
                 console.error('Error fetching song data:', error);

@@ -1,5 +1,5 @@
 import React, { use, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions, Button } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions, Button, TouchableHighlight } from 'react-native';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -115,6 +115,17 @@ export default function SelectionScreen() {
                                             <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>
                                         </TouchableOpacity>
                                     )}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
+                                            });
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
                                 />
                             ) : (
                                 <FlatList
@@ -161,21 +172,25 @@ export default function SelectionScreen() {
 
                                         return (
                                             <View key={rangeStart} style={{ marginTop: index === 0 ? 12 : 0 }}>
-                                                <TouchableOpacity
+                                                <TouchableHighlight
+                                                    underlayColor={Colors[theme].divider}
                                                     onPress={() => {
                                                         toggleDropdown(index.toString())
                                                     }}
                                                     style={{
                                                         backgroundColor: Colors[theme].headerBackground,
-                                                        shadowColor: 'black',
-                                                        shadowOffset: { width: 0, height: 0 },
-                                                        shadowOpacity: 0.25,
-                                                        shadowRadius: 1,
-                                                        elevation: 5,
                                                         borderRadius: 12,
                                                         height: 60,
                                                         marginVertical: 4,
                                                         marginHorizontal: 15,
+                                                        shadowColor: '#000',
+                                                        shadowOffset: {
+                                                            width: 0,
+                                                            height: 2,
+                                                        },
+                                                        shadowOpacity: 0.05,
+                                                        shadowRadius: 5,
+                                                        elevation: 3,
                                                     }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
                                                         <Text style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</Text>
@@ -186,7 +201,7 @@ export default function SelectionScreen() {
                                                             color={Colors[theme].icon}
                                                         />
                                                     </View>
-                                                </TouchableOpacity>
+                                                </TouchableHighlight>
 
                                                 {openDropdowns[index.toString()] && (
                                                     <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>

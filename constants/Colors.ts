@@ -9,7 +9,7 @@ export const Colors = {
   light: {
     text: '#000000',
     fadedText: '#8A9199', // More faded text color
-    background: '#fff',
+    background: '#F2F2F7',
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
@@ -23,12 +23,14 @@ export const Colors = {
     handleBar: '#0a0a0a',
     fadedIcon: '#C5C8CC',
     divider: '#e8e8e8',
-    destructive: '#fd3b31'
+    destructive: '#fd3b31',
+    settingsButton: '#fff'
   },
   dark: {
     text: '#FFFFFF',
     fadedText: '#787E83', // More faded text color
-    background: '#141414',
+    background: '#000',
+    settingsButton: '#141414',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',

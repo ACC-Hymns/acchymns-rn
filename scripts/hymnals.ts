@@ -152,8 +152,6 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     const songs = await FileSystem.readAsStringAsync(songsFilePath);
     const songsList = JSON.parse(songs) as SongList;
 
-    console.log(songsList);
-
     const chunkSize = 25;
     const songNumbers = Object.keys(songsList);
     const totalSongs = songNumbers.length;

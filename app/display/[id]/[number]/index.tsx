@@ -250,7 +250,6 @@ export default function DisplayScreen() {
         const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
         navigation.addListener('beforeRemove', async (e) => {
-            console.log("trying to leave");
             if(e.data.action.type == 'GO_BACK') {
                 console.log('Locking orientation to portrait');
                 ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
@@ -487,7 +486,6 @@ export default function DisplayScreen() {
             if (Math.abs(offset.value) > MAX_OFFSET / 2) {
                 if (offset.value > 0) {
                     // Swipe right
-                    console.log("Swipe left");
                     const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex > 0) {
@@ -496,7 +494,6 @@ export default function DisplayScreen() {
 
                 } else {
                     // Swipe left
-                    console.log("Swipe right");
                     const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex < songNumbers.length - 1) {
@@ -642,7 +639,7 @@ function makeStyles(theme: "light" | "dark") {
             shadowRadius: 9.51,
 
             elevation: 15,
-            backgroundColor: Colors[theme]['background'],
+            backgroundColor: Colors[theme]['settingsButton'],
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
         }

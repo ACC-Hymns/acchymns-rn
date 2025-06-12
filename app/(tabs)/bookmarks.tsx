@@ -88,10 +88,7 @@ export default function BookmarkScreen() {
     const loadBookmarks = async () => {
         try {
             const storedBookmarks = await AsyncStorage.getItem(BOOKMARKS_KEY);
-            console.log(storedBookmarks == null);
-            console.log(JSON.parse(storedBookmarks ?? '')?.length);
             if (storedBookmarks !== null) {
-                console.log("Loading bookmarks from AsyncStorage");
                 const parsedBookmarks = JSON.parse(storedBookmarks) as Bookmark[];
                 setBookmarks(parsedBookmarks);
             } else {
@@ -268,7 +265,7 @@ export default function BookmarkScreen() {
                         alignItems: 'center',
                         paddingVertical: 10, // Add padding to allow content to grow
                         minHeight: 60, // Ensure a minimum height of 60
-                        marginBottom: index === filteredData.length - 1 ? 100 : 4, // Add margin only to the last item
+                        marginBottom: index === filteredData.length - 1 ? 100 : 8, // Add margin only to the last item
                     }}
 
                     onPress={() => {

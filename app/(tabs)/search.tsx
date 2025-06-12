@@ -209,7 +209,7 @@ export default function SearchScreen() {
                                 alignItems: 'center',
                                 paddingVertical: 10, // Add padding to allow content to grow
                                 minHeight: 60, // Ensure a minimum height of 60
-                                marginBottom: index === dataSource.length - 1 ? 100 : 4, // Add margin only to the last item
+                                marginBottom: index === dataSource.length - 1 ? 100 : 8, // Add margin only to the last item
                             }}
 
                             onPress={() => {

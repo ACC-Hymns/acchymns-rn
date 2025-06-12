@@ -62,7 +62,7 @@ export default function LanguageScreen() {
                         <React.Fragment key={language}>
                             <TouchableHighlight
                                 onPress={() => setSelectedLanguage(language)}
-                                underlayColor={'#e2e2e2'}
+                                underlayColor={Colors[theme].divider}
                             >
                                 <View style={styles.settingsItem}>
                                     <Text style={styles.settingsText}>
@@ -95,7 +95,7 @@ function makeStyles(theme: "light" | "dark") {
             marginVertical: 8,
         },
         settingsContainer: {
-            backgroundColor: 'white',
+            backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 12,
             overflow: 'hidden',
         },

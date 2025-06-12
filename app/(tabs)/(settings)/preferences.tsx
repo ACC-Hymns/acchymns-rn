@@ -35,22 +35,22 @@ export default function PreferencesScreen() {
         },
         de: {
             accessibility: 'ZUGANG & SPRACHE',
-            legacyNumberSelection: 'Legacy Number Selection',
+            legacyNumberSelection: 'Veraltete Zahlauswahl',
             language: 'Sprache',
         },
         sr: {
             accessibility: 'PRISTUP I JEZIK',
-            legacyNumberSelection: 'Legacy Number Selection',
+            legacyNumberSelection: 'Zastareli izbor brojeva',
             language: 'Jezik',
         },
         ja: {
             accessibility: 'アクセシビリティー & 言語',
-            legacyNumberSelection: 'Legacy Number Selection',
+            legacyNumberSelection: '昔ながらの数字の選択',
             language: '言語',
         },
         pt: {
             accessibility: 'ACESSIBILIDADE & IDIOMA',
-            legacyNumberSelection: 'Legacy Number Selection',
+            legacyNumberSelection: 'Seleção de Números Legada',
             language: 'Idioma',
         }
     }
@@ -66,7 +66,7 @@ export default function PreferencesScreen() {
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight 
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</Text>
@@ -84,7 +84,7 @@ export default function PreferencesScreen() {
                     
                     <TouchableHighlight
                         onPress={() => router.push('/(tabs)/(settings)/language')}
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.settingsText}>{i18n.t('language')}</Text>
@@ -111,7 +111,7 @@ function makeStyles(theme: "light" | "dark") {
             marginVertical: 8,
         },
         settingsContainer: {
-            backgroundColor: 'white',
+            backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 12,
             overflow: 'hidden',
         },

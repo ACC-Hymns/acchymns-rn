@@ -42,7 +42,7 @@ export default function RootLayout() {
 
     const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
     const [languageOverride, setLanguageOverride] = useState<string | null>(null);
-
+    const [postHogOptedIn, setPostHogOptedIn] = useState<boolean>(true);
     // save preferences to async storage
     useEffect(() => {
 
@@ -55,13 +55,16 @@ export default function RootLayout() {
                 if(languageOverride !== null)
                     await AsyncStorage.setItem('languageOverride', languageOverride);
                 
+                if(postHogOptedIn !== null)
+                    await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
+
                 console.log('Saved preferences.');
             } catch (error) {
                 console.error('Error saving preferences:', error);
             }
         }
         savePreferences();
-    }, [legacyNumberGrouping, languageOverride]);
+    }, [legacyNumberGrouping, languageOverride, postHogOptedIn]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -79,9 +82,11 @@ export default function RootLayout() {
             legacyNumberGrouping,
             setLegacyNumberGrouping,
             languageOverride,
-            setLanguageOverride
+            setLanguageOverride,
+            postHogOptedIn,
+            setPostHogOptedIn
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn]);
     // Load hymnal data
 
     const translations = {
@@ -127,6 +132,10 @@ export default function RootLayout() {
             if(value !== null)
                 setLanguageOverride(value);
         });
+        AsyncStorage.getItem('postHogOptedIn').then((value) => {
+            if(value !== null)
+                setPostHogOptedIn(value === 'true');
+        });
 
         const data = loadHymnals();
         data.then((data) => {
@@ -144,8 +153,13 @@ export default function RootLayout() {
         return null;
     }
 
+    const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY;
+    if(!POSTHOG_API_KEY) {
+        console.error('POSTHOG_API_KEY is not set');
+    }
+
     return (
-        <PostHogProvider apiKey="phc_2ykxG0dZyno8rUEmVrwfsV2YvKjhMJH1jBMy4J8o3cg" options={{
+        <PostHogProvider apiKey={POSTHOG_API_KEY} options={{
             host: "https://us.i.posthog.com",
         }}>
         <GestureHandlerRootView style={{ flex: 1 }}>

@@ -148,7 +148,7 @@ function makeStyles(theme: 'light' | 'dark') {
         deleteButton: {
           width: 380,
           height: "100%",
-          backgroundColor: "#fd3b31",
+          backgroundColor: Colors[theme]['destructive'],
           justifyContent: "center",
           alignItems: 'flex-start',
           padding: 28,

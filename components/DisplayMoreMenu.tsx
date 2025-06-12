@@ -135,9 +135,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-                <TouchableOpacity onPress={() => {
-                    console.log(isBookmarked ? 'Is Bookmarked' : 'Not Bookmarked');
-                }}>
+                <TouchableOpacity onPress={() => {}}>
                     <IconSymbol
                         name="ellipsis.circle"
                         size={24}

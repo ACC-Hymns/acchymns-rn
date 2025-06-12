@@ -9,6 +9,7 @@ import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
+import PostHog, { usePostHog } from 'posthog-react-native';
 
 export default function HelpScreen() {
 
@@ -32,6 +33,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Delete All Hymnals?',
             clearCacheConfirmationMessage: 'This will delete all cached files created by the app.',
             deleteHymnalsConfirmationMessage: 'This will delete all hymnals currently downloaded.',
+            posthogOptOut: 'Opt Out of Data Collection',
+            posthogOptIn: 'Opt In to Data Collection',
+            posthogOptOutConfirmation: 'Opt Out of Data Collection?',
+            posthogOptOutConfirmationMessage: 'This will opt you out of data collection. You can opt in again at any time.',
+            optOut: 'Confirm',
             clear: 'Clear',
             delete: 'Delete',
             cancel: 'Cancel',
@@ -49,6 +55,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Eliminar Todos los Hymnals?',
             clearCacheConfirmationMessage: 'Esto eliminará todos los archivos caché creados por la aplicación.',
             deleteHymnalsConfirmationMessage: 'Esto eliminará todos los hymnals actualmente descargados.',
+            posthogOptOut: 'Desactivar la recopilación de datos',
+            posthogOptIn: 'Activar la recopilación de datos',
+            posthogOptOutConfirmation: '¿Desactivar la recopilación de datos?',
+            posthogOptOutConfirmationMessage: 'Esto desactivará la recopilación de datos. Puede activarla de nuevo en cualquier momento.',
+            optOut: 'Confirmar',
             clear: 'Limpiar',
             delete: 'Eliminar',
             cancel: 'Cancelar',
@@ -66,6 +77,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Supprimer Tous les Hymnals?',
             clearCacheConfirmationMessage: 'Cela supprimera tous les fichiers mis en cache créés par l\'application.',
             deleteHymnalsConfirmationMessage: 'Cela supprimera tous les hymnals actuellement téléchargés.',
+            posthogOptOut: 'Désactiver la collecte de données',
+            posthogOptIn: 'Activer la collecte de données',
+            posthogOptOutConfirmation: 'Désactiver la collecte de données?',
+            posthogOptOutConfirmationMessage: 'Cela désactivera la collecte de données. Vous pouvez l\'activer à nouveau à tout moment.',
+            optOut: 'Confirmer',
             clear: 'Effacer',
             delete: 'Supprimer',
             cancel: 'Annuler',
@@ -83,6 +99,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Alle Hymnals löschen?',
             clearCacheConfirmationMessage: 'Dies wird alle zwischengespeicherten Dateien löschen, die von der App erstellt wurden.',
             deleteHymnalsConfirmationMessage: 'Dies wird alle derzeit heruntergeladenen Hymnals löschen.',
+            posthogOptOut: 'Datensammlung deaktivieren',
+            posthogOptIn: 'Datensammlung aktivieren',
+            posthogOptOutConfirmation: 'Datensammlung deaktivieren?',
+            posthogOptOutConfirmationMessage: 'Dies deaktiviert die Datensammlung. Sie können sie jederzeit wieder aktivieren.',
+            optOut: 'Bestätigen',
             clear: 'Löschen',
             delete: 'Löschen',
             cancel: 'Abbrechen',
@@ -100,6 +121,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'すべてのハイムナルを削除しますか？',
             clearCacheConfirmationMessage: 'これはアプリが作成したキャッシュファイルをすべて削除します。',
             deleteHymnalsConfirmationMessage: 'これは現在ダウンロードされているすべてのハイムナルを削除します。',
+            posthogOptOut: 'データ収集をオフにする',
+            posthogOptIn: 'データ収集をオンにする',
+            posthogOptOutConfirmation: 'データ収集をオフにしますか？',
+            posthogOptOutConfirmationMessage: 'これはデータ収集をオフにします。いつでもオンにすることができます。',
+            optOut: '確認',
             clear: 'クリア',
             delete: '削除',
             cancel: 'キャンセル',
@@ -117,6 +143,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Excluir Todos os Hymnals?',
             clearCacheConfirmationMessage: 'Isso excluirá todos os arquivos de cache criados pela aplicação.',
             deleteHymnalsConfirmationMessage: 'Isso excluirá todos os hymnals atualmente baixados.',
+            posthogOptOut: 'Desativar a coleta de dados',
+            posthogOptIn: 'Ativar a coleta de dados',
+            posthogOptOutConfirmation: 'Desativar a coleta de dados?',
+            posthogOptOutConfirmationMessage: 'Isso desativará a coleta de dados. Você pode ativá-la novamente a qualquer momento.',
+            optOut: 'Confirmar',
             clear: 'Limpar',
             delete: 'Excluir',
             cancel: 'Cancelar',
@@ -134,6 +165,11 @@ export default function HelpScreen() {
             deleteHymnalsConfirmation: 'Obriši sve himnarije?',
             clearCacheConfirmationMessage: 'Ovo će obrisati sve keš fajlove koje je napravila aplikacija.',
             deleteHymnalsConfirmationMessage: 'Ovo će obrisati sve himnarije koje su trenutno preuzete.',
+            posthogOptOut: 'Deaktivirati prikupljanje podataka',
+            posthogOptIn: 'Aktivirati prikupljanje podataka',
+            posthogOptOutConfirmation: 'Deaktivirati prikupljanje podataka?',
+            posthogOptOutConfirmationMessage: 'Ovo će deaktivirati prikupljanje podataka. Možete ih ponovno aktivirati u bilo kojem trenutku.',
+            optOut: 'Potvrdi',
             clear: 'Očisti',
             delete: 'Obriši',
             cancel: 'Otkaži',
@@ -149,6 +185,7 @@ export default function HelpScreen() {
         });
     }, [navigation]);
 
+    const posthog = usePostHog()
     return (
         <>
             <ScrollView style={styles.scrollView}>
@@ -160,7 +197,7 @@ export default function HelpScreen() {
                         onPress={() => { 
                             Linking.openURL('https://forms.gle/Ezh7d8LFsN5eKdo87');
                         }}
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.settingsText}>{i18n.t('reportBug')}</Text>
@@ -172,7 +209,7 @@ export default function HelpScreen() {
                         onPress={() => { 
                             Linking.openURL('https://forms.gle/1t7rtUkNaksEUtPEA');
                         }}
-                        underlayColor={'#e2e2e2'}
+                            underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.settingsText}>{i18n.t('requestBook')}</Text>
@@ -184,11 +221,45 @@ export default function HelpScreen() {
                         onPress={() => { 
                             Linking.openURL('https://docs.google.com/document/d/1zWztUrFOr_6ksqDDm4EbQ0jk7trwofaVeeSybcD5PcA');
                         }}
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.settingsText}>{i18n.t('privacyPolicy')}</Text>
                             <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                        </View>
+                    </TouchableHighlight>
+                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                    <TouchableHighlight
+                        onPress={async () => {
+                            if(context?.postHogOptedIn) {
+                                context?.setPostHogOptedIn(false);
+                                await posthog.optIn();
+                            } else {
+                                Alert.alert(i18n.t('posthogOptOutConfirmation'), i18n.t('posthogOptOutConfirmationMessage'), [
+                                    {
+                                        text: i18n.t('cancel'),
+                                        onPress: () => {
+                                            context?.setPostHogOptedIn(false);
+                                        },
+                                        style: 'cancel',
+                                        isPreferred: true
+                                    },
+                                    {
+                                        text: i18n.t('optOut'),
+                                        onPress: async () => {
+                                            // opt out of posthog
+                                            context?.setPostHogOptedIn(true);
+                                            await posthog.optOut();
+                                        },
+                                        style: 'default'
+                                    },
+                                ]);
+                            }
+                        }}
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <View style={styles.settingsItem}>
+                            <Text style={styles.settingsText}>{context?.postHogOptedIn ? i18n.t('posthogOptIn') : i18n.t('posthogOptOut')}</Text>
                         </View>
                     </TouchableHighlight>
                 </View>
@@ -216,7 +287,7 @@ export default function HelpScreen() {
                                 },
                             ]);
                         }}
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.destructiveSettingsText}>{i18n.t('clearCache')}</Text>
@@ -247,7 +318,7 @@ export default function HelpScreen() {
                                 },
                             ]);
                         }}
-                        underlayColor={'#e2e2e2'}
+                        underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
                             <Text style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</Text>
@@ -270,7 +341,7 @@ function makeStyles(theme: "light" | "dark") {
             marginVertical: 8,
         },
         settingsContainer: {
-            backgroundColor: 'white',
+            backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 12,
             overflow: 'hidden',
         },
