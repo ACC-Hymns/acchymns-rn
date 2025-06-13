@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
 import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js';
+import { translations } from '@/constants/localization';
 
 export default function SettingsScreen() {
 
@@ -17,71 +18,6 @@ export default function SettingsScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const translations = {
-        en: {
-            settings: 'Settings',
-            info: 'INFO',
-            appVersion: 'App Version',
-            help: 'Help',
-            general: 'GENERAL',
-            addHymnal: 'Add Hymnals',
-            preferences: 'Preferences',
-        },
-        es: {
-            settings: 'Configuración',
-            info: 'INFORMACIÓN',
-            appVersion: 'Versión de la aplicación',
-            help: 'Ayuda',
-            general: 'GENERAL',
-            addHymnal: 'Agregar Himnarios',
-            preferences: 'Preferencias',
-        },
-        fr: {
-            settings: 'Paramètres',
-            info: 'INFORMATIONS',
-            appVersion: 'Version de l\'application',
-            help: 'Aide',
-            general: 'GÉNÉRAL',
-            addHymnal: 'Ajouter un Livre de Hymnes',
-            preferences: 'Préférences',
-        },
-        de: {
-            settings: 'Einstellungen',
-            info: 'INFORMATIONEN',
-            appVersion: 'App-Version',
-            help: 'Hilfe',
-            general: 'ALLGEMEIN',
-            addHymnal: 'Gesangbuch hinzufügen',
-            preferences: 'Einstellungen',
-        },
-        ja: {
-            settings: '設定',
-            info: '情報',
-            appVersion: 'アプリバージョン',
-            help: 'ヘルプ',
-            general: '一般',
-            addHymnal: '賛美歌集を追加',
-            preferences: '設定',
-        },
-        pt: {
-            settings: 'Configurações',
-            info: 'INFORMAÇÕES',
-            appVersion: 'Versão do aplicativo',
-            help: 'Ajuda',
-            general: 'GERAL',
-            addHymnal: 'Adicionar hinários',
-            preferences: 'Preferências',
-        },
-        sr: {
-            settings: 'Podešavanja',
-            info: 'INFO',
-            appVersion: 'Verzija aplikacije',
-            help: 'Pomoć',
-            general: 'OPŠTE',
-            addHymnal: 'Dodajte himnala',
-            preferences: 'Preferences',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

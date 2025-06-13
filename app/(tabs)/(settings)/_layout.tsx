@@ -2,6 +2,7 @@ import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { HymnalContext } from "@/constants/context";
+import { translations } from "@/constants/localization";
 import { Ionicons } from "@expo/vector-icons";
 import { getLocales } from "expo-localization";
 import { router, Stack } from "expo-router";
@@ -12,50 +13,6 @@ import { Pressable, TouchableOpacity, useColorScheme } from "react-native";
 export default function HomeLayout() {
     const theme = useColorScheme() ?? 'light';
     const context = useContext(HymnalContext);
-    const translations = {
-        en: {
-            preferences: 'Preferences',
-            help: 'Help',
-            back: 'Back',
-            language: 'Language',
-        },
-        es: {
-            preferences: 'Preferencias',
-            help: 'Ayuda',
-            back: 'Atrás',
-            language: 'Idioma',
-        },
-        fr: {
-            preferences: 'Préférences',
-            help: 'Aide',
-            back: 'Retour',
-            language: 'Langue',
-        },
-        de: {
-            preferences: 'Einstellungen',
-            help: 'Hilfe',
-            back: 'Zurück',
-            language: 'Sprache',
-        },
-        sr: {
-            preferences: 'Preferences',
-            help: 'Pomoć',
-            back: 'Nazad',
-            language: 'Jezik',
-        },
-        ja: {
-            preferences: '設定',
-            help: 'ヘルプ',
-            back: '戻る',
-            language: '言語',
-        },
-        pt: {
-            preferences: 'Preferências',
-            help: 'Ajuda',
-            back: 'Voltar',
-            language: 'Idioma',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

@@ -6,7 +6,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { getLocales } from 'expo-localization';
-import { supportedLanguages, getLanguageName } from '@/constants/localization';
+import { supportedLanguages, getLanguageName, translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
 
@@ -16,30 +16,6 @@ export default function LanguageScreen() {
     const styles = makeStyles(theme);
     const router = useRouter();
     const context = useContext(HymnalContext);
-
-    const translations = {
-        en: {
-            language: 'LANGUAGE',
-        },
-        es: {
-            language: 'IDIOMA',
-        },
-        fr: {
-            language: 'LANGUE',
-        },
-        de: {
-            language: 'SPRACHE',
-        },
-        sr: {
-            language: 'JEZIK',
-        },
-        ja: {
-            language: '言語',
-        },
-        pt: {
-            language: 'IDIOMA',
-        }
-    }
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -55,7 +31,7 @@ export default function LanguageScreen() {
         <>
             <ScrollView style={styles.scrollView}>
                 <View style={{}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('language')}</Text>
+                    <Text style={styles.settingsLabel}>{i18n.t('language').toUpperCase()}</Text>
                 </View>
                 <View style={[styles.settingsContainer]}>
                     {supportedLanguages.map((language) => (

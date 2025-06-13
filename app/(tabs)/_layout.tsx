@@ -11,56 +11,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { translations } from '@/constants/localization';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
 
     const context = useContext(HymnalContext);
-
-    const translations = {
-        en: {
-            home: 'Home',
-            search: 'Search',
-            bookmarks: 'Bookmarks',
-            settings: 'Settings',
-        },
-        es: {
-            home: 'Inicio',
-            search: 'Buscar',
-            bookmarks: 'Marcadores',
-            settings: 'Configuración',
-        },
-        fr: {
-            home: 'Accueil',
-            search: 'Rechercher',
-            bookmarks: 'Marque-pages',
-            settings: 'Paramètres',
-        },
-        de: {
-            home: 'Startseite',
-            search: 'Suchen',
-            bookmarks: 'Lesezeichen',
-            settings: 'Einstellungen',
-        },
-        pt: {
-            home: 'Início',
-            search: 'Pesquisar',
-            bookmarks: 'Favoritos',
-            settings: 'Configurações',
-        },
-        sr: {
-            home: 'Početna',
-            search: 'Pretraga',
-            bookmarks: 'Omiljeni',
-            settings: 'Podešavanja',
-        },
-        ja: {
-            home: 'ホーム',
-            search: '検索',
-            bookmarks: 'ブックマーク',
-            settings: '設定',
-        }
-    }
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;

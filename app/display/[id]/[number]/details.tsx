@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useContext } from "react";
 import { Text, FlatList, SafeAreaView, TouchableOpacity, useColorScheme, StyleSheet, View, ActivityIndicator } from "react-native";
 import { WebView } from "react-native-webview";
+import { translations } from "@/constants/localization";
 
 export default function HymnalImporter() {
 
@@ -23,29 +24,6 @@ export default function HymnalImporter() {
     const [songData, setSongData] = useState<SongList>();
     const [songDetails, setSongDetails] = useState<SearchResult>();
 
-    const translations = {
-        en: {
-            noDetailsFound: 'No details found.',
-        },
-        es: {
-            noDetailsFound: 'No se encontraron detalles.',
-        },
-        fr: {
-            noDetailsFound: 'Aucun détail trouvé.',
-        },
-        de: {
-            noDetailsFound: 'Keine Details gefunden.',
-        },
-        sr: {
-            noDetailsFound: 'Nema detalja pronađen.',
-        },
-        ja: {
-            noDetailsFound: '詳細が見つかりません。',
-        },
-        pt: {
-            noDetailsFound: 'Nenhum detalhe encontrado.',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js'
 import React from 'react';
+import { translations } from '@/constants/localization';
 
 export default function HomeScreen() {
 
@@ -33,71 +34,6 @@ export default function HomeScreen() {
 
     const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
 
-    const translations = {
-        en: {
-            home: 'Home',
-            noHymnals: 'No Hymnals',
-            addHymnal: 'Add Hymnal',
-            deleteAlertTitle: 'Delete ',
-            deleteAlertMessage: 'You can always download the hymnal again later.',
-            cancel: 'Cancel',
-            delete: 'Delete',
-        },
-        es: {
-            home: 'Inicio',
-            noHymnals: 'No hay Himnarios',
-            addHymnal: 'Agregar Himnarios',
-            deleteAlertTitle: 'Borrar ',
-            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
-            cancel: 'Cancelar',
-            delete: 'Borrar',
-        },
-        fr: {
-            home: 'Accueil',
-            noHymnals: 'Aucun Livre de Hymnes',
-            addHymnal: 'Ajouter un Livre de Hymnes',
-            deleteAlertTitle: 'Supprimer ',
-            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
-            cancel: 'Annuler',
-            delete: 'Supprimer',
-        },
-        de: {
-            home: 'Startseite',
-            noHymnals: 'Keine Gesangbücher',
-            addHymnal: 'Gesangbuch hinzufügen',
-            deleteAlertTitle: 'Löschen ',
-            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
-            cancel: 'Stornieren',
-            delete: 'Löschen',
-        },
-        ja: {
-            home: 'ホーム',
-            noHymnals: '賛美歌集なし',
-            addHymnal: '賛美歌集を追加',
-            deleteAlertTitle: '削除 ',
-            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
-            cancel: 'キャンセル',
-            delete: '削除',
-        },
-        pt: {
-            home: 'Início',
-            noHymnals: 'Sem hinários',
-            addHymnal: 'Adicionar Hinário',
-            deleteAlertTitle: 'Deletar ',
-            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
-            cancel: 'Cancelar',
-            delete: 'Deletar',
-        },
-        sr: {
-            home: 'Početna',
-            noHymnals: 'Nema himnala',
-            addHymnal: 'Dodajte himnala', 
-            deleteAlertTitle: 'Obriši ',
-            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
-            cancel: 'Otkaži',
-            delete: 'Obriši',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

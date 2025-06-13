@@ -6,7 +6,7 @@ import React, { useContext } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
-import { getLanguageName } from '@/constants/localization';
+import { getLanguageName, translations } from '@/constants/localization';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 
@@ -17,43 +17,6 @@ export default function PreferencesScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const translations = {
-        en: {
-            accessibility: 'ACCESSIBILITY & LANGUAGE',
-            legacyNumberSelection: 'Legacy Number Selection',
-            language: 'Language',
-        },
-        es: {
-            accessibility: 'ACCESIBILIDAD Y IDIOMA',
-            legacyNumberSelection: 'Selección de Número Antigua',
-            language: 'Idioma',
-        },
-        fr: {
-            accessibility: 'ACCESSIBILITÉ ET LANGUE',
-            legacyNumberSelection: 'Sélection de Numéro Ancien',
-            language: 'Langue',
-        },
-        de: {
-            accessibility: 'ZUGANG & SPRACHE',
-            legacyNumberSelection: 'Veraltete Zahlauswahl',
-            language: 'Sprache',
-        },
-        sr: {
-            accessibility: 'PRISTUP I JEZIK',
-            legacyNumberSelection: 'Zastareli izbor brojeva',
-            language: 'Jezik',
-        },
-        ja: {
-            accessibility: 'アクセシビリティー & 言語',
-            legacyNumberSelection: '昔ながらの数字の選択',
-            language: '言語',
-        },
-        pt: {
-            accessibility: 'ACESSIBILIDADE & IDIOMA',
-            legacyNumberSelection: 'Seleção de Números Legada',
-            language: 'Idioma',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
@@ -62,7 +25,7 @@ export default function PreferencesScreen() {
         <>
             <ScrollView style={styles.scrollView}>
                 <View style={{}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('accessibility')}</Text>
+                    <Text style={styles.settingsLabel}>{i18n.t('accessibilityAndLanguage')}</Text>
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight 

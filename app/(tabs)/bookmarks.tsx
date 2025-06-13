@@ -19,6 +19,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { padStart } from 'pdf-lib';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { translations } from '@/constants/localization';
 
 export default function BookmarkScreen() {
 
@@ -32,37 +33,6 @@ export default function BookmarkScreen() {
     const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-
-    const translations = {
-        en: {
-            bookmarks: 'Bookmarks',
-            search: 'Search',
-        },
-        es: {
-            bookmarks: 'Marcadores',
-            search: 'Buscar',
-        },
-        fr: {
-            bookmarks: 'Marque-pages',
-            search: 'Rechercher',
-        },
-        de: {
-            bookmarks: 'Lesezeichen',
-            search: 'Suchen',
-        },
-        sr: {
-            bookmarks: 'Zabeleške',
-            search: 'Pretraga',
-        },
-        ja: {
-            bookmarks: 'ブックマーク',
-            search: '検索',
-        },
-        pt: {
-            bookmarks: 'Marcadores',
-            search: 'Pesquisar',
-        },
-    }
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -215,15 +185,15 @@ export default function BookmarkScreen() {
                         const song = songData[number];
 
                         Alert.alert(
-                            `Remove "${song.title}"`,
-                            `Are you sure you want to remove this bookmark?`,
+                            i18n.t('remove') + ` "${song.title}"`,
+                            i18n.t('removeMessage'),
                             [
                                 {
-                                    text: 'Cancel',
+                                    text: i18n.t('cancel'),
                                     style: 'cancel',
                                 },
                                 {
-                                    text: 'Delete',
+                                    text: i18n.t('delete'),
                                     style: 'destructive',
                                     onPress: () => {
                                         // Remove the item from the bookmarks

@@ -15,6 +15,7 @@ import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAre
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
+import { translations } from '@/constants/localization';
 
 export default function HymnalImporter() {
 
@@ -23,115 +24,6 @@ export default function HymnalImporter() {
     const isPresented = router.canGoBack();
     const context = useContext(HymnalContext);
     const posthog = usePostHog()
-
-    const translations = {
-        en: {
-            addHymnal: 'Add Hymnals',
-            subtitle: 'Download hymnals to access them offline.',
-            verifying: 'Verifying...',
-            size: 'Size',
-            progress: 'Progress',
-            back: 'Back',
-            failedToLoadHymnals: 'Failed to load Hymnals',
-            failedToLoadHymnalsMessage: 'Please check your internet connection and try again.',
-            retry: 'Retry',
-            verificationFailed: 'Verification Failed',
-            verificationFailedMessage: 'Some files were unable to download properly. Please try again.',
-            ok: 'Ok',
-            startingDownload: 'Starting download...',
-        },
-        es: {
-            addHymnal: 'Agregar himnarios',
-            subtitle: 'Descarga himnarios para acceder sin conexión.',
-            verifying: 'Verificando...',
-            size: 'Tamaño',
-            progress: 'Progreso',
-            back: 'Atrás',
-            failedToLoadHymnals: 'No se pudieron cargar los himnarios',
-            failedToLoadHymnalsMessage: 'Por favor, revisa tu conexión a internet e inténtalo de nuevo.',
-            retry: 'Reintentar',
-            verificationFailed: 'Falló la verificación',
-            verificationFailedMessage: 'Algunos archivos no se descargaron correctamente. Inténtalo de nuevo.',
-            ok: 'Aceptar',
-            startingDownload: 'Iniciando descarga...',
-        },
-        fr: {
-            addHymnal: 'Ajouter des recueils',
-            subtitle: 'Téléchargez des recueils pour y accéder hors ligne.',
-            verifying: 'Vérification...',
-            size: 'Taille',
-            progress: 'Progression',
-            back: 'Retour',
-            failedToLoadHymnals: 'Échec du chargement des recueils',
-            failedToLoadHymnalsMessage: 'Veuillez vérifier votre connexion Internet et réessayer.',
-            retry: 'Réessayer',
-            verificationFailed: 'Échec de la vérification',
-            verificationFailedMessage: 'Certains fichiers n’ont pas pu être téléchargés correctement. Veuillez réessayer.',
-            ok: 'Ok',
-            startingDownload: 'Démarrage du téléchargement...',
-        },
-        de: {
-            addHymnal: 'Gesangbücher hinzufügen',
-            subtitle: 'Lade Gesangbücher herunter, um offline darauf zuzugreifen.',
-            verifying: 'Wird überprüft...',
-            size: 'Größe',
-            progress: 'Fortschritt',
-            back: 'Zurück',
-            failedToLoadHymnals: 'Gesangbücher konnten nicht geladen werden',
-            failedToLoadHymnalsMessage: 'Bitte überprüfe deine Internetverbindung und versuche es erneut.',
-            retry: 'Wiederholen',
-            verificationFailed: 'Verifizierung fehlgeschlagen',
-            verificationFailedMessage: 'Einige Dateien konnten nicht korrekt heruntergeladen werden. Bitte versuche es erneut.',
-            ok: 'Ok',
-            startingDownload: 'Download wird gestartet...',
-        },
-        sr: {
-            addHymnal: 'Dodaj himnar',
-            subtitle: 'Preuzmite himnar za pristup van mreže.',
-            verifying: 'Proveravanje...',
-            size: 'Veličina',
-            progress: 'Napredak',
-            back: 'Nazad',
-            failedToLoadHymnals: 'Nije moguće učitati himnare',
-            failedToLoadHymnalsMessage: 'Proverite internet vezu i pokušajte ponovo.',
-            retry: 'Pokušaj ponovo',
-            verificationFailed: 'Provera nije uspela',
-            verificationFailedMessage: 'Neki fajlovi nisu uspešno preuzeti. Pokušajte ponovo.',
-            ok: 'U redu',
-            startingDownload: 'Započinje preuzimanje...',
-        },
-        ja: {
-            addHymnal: '賛美歌集を追加',
-            subtitle: '賛美歌集をダウンロードしてオフラインで利用できます。',
-            verifying: '確認中...',
-            size: 'サイズ',
-            progress: '進行状況',
-            back: '戻る',
-            failedToLoadHymnals: '賛美歌集の読み込みに失敗しました',
-            failedToLoadHymnalsMessage: 'インターネット接続を確認して、もう一度お試しください。',
-            retry: '再試行',
-            verificationFailed: '検証に失敗しました',
-            verificationFailedMessage: '一部のファイルが正しくダウンロードされませんでした。もう一度お試しください。',
-            ok: 'OK',
-            startingDownload: 'ダウンロードを開始しています...',
-        },
-        pt: {
-            addHymnal: 'Adicionar hinários',
-            subtitle: 'Baixe hinários para acessá-los offline.',
-            verifying: 'Verificando...',
-            size: 'Tamanho',
-            progress: 'Progresso',
-            back: 'Voltar',
-            failedToLoadHymnals: 'Falha ao carregar os hinários',
-            failedToLoadHymnalsMessage: 'Verifique sua conexão com a internet e tente novamente.',
-            retry: 'Tentar novamente',
-            verificationFailed: 'Falha na verificação',
-            verificationFailedMessage: 'Alguns arquivos não foram baixados corretamente. Tente novamente.',
-            ok: 'Ok',
-            startingDownload: 'Iniciando download...',
-        }
-    };
-
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -257,7 +149,7 @@ export default function HymnalImporter() {
                             contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
                             ListHeaderComponent={(
                                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <Text style={styles.descriptionText}>{i18n.t('subtitle')}</Text>
+                                    <Text style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</Text>
                                 </View>
                             )}
                             renderItem={({ item }) => (

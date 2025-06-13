@@ -8,40 +8,11 @@ import { router, Stack } from "expo-router";
 import { Text, TouchableOpacity, useColorScheme } from "react-native";
 import { useContext } from "react";
 import { HymnalContext } from "@/constants/context";
+import { translations } from "@/constants/localization";
 
 export default function DisplayLayout() {
     const theme = useColorScheme() ?? 'light';
     const context = useContext(HymnalContext);
-    const translations = {
-        en: {
-            back: 'Back',
-            details: 'Details',
-        },
-        es: {
-            back: 'Atrás',
-            details: 'Detalles',
-        },
-        fr: {
-            back: 'Retour',
-            details: 'Détails',
-        },
-        de: {
-            back: 'Zurück',
-            details: 'Details',
-        },
-        sr: {
-            back: 'Nazad',
-            details: 'Detalji',
-        },
-        ja: {
-            back: '戻る',
-            details: '詳細',
-        },
-        pt: {
-            back: 'Voltar',
-            details: 'Detalhes',
-        },
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

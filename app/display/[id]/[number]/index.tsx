@@ -28,6 +28,7 @@ import { error } from 'pdf-lib';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
+import { translations } from '@/constants/localization';
 
 
 export default function DisplayScreen() {
@@ -47,43 +48,6 @@ export default function DisplayScreen() {
     const scrollRef = useRef<ScrollView | null>(null);
     const [isPresenting, setIsPresenting] = useState(false);
 
-    const translations = {
-        en: {
-            notes: 'Notes',
-            piano: 'Piano',
-            all: 'All',
-        },
-        es: {
-            notes: 'Notas',
-            piano: 'Piano',
-            all: 'Todas',
-        },
-        fr: {
-            notes: 'Notes',
-            piano: 'Piano',
-            all: 'Toutes',
-        },
-        de: {
-            notes: 'Noten',
-            piano: 'Piano',
-            all: 'Alle',
-        },
-        sr: {
-            notes: 'Notatke',
-            piano: 'Piano',
-            all: 'Sve',
-        },
-        ja: {
-            notes: 'ノート',
-            piano: 'ピアノ',
-            all: 'すべて',
-        },
-        pt: {
-            notes: 'Notas',
-            piano: 'Piano',
-            all: 'Todas',
-        },
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

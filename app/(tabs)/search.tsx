@@ -13,6 +13,7 @@ import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import React from 'react';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { translations } from '@/constants/localization';
 
 
 export default function SearchScreen() {
@@ -26,57 +27,6 @@ export default function SearchScreen() {
     const [songList, setSongList] = useState<SongSearchInfo[]>([]);
     const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
-    const translations = {
-        en: {
-            search: 'Search',
-            featured: 'Featured Songs',
-            recent: 'Recent Searches',
-            clear: 'Clear All',
-            cancel: 'Cancel',
-        },
-        es: {
-            search: 'Buscar',
-            featured: 'Canciones Destacadas',
-            recent: 'Búsquedas Recientes',
-            clear: 'Limpiar Todo',
-            cancel: 'Cancelar',
-        },
-        fr: {
-            search: 'Rechercher',
-            featured: 'Chansons en vedette',
-            recent: 'Recherches récentes',
-            clear: 'Tout effacer',
-            cancel: 'Annuler',
-        },
-        de: {
-            search: 'Suchen',
-            featured: 'Vorgestellte Lieder',
-            recent: 'Zuletzt gesucht',
-            clear: 'Alles löschen',
-            cancel: 'Abbrechen',
-        },
-        pt: {
-            search: 'Pesquisar',
-            featured: 'Músicas em destaque',
-            recent: 'Pesquisas recentes',
-            clear: 'Limpar tudo',
-            cancel: 'Cancelar',
-        },
-        sr: {
-            search: 'Pretraži',
-            featured: 'Preporučene pesme',
-            recent: 'Nedavne pretrage',
-            clear: 'Očisti sve',
-            cancel: 'Otkaži',
-        },
-        ja: {
-            search: '検索',
-            featured: 'おすすめの曲',
-            recent: '最近の検索',
-            clear: 'すべて消去',
-            cancel: 'キャンセル',
-        }
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
@@ -274,9 +224,9 @@ export default function SearchScreen() {
                                         <Text style={styles.searchHistoryTitle}>{i18n.t('recent')}</Text>
                                         <Button
                                             onPress={() => {
-                                                Alert.alert('Clear History', 'You cannot undo this action', [
+                                                Alert.alert(i18n.t('clearHistory'), i18n.t('clearHistoryMessage'), [
                                                     {
-                                                        text: 'Cancel',
+                                                        text: i18n.t('cancel'),
                                                         onPress: () => {
 
                                                         },
@@ -284,7 +234,7 @@ export default function SearchScreen() {
                                                         isPreferred: true
                                                     },
                                                     {
-                                                        text: 'Clear All',
+                                                        text: i18n.t('clearAll'),
                                                         onPress: () => {
                                                             setSearchHistory([]);
                                                             saveSearches([]);
@@ -293,7 +243,7 @@ export default function SearchScreen() {
                                                     },
                                                 ]);
                                             }}
-                                            accessibilityLabel={"Clear Search History"}
+                                            accessibilityLabel={i18n.t('clearHistory')}
                                             title={i18n.t('clear')}
                                         />
                                     </View>
@@ -344,6 +294,7 @@ export default function SearchScreen() {
                                     showsHorizontalScrollIndicator={false}
                                     contentContainerStyle={{ padding: 20 }}>
                                         <FlatList
+                                            key={numColumns}
                                             scrollEnabled={false}
                                             contentContainerStyle={{
                                             alignSelf: 'flex-start',

@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { PostHogProvider } from 'posthog-react-native'
+import { translations } from '@/constants/localization';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -89,36 +90,6 @@ export default function RootLayout() {
     }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn]);
     // Load hymnal data
 
-    const translations = {
-        en: {
-            back: 'Back',
-            addHymnal: 'Add Hymnal',
-        },
-        es: {
-            back: 'Atrás',
-            addHymnal: 'Agregar Himnario',
-        },
-        fr: {
-            back: 'Retour',
-            addHymnal: 'Ajouter un Hymnaire',
-        },
-        de: {
-            back: 'Zurück',
-            addHymnal: 'Hymnaire hinzufügen',
-        },
-        sr: {
-            back: 'Nazad',
-            addHymnal: 'Dodajte himnala',
-        },
-        ja: {
-            back: '戻る',
-            addHymnal: '賛美歌集を追加',
-        },
-        pt: {
-            back: 'Voltar',
-            addHymnal: 'Adicionar Hinário',
-        },
-    }
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
