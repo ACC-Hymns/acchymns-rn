@@ -172,16 +172,21 @@ export default function HymnalImporter() {
                                                 });
                                                 Alert.alert(i18n.t('verificationFailed'), i18n.t('verificationFailedMessage'), [
                                                     {
-                                                        text: i18n.t('ok'),
+                                                        text: i18n.t('ignore'),
                                                         onPress: () => {
 
                                                         },
+                                                        style: 'destructive'
+                                                    },{
+                                                        text: i18n.t('ok'),
+                                                        onPress: () => {
+                                                            // delete the files
+                                                            context?.deleteHymnal?.(item.name.short);
+                                                        },
                                                         style: 'default'
                                                     },
+                                                    
                                                 ]);
-
-                                                // delete the files
-                                                context?.deleteHymnal?.(item.name.short);
                                             }
                                             // reset the progress value
                                             context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: 0 }));

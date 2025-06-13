@@ -149,6 +149,7 @@ export default function SearchScreen() {
                     scrollEnabled={scrollEnabled}
                     data={dataSource}
                     keyboardShouldPersistTaps='always'
+                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                     renderItem={({ item, index }) => (
                         <TouchableOpacity
                             style={{
@@ -159,7 +160,6 @@ export default function SearchScreen() {
                                 alignItems: 'center',
                                 paddingVertical: 10, // Add padding to allow content to grow
                                 minHeight: 60, // Ensure a minimum height of 60
-                                marginBottom: index === dataSource.length - 1 ? 100 : 8, // Add margin only to the last item
                             }}
 
                             onPress={() => {
@@ -188,6 +188,7 @@ export default function SearchScreen() {
                         </TouchableOpacity>
                     )}
                     style={[styles.scrollView]}
+                    ListFooterComponent={() => <View style={{ height: 100 }} />}
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
@@ -287,7 +288,9 @@ export default function SearchScreen() {
                             )}
                             {(!searchBarFocused) && (
                                 <View style={{ marginTop: 24 }}>
-                                    <Text style={[styles.headerText, {marginHorizontal: 30}]}>{i18n.t('featured')}</Text>
+                                    {featuredList.length > 0 && (
+                                        <Text style={[styles.headerText, {marginHorizontal: 30}]}>{i18n.t('featured')}</Text>
+                                    )}
                                     <ScrollView
                                     horizontal
                                     showsVerticalScrollIndicator={false}

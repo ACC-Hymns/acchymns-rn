@@ -26,6 +26,7 @@ const translations = {
         oops: 'Oops!',
         screenDoesntExist: 'This screen doesn\'t exist.',
         goToHomeScreen: 'Go to home screen!',
+        ignore: 'Ignore',
 
         // Search and Bookmarks screen
         search: 'Search',
@@ -89,6 +90,8 @@ const translations = {
         saveBookmark: 'Save as Bookmark',
         share: 'Share',
         reportIssue: 'Report Issue',
+        reportIssueSuccess: 'Issue reported successfully',
+        reportIssueFailure: 'Failed to report issue',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Download hymnals to access them offline.',
@@ -115,6 +118,7 @@ const translations = {
         oops: '¡Ay!',
         screenDoesntExist: 'Esta pantalla no existe.',
         goToHomeScreen: '¡Ir a la pantalla de inicio!',
+        ignore: 'Ignorar',
         // Search and Bookmarks screen
         search: 'Buscar',
         bookmarks: 'Marcadores',
@@ -171,6 +175,8 @@ const translations = {
         saveBookmark: 'Guardar como Marcador',
         share: 'Compartir',
         reportIssue: 'Reportar Problema',
+        reportIssueSuccess: 'Problema reportado correctamente',
+        reportIssueFailure: 'Error al reportar el problema',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Descarga himnarios para acceder sin conexión.',
@@ -197,6 +203,7 @@ const translations = {
         oops: 'Oups!',
         screenDoesntExist: 'Cette écran n\'existe pas.',
         goToHomeScreen: 'Retour à l\'écran d\'accueil !',
+        ignore: 'Ignorer',
         // Search and Bookmarks screen
         search: 'Rechercher',
         bookmarks: 'Marque-pages',
@@ -254,6 +261,8 @@ const translations = {
         saveBookmark: 'Enregistrer comme Marque-page',
         share: 'Partager',
         reportIssue: 'Signaler un Problème',
+        reportIssueSuccess: 'Problème signalé avec succès',
+        reportIssueFailure: 'Échec du signalement du problème',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Téléchargez les hymnaires pour les accéder hors ligne.',
@@ -280,6 +289,7 @@ const translations = {
         oops: 'Hoppla!',
         screenDoesntExist: 'Diese Seite existiert nicht.',
         goToHomeScreen: 'Zurück zur Startseite!',
+        ignore: 'Ignorieren',
         // Search and Bookmarks screen
         search: 'Suchen',
         bookmarks: 'Lesezeichen',
@@ -336,6 +346,8 @@ const translations = {
         saveBookmark: 'Speichern als Lesezeichen',
         share: 'Teilen',
         reportIssue: 'Problem melden',
+        reportIssueSuccess: 'Problem erfolgreich gemeldet',
+        reportIssueFailure: 'Fehler beim Melden des Problems',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Lade Hymnals herunter, um sie offline verfügbar zu machen.',
@@ -362,6 +374,7 @@ const translations = {
         oops: 'Ups!',
         screenDoesntExist: 'Ova stranica ne postoji.',
         goToHomeScreen: 'Vrati se na početnu stranicu!',
+        ignore: 'Zanemariti',
         // Search and Bookmarks screen
         search: 'Pretraži',
         bookmarks: 'Zabilježi',
@@ -418,7 +431,8 @@ const translations = {
         saveBookmark: 'Sačuvaj kao Bookmark',
         share: 'Podelite',
         reportIssue: 'Prijavite Problem',
-
+        reportIssueSuccess: 'Problem uspešno prijavljen',
+        reportIssueFailure: 'Greška pri prijavi problema',
         // Hymnal Importer screen
         addHymnalSubtitle: 'Preuzmite himnale za dostupnost offline.',
         verifying: 'Verifikacija...',
@@ -444,6 +458,7 @@ const translations = {
         oops: 'あっ！',
         screenDoesntExist: 'この画面は存在しません。',
         goToHomeScreen: 'ホーム画面に戻る！',
+        ignore: '無視',
         // Search and Bookmarks screen
         search: '検索',
         bookmarks: 'ブックマーク',
@@ -500,7 +515,8 @@ const translations = {
         saveBookmark: 'ブックマークとして保存',
         share: '共有',
         reportIssue: '問題を報告',
-
+        reportIssueSuccess: '問題が報告されました',
+        reportIssueFailure: '問題の報告に失敗しました',
         // Hymnal Importer screen
         addHymnalSubtitle: 'オフラインで賛美歌集にアクセスするためにダウンロードします。',
         verifying: '確認中...',
@@ -526,6 +542,7 @@ const translations = {
         oops: 'Ops!',
         screenDoesntExist: 'Esta tela não existe.',
         goToHomeScreen: 'Voltar para a tela inicial!',
+        ignore: 'Ignorar',
         // Search and Bookmarks screen
         search: 'Pesquisar',
         bookmarks: 'Marcadores',
@@ -582,7 +599,8 @@ const translations = {
         saveBookmark: 'Salvar como Marcador',
         share: 'Compartilhar',
         reportIssue: 'Relatar Problema',
-
+        reportIssueSuccess: 'Problema reportado com sucesso',
+        reportIssueFailure: 'Falha ao reportar problema',
         // Hymnal Importer screen
         addHymnalSubtitle: 'Baixe hinários para acessá-los offline.',
         verifying: 'Verificando...',

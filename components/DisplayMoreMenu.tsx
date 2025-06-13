@@ -1,4 +1,4 @@
-import { Button, TouchableOpacity, useColorScheme } from 'react-native'
+import { Alert, Button, TouchableOpacity, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
@@ -11,6 +11,8 @@ import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { useReportAPI } from "@/scripts/report";
+import { translations } from '@/constants/localization';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -23,58 +25,8 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
-
-    const translations = {
-        en: {
-            details: 'Details',
-            removeBookmark: 'Remove Bookmark',
-            saveBookmark: 'Save as Bookmark',
-            share: 'Share',
-            reportIssue: 'Report Issue',
-        },
-        es: {
-            details: 'Detalles',
-            removeBookmark: 'Eliminar Marcador',
-            saveBookmark: 'Guardar como Marcador',
-            share: 'Compartir',
-            reportIssue: 'Reportar Problema',
-        },
-        fr: {
-            details: 'Détails',
-            removeBookmark: 'Supprimer le Marque-page',
-            saveBookmark: 'Enregistrer comme Marque-page',
-            share: 'Partager',
-            reportIssue: 'Signaler un Problème',
-        },
-        de: {
-            details: 'Details',
-            removeBookmark: 'Löschen',
-            saveBookmark: 'Speichern als Lesezeichen',
-            share: 'Teilen',
-            reportIssue: 'Problem melden',
-        },
-        sr: {
-            details: 'Detalji',
-            removeBookmark: 'Ukloni Bookmark',
-            saveBookmark: 'Sačuvaj kao Bookmark',
-            share: 'Podelite',
-            reportIssue: 'Prijavite Problem',
-        },
-        ja: {
-            details: '詳細',
-            removeBookmark: 'ブックマークを削除',
-            saveBookmark: 'ブックマークとして保存',
-            share: '共有',
-            reportIssue: '問題を報告',
-        },
-        pt: {
-            details: 'Detalhes',
-            removeBookmark: 'Remover Marcador',
-            saveBookmark: 'Salvar como Marcador',
-            share: 'Compartilhar',
-            reportIssue: 'Relatar Problema',
-        },
-    }
+    const reportAPI = useReportAPI();
+    
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
@@ -111,6 +63,20 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
             console.error("Error removing bookmark:", error);
         }
     };
+
+    
+
+    const reportIssue = async () => {
+        let result = await reportAPI.report({
+            book: bookId,
+            number: songId ?? '',
+        });
+        if(result) {
+            Alert.alert(i18n.t('reportIssueSuccess'));
+        } else {
+            Alert.alert(i18n.t('reportIssueFailure'));
+        }
+    }
 
     const [songData, setSongData] = useState<Song | null>(null);
     useLayoutEffect(() => {
@@ -178,7 +144,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                             <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                         </DropdownMenu.ItemIcon>
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item key="report-issue" onSelect={() => { }} destructive={true} >
+                    <DropdownMenu.Item key="report-issue" onSelect={reportIssue} destructive={true} >
                         <DropdownMenu.ItemTitle>{i18n.t('reportIssue')}</DropdownMenu.ItemTitle>
                         <DropdownMenu.ItemIcon ios={{ name: 'exclamationmark.bubble' }}>
                             <IconSymbol name='exclamationmark.bubble' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />

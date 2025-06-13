@@ -46,7 +46,7 @@ export default function DisplayScreen() {
     const navigation = useNavigation();
     const styles = makeStyles(theme);
     const scrollRef = useRef<ScrollView | null>(null);
-    const [isPresenting, setIsPresenting] = useState(false);
+    const [isSwiping, setIsSwiping] = useState(false);
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -215,17 +215,14 @@ export default function DisplayScreen() {
 
         navigation.addListener('beforeRemove', async (e) => {
             if(e.data.action.type == 'GO_BACK') {
-                console.log('Locking orientation to portrait');
                 ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
             }
 
             const nextRoute = (e.data?.action?.payload as { name?: string, params: {[key: string]: string}, singular: any });
             console.log('Navigating to:', nextRoute.name);
-            if(!nextRoute.name?.startsWith('display')) {
-                console.log('Locking orientation to portrait');
+            if(!nextRoute.name?.startsWith('index')) {
                 ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
             } else {
-                console.log('Unlocking orientation');
                 ScreenOrientation.unlockAsync();
             }
             ScreenOrientation.removeOrientationChangeListener(subscription);

@@ -20,6 +20,15 @@ import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { PostHogProvider } from 'posthog-react-native'
 import { translations } from '@/constants/localization';
+import 'react-native-url-polyfill/auto';
+import 'react-native-get-random-values';
+import { Buffer } from 'buffer';
+import { decode, encode } from 'base-64';
+
+global.Buffer = Buffer;
+global.process = require('process');
+global.btoa = encode;
+global.atob = decode;
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,7 +52,7 @@ export default function RootLayout() {
 
     const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
     const [languageOverride, setLanguageOverride] = useState<string | null>(null);
-    const [postHogOptedIn, setPostHogOptedIn] = useState<boolean>(true);
+    const [postHogOptedIn, setPostHogOptedIn] = useState<boolean | null>(null);
     // save preferences to async storage
     useEffect(() => {
 

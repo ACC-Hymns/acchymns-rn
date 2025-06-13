@@ -374,11 +374,14 @@ export default function SelectionScreen() {
                                                 }}
                                                 style={{
                                                     backgroundColor: Colors[theme].headerBackground,
-                                                    shadowColor: 'black',
-                                                    shadowOffset: { width: 0, height: 0 },
-                                                    shadowOpacity: 0.25,
-                                                    shadowRadius: 1,
-                                                    elevation: 5,
+                                                    shadowColor: '#000',
+                                                    shadowOffset: {
+                                                        width: 0,
+                                                        height: 2,
+                                                    },
+                                                    shadowOpacity: 0.05,
+                                                    shadowRadius: 5,
+                                                    elevation: 3,
                                                     borderRadius: 12,
                                                     height: 60,
                                                     marginVertical: 4,

@@ -64,22 +64,32 @@ async function getImageData(bookData: BookSummary, songId: string): Promise<{ ur
 
             for (let i = 0; i < pages.length; i++) {
                 const page = pages[i];
+                // test if pdf HAS a crop box (media box is the same as the crop box)
+                const mediaBox = page.getMediaBox();
+                const cropBox = page.getCropBox();
+                let isCropped = false;
+                if (mediaBox.x !== cropBox.x || mediaBox.y !== cropBox.y || mediaBox.width !== cropBox.width || mediaBox.height !== cropBox.height) {
+                    isCropped = true;
+                }
+
                 const { x: cropX, y: cropY, width: cropWidth, height: cropHeight } = page.getCropBox();
                 const pageRect = page.getMediaBox();
                 const img = images[i];
-                const adjustedCropX = cropX * img.width() / pageRect.width;
+                const scalarX = img.width() / pageRect.width;
+                const scalarY = img.height() / pageRect.height;
+                const adjustedCropX = cropX * scalarX;
                 // Invert Y because PDF origin is bottom-left, image origin is top-left
-                const adjustedCropY = img.height() - ((cropY + cropHeight) * img.height() / pageRect.height);
-                const adjustedCropWidth = cropWidth * img.width() / pageRect.width;
-                const adjustedCropHeight = cropHeight * img.height() / pageRect.height;
+                const adjustedCropY = img.height() - ((cropY + cropHeight) * scalarY);
+                const adjustedCropWidth = cropWidth * scalarX;
+                const adjustedCropHeight = cropHeight * scalarY;
 
                 if (img) {
-                    // Define source rect (from the original image)
+                    // Define source rect (from the original image) - if cropped, use the crop box, otherwise use the media box
                     const srcRect = {
-                        x: adjustedCropX,
-                        y: adjustedCropY,
-                        width: adjustedCropWidth,
-                        height: adjustedCropHeight,
+                        x: isCropped ? adjustedCropX : 0,
+                        y: isCropped ? adjustedCropY : 0,
+                        width: isCropped ? adjustedCropWidth : img.width(),
+                        height: isCropped ? adjustedCropHeight : img.height(),
                     };
 
                     // Define destination rect (where to draw on canvas)

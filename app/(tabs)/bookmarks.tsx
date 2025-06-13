@@ -235,7 +235,6 @@ export default function BookmarkScreen() {
                         alignItems: 'center',
                         paddingVertical: 10, // Add padding to allow content to grow
                         minHeight: 60, // Ensure a minimum height of 60
-                        marginBottom: index === filteredData.length - 1 ? 100 : 8, // Add margin only to the last item
                     }}
 
                     onPress={() => {
@@ -278,6 +277,7 @@ export default function BookmarkScreen() {
                     keyboardShouldPersistTaps='always'
                     renderItem={renderItem}
                     style={[styles.scrollView]}
+                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
@@ -299,6 +299,7 @@ export default function BookmarkScreen() {
                             />
                         </>
                     }
+                    ListFooterComponent={() => <View style={{ height: 100 }} />}
                 />
             )}
         </>
@@ -319,7 +320,7 @@ function makeStyles(theme: "light" | "dark") {
         deleteButton: {
             backgroundColor: '#fd3b31',
             width: 70,
-            height: '95%',
+            height: '100%',
             borderRadius: 16,
             alignItems: 'center',
             justifyContent: 'center',

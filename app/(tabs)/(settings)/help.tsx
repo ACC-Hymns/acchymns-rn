@@ -32,6 +32,7 @@ export default function HelpScreen() {
     const posthog = usePostHog()
     return (
         <>
+            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
             <ScrollView style={styles.scrollView}>
                 <View style={{}}>
                     <Text style={styles.settingsLabel}>{i18n.t('general')}</Text>
@@ -167,9 +168,10 @@ export default function HelpScreen() {
                         <View style={styles.settingsItem}>
                             <Text style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</Text>
                         </View>
-                    </TouchableHighlight>
-                </View>
-            </ScrollView>
+                        </TouchableHighlight>
+                    </View>
+                </ScrollView>
+            </View>
         </>
     );
 }

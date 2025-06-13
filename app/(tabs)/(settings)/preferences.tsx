@@ -23,42 +23,44 @@ export default function PreferencesScreen() {
 
     return (
         <>
-            <ScrollView style={styles.scrollView}>
-                <View style={{}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('accessibilityAndLanguage')}</Text>
-                </View>
-                <View style={[styles.settingsContainer]}>
-                    <TouchableHighlight 
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</Text>
-                            <Switch
-                                style={{marginVertical: -8}}
-                                trackColor={{ true: Colors[theme].primary }}
-                                value={context?.legacyNumberGrouping ?? false}
-                                onValueChange={(value) => {
-                                    context?.setLegacyNumberGrouping(value);
-                                }}
-                            />
-                        </View>
-                    </TouchableHighlight>
-                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                    
-                    <TouchableHighlight
-                        onPress={() => router.push('/(tabs)/(settings)/language')}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{i18n.t('language')}</Text>
-                            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                                <Text style={[styles.settingsText, {color: Colors[theme].fadedText}]}>{getLanguageName(context?.languageOverride ?? 'en')}</Text>
-                                <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
+                <ScrollView style={styles.scrollView}>
+                    <View style={{}}>
+                        <Text style={styles.settingsLabel}>{i18n.t('accessibilityAndLanguage')}</Text>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        <TouchableHighlight
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <Text style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</Text>
+                                <Switch
+                                    style={{ marginVertical: -8 }}
+                                    trackColor={{ true: Colors[theme].primary }}
+                                    value={context?.legacyNumberGrouping ?? false}
+                                    onValueChange={(value) => {
+                                        context?.setLegacyNumberGrouping(value);
+                                    }}
+                                />
                             </View>
-                        </View>
-                    </TouchableHighlight>
-                </View>
-            </ScrollView>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+
+                        <TouchableHighlight
+                            onPress={() => router.push('/(tabs)/(settings)/language')}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <Text style={styles.settingsText}>{i18n.t('language')}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{getLanguageName(context?.languageOverride ?? 'en')}</Text>
+                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                </View>
+                            </View>
+                        </TouchableHighlight>
+                    </View>
+                </ScrollView>
+            </View>
         </>
     );
 }
@@ -91,7 +93,7 @@ function makeStyles(theme: "light" | "dark") {
             color: Colors[theme]['text'],
             fontFamily: 'Lato',
         },
-        
+
         scrollView: {
             flex: 1,
             width: '100%',

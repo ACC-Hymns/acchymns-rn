@@ -29,33 +29,35 @@ export default function LanguageScreen() {
 
     return (
         <>
-            <ScrollView style={styles.scrollView}>
-                <View style={{}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('language').toUpperCase()}</Text>
-                </View>
-                <View style={[styles.settingsContainer]}>
-                    {supportedLanguages.map((language) => (
-                        <React.Fragment key={language}>
-                            <TouchableHighlight
-                                onPress={() => setSelectedLanguage(language)}
-                                underlayColor={Colors[theme].divider}
-                            >
-                                <View style={styles.settingsItem}>
-                                    <Text style={styles.settingsText}>
-                                        {getLanguageName(language)}
-                                    </Text>
-                                    {selectedLanguage === language && (
-                                        <IconSymbol name="checkmark" size={18} weight='medium' color={Colors[theme].primary} />
-                                    )}
-                                </View>
-                            </TouchableHighlight>
-                            {language !== supportedLanguages[supportedLanguages.length - 1] && (
-                                <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                            )}
-                        </React.Fragment>
-                    ))}
-                </View>
-            </ScrollView>
+            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
+                <ScrollView style={styles.scrollView}>
+                    <View style={{}}>
+                        <Text style={styles.settingsLabel}>{i18n.t('language').toUpperCase()}</Text>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        {supportedLanguages.map((language) => (
+                            <React.Fragment key={language}>
+                                <TouchableHighlight
+                                    onPress={() => setSelectedLanguage(language)}
+                                    underlayColor={Colors[theme].divider}
+                                >
+                                    <View style={styles.settingsItem}>
+                                        <Text style={styles.settingsText}>
+                                            {getLanguageName(language)}
+                                        </Text>
+                                        {selectedLanguage === language && (
+                                            <IconSymbol name="checkmark" size={18} weight='medium' color={Colors[theme].primary} />
+                                        )}
+                                    </View>
+                                </TouchableHighlight>
+                                {language !== supportedLanguages[supportedLanguages.length - 1] && (
+                                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
         </>
     );
 }
@@ -88,7 +90,7 @@ function makeStyles(theme: "light" | "dark") {
             color: Colors[theme]['text'],
             fontFamily: 'Lato',
         },
-        
+
         scrollView: {
             flex: 1,
             width: '100%',

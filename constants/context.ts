@@ -9,7 +9,7 @@ interface HymnalContextType {
     setLegacyNumberGrouping: (legacyNumberGrouping: boolean) => void;
     languageOverride: string | null;
     setLanguageOverride: (languageOverride: string) => void;
-    postHogOptedIn: boolean;
+    postHogOptedIn: boolean | null;
     setPostHogOptedIn: (postHogOptedIn: boolean) => void;
 
     onLayoutHomeView: () => void;
