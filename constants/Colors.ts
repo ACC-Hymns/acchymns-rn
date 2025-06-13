@@ -3,6 +3,8 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
+import { I18n } from "i18n-js";
+
 const tintColorLight = '#000';
 const tintColorDark = '#fff';
 export const Colors = {
@@ -10,6 +12,7 @@ export const Colors = {
     text: '#000000',
     fadedText: '#8A9199', // More faded text color
     background: '#F2F2F7',
+    songBackground: '#fff',
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
@@ -30,6 +33,7 @@ export const Colors = {
     text: '#FFFFFF',
     fadedText: '#787E83', // More faded text color
     background: '#000',
+    songBackground: '#000',
     settingsButton: '#141414',
     tint: tintColorDark,
     icon: '#9BA1A6',
@@ -47,3 +51,6 @@ export const Colors = {
     destructive: '#fd3b31'
   },
 };
+
+
+export const supportedThemes = ['system', 'light', 'dark'];

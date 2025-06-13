@@ -9,6 +9,10 @@ interface HymnalContextType {
     setLegacyNumberGrouping: (legacyNumberGrouping: boolean) => void;
     languageOverride: string | null;
     setLanguageOverride: (languageOverride: string) => void;
+    themeOverride: string | null;
+    setThemeOverride: (themeOverride: string) => void;
+    invertSheetMusic: boolean | null;
+    setInvertSheetMusic: (invertSheetMusic: boolean) => void;
     postHogOptedIn: boolean | null;
     setPostHogOptedIn: (postHogOptedIn: boolean) => void;
 

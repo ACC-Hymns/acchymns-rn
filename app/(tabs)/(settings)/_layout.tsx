@@ -57,6 +57,17 @@ export default function HomeLayout() {
                     headerShadowVisible: false,
                 }}
             />
+            <Stack.Screen
+                name="theme"
+                options={{ 
+                    title: i18n.t('theme'),
+                    headerShown: true, 
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                }}
+            />
         </Stack>
     );
 }

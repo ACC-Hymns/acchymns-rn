@@ -2,7 +2,7 @@ import { BookSummary } from "@/constants/types";
 import { HYMNAL_FOLDER } from "./hymnals";
 import * as FileSystem from 'expo-file-system';
 import PdfPageImage from 'react-native-pdf-page-image';
-import { Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
+import { BlendMode, Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { Image } from "react-native";
 
@@ -21,7 +21,7 @@ async function loadSkiaImageFromUri(uri: string) {
     }
 }
 
-async function getImageData(bookData: BookSummary, songId: string): Promise<{ uri: string; aspectRatio: number } | null> {
+async function getImageData(bookData: BookSummary, songId: string, inverted: boolean): Promise<{ uri: string; aspectRatio: number } | null> {
     const filePath = `${FileSystem.documentDirectory}${HYMNAL_FOLDER}/${bookData.name.short}/songs/${songId}.${bookData.fileExtension}`.replace(/\/\//g, '/');
     const normalizedFilePath = filePath.replace(/\\/g, '/').replace(/\/\//g, '/');
     const fileInfo = await FileSystem.getInfoAsync(normalizedFilePath);
@@ -120,6 +120,14 @@ async function getImageData(bookData: BookSummary, songId: string): Promise<{ ur
             }
             const canvas = surface.getCanvas();
 
+
+            const invertMatrix = [
+                -1, 0, 0, 0, 255,  // Red channel
+                0,-1, 0, 0, 255,  // Green channel
+                0, 0,-1, 0, 255,  // Blue channel
+                0, 0, 0, 1,   0   // Alpha channel
+            ]
+
             // Draw images on canvas
             for (let i = 0; i < images.length; i++) {
                 const img = images[i];
@@ -129,8 +137,17 @@ async function getImageData(bookData: BookSummary, songId: string): Promise<{ ur
                 if (img) {
                     // Draw only the cropped portion
                     const paint = Skia.Paint(); // Create a SkPaint instance
+
                     canvas.drawImageRect(img, srcRect, dstRect, paint);
                 }
+            }
+
+            // draw a white rectangle over the canvas
+            if (inverted) {
+                const whitePaint = Skia.Paint();
+                whitePaint.setBlendMode(BlendMode.Difference);
+                whitePaint.setColor(Skia.Color('white'));
+                canvas.drawRect({x: 0, y: 0, width: maxWidth, height: totalHeight}, whitePaint);
             }
 
             // Draw each image stacked vertically
@@ -151,11 +168,48 @@ async function getImageData(bookData: BookSummary, songId: string): Promise<{ ur
             };
         } else {
             if (imageURI) {
-                let size = await Image.getSize(imageURI)
-                result = {
-                    uri: imageURI,
-                    aspectRatio: size.width / size.height,
-                };
+
+                if(inverted) {
+                    // invert the image
+                    const img = await loadSkiaImageFromUri(imageURI);
+                
+                    if (img) {
+                        const surface = Skia.Surface.MakeOffscreen(img.width(), img.height());
+                        if (!surface) {
+                            console.error("Failed to create offscreen surface");
+                            return null;
+                        }
+                        const canvas = surface.getCanvas();
+                        
+                        // Draw the image
+                        const paint = Skia.Paint();
+                        canvas.drawImageRect(img, {x: 0, y: 0, width: img.width(), height: img.height()}, {x: 0, y: 0, width: img.width(), height: img.height()}, paint);
+                        
+                        // If inverted, apply inversion
+                        if (inverted) {
+                            const whitePaint = Skia.Paint();
+                            whitePaint.setBlendMode(BlendMode.Difference);
+                            whitePaint.setColor(Skia.Color('white'));
+                            canvas.drawRect({x: 0, y: 0, width: img.width(), height: img.height()}, whitePaint);
+                        }
+                        
+                        // Get final image
+                        const resultImage = surface.makeImageSnapshot();
+                        const base64 = resultImage.encodeToBase64();
+                        const dataUri = `data:image/png;base64,${base64}`;
+                        
+                        result = {
+                            uri: dataUri,
+                            aspectRatio: img.width() / img.height(),
+                        };
+                    }
+                } else {
+                    let size = await Image.getSize(imageURI)
+                    result = {
+                        uri: imageURI,
+                        aspectRatio: size.width / size.height,
+                    };
+                }
             }
         }
 

@@ -235,6 +235,7 @@ export default function BookmarkScreen() {
                         alignItems: 'center',
                         paddingVertical: 10, // Add padding to allow content to grow
                         minHeight: 60, // Ensure a minimum height of 60
+                        marginBottom: 8,
                     }}
 
                     onPress={() => {
@@ -277,7 +278,6 @@ export default function BookmarkScreen() {
                     keyboardShouldPersistTaps='always'
                     renderItem={renderItem}
                     style={[styles.scrollView]}
-                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
@@ -316,6 +316,7 @@ function makeStyles(theme: "light" | "dark") {
             width: 70,
             alignItems: 'center',
             justifyContent: 'flex-start',
+            marginBottom: 8,
         },
         deleteButton: {
             backgroundColor: '#fd3b31',

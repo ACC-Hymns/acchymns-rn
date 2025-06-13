@@ -9,8 +9,8 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
-import { BookSummary } from '@/constants/types';
-import { Button, Pressable, TouchableOpacity, View, Text } from 'react-native';
+import { Bookmark, BookSummary } from '@/constants/types';
+import { Button, Pressable, TouchableOpacity, View, Text, Appearance } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
@@ -24,6 +24,7 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
+import DefaultPreference from 'react-native-default-preference';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -53,6 +54,18 @@ export default function RootLayout() {
     const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
     const [languageOverride, setLanguageOverride] = useState<string | null>(null);
     const [postHogOptedIn, setPostHogOptedIn] = useState<boolean | null>(null);
+    const [themeOverride, setThemeOverride] = useState<string | null>(null);
+    const [invertSheetMusic, setInvertSheetMusic] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        const appliedTheme =
+            themeOverride === 'system' || themeOverride === null
+                ? null // system default
+                : themeOverride;
+    
+        Appearance.setColorScheme(appliedTheme as 'light' | 'dark' | null);
+    }, [themeOverride]);
+
     // save preferences to async storage
     useEffect(() => {
 
@@ -68,13 +81,19 @@ export default function RootLayout() {
                 if(postHogOptedIn !== null)
                     await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
 
+                if(themeOverride !== null)
+                    await AsyncStorage.setItem('themeOverride', themeOverride);
+
+                if(invertSheetMusic !== null)
+                    await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
+
                 console.log('Saved preferences.');
             } catch (error) {
                 console.error('Error saving preferences:', error);
             }
         }
         savePreferences();
-    }, [legacyNumberGrouping, languageOverride, postHogOptedIn]);
+    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -94,9 +113,13 @@ export default function RootLayout() {
             languageOverride,
             setLanguageOverride,
             postHogOptedIn,
-            setPostHogOptedIn
+            setPostHogOptedIn,
+            themeOverride,
+            setThemeOverride,
+            invertSheetMusic,
+            setInvertSheetMusic
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride]);
     // Load hymnal data
 
     const i18n = new I18n(translations);
@@ -104,7 +127,7 @@ export default function RootLayout() {
     i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
     useEffect(() => {
         // load preferences from async storage
-        AsyncStorage.getItem('legacyNumberGrouping').then((value) => {
+        AsyncStorage.getItem('legacyNumberGrouping').then(async (value) => {
             if(value !== null)
                 setLegacyNumberGrouping(value === 'true');
         });
@@ -115,6 +138,14 @@ export default function RootLayout() {
         AsyncStorage.getItem('postHogOptedIn').then((value) => {
             if(value !== null)
                 setPostHogOptedIn(value === 'true');
+        });
+        AsyncStorage.getItem('themeOverride').then((value) => {
+            if(value !== null)
+                setThemeOverride(value);
+        });
+        AsyncStorage.getItem('invertSheetMusic').then(async (value) => {
+            if(value !== null)
+                setInvertSheetMusic(value === 'true');
         });
 
         const data = loadHymnals();

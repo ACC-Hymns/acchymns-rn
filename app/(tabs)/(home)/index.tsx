@@ -90,48 +90,52 @@ export default function HomeScreen() {
             console.error("Error loading sort order:", error);
         }
     };
-    
-    const UnderlayRight = () => {
-        const { close, percentOpen, item } = useSwipeableItemParams<string>();
-        const animatedStyles = useAnimatedStyle(() => ({
-            transform: [{ translateX: (1 - (percentOpen.value)) * 100 }],
-            opacity: percentOpen.value,
-        }));
-        return (
-            <Animated.View style={[styles.deleteButtonContainer,animatedStyles]}>
-                <TouchableOpacity 
-                    activeOpacity={0.7}
-                    onPress={() => {
-                        Alert.alert(`${i18n.t('deleteAlertTitle')}"${bookData![item].name.medium}"`, i18n.t('deleteAlertMessage'), [
-                            {
-                                text: i18n.t('cancel'),
-                                onPress: () => {
-                                    close();
-                                },
-                                style: 'cancel',
-                                isPreferred: true
-                            },
-                            {
-                                text: i18n.t('delete'),
-                                onPress: () => {
-                                    close();
-                                    deleteHymnal(item);
-                                },
-                                style: 'destructive'
-                            },
-                        ]);
-                    }}
-                    style={[styles.deleteButton]}
-                >
-                    <IconSymbol
-                        name="trash"
-                        size={24}
-                        weight='light'
-                        color='white' />
-                </TouchableOpacity>
-            </Animated.View>
-        );
-    };
+
+    const UnderlayRight = useMemo(() => {
+        return () => {
+            const { close, percentOpen, item } = useSwipeableItemParams<string>();
+            const animatedStyles = useAnimatedStyle(() => ({
+                transform: [{ translateX: (1 - (percentOpen.value)) * 100 }],
+                opacity: percentOpen.value,
+            }));
+            return (
+                <Animated.View style={[styles.deleteButtonContainer,animatedStyles]}>
+                    <TouchableOpacity 
+                        activeOpacity={0.7}
+                        onPress={() => {
+                            if (bookData && bookData[item]) {
+                                Alert.alert(`${i18n.t('deleteAlertTitle')}"${bookData[item].name.medium}"`, i18n.t('deleteAlertMessage'), [
+                                    {
+                                        text: i18n.t('cancel'),
+                                        onPress: () => {
+                                            close();
+                                        },
+                                        style: 'cancel',
+                                        isPreferred: true
+                                    },
+                                    {
+                                        text: i18n.t('delete'),
+                                        onPress: () => {
+                                            close();
+                                            deleteHymnal(item);
+                                        },
+                                        style: 'destructive'
+                                    },
+                                ]);
+                            }
+                        }}
+                        style={[styles.deleteButton]}
+                    >
+                        <IconSymbol
+                            name="trash"
+                            size={24}
+                            weight='light'
+                            color='white' />
+                    </TouchableOpacity>
+                </Animated.View>
+            );
+        };
+    }, [context?.languageOverride, i18n.locale]);
     
     
     const renderDraggableHymnalItem = useMemo(() => {
@@ -170,7 +174,7 @@ export default function HomeScreen() {
             </View>
         );
     // Add dependencies as needed
-    }, [bookData, router]);
+    }, [bookData, router, context?.languageOverride, i18n.locale]);
 
     return (
         <>

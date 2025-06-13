@@ -29,6 +29,7 @@ import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
 import { translations } from '@/constants/localization';
+import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix  } from '@shopify/react-native-skia';
 
 
 export default function DisplayScreen() {
@@ -87,7 +88,7 @@ export default function DisplayScreen() {
             title: params.number,
             headerRight: () => (
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                    { (
+                    {(
                         <TouchableOpacity onPress={handlePress}>
                             <Ionicons
                                 name="musical-notes"
@@ -112,6 +113,30 @@ export default function DisplayScreen() {
 
     useFocusEffect(
         useCallback(() => {
+
+            // Unlock orientation on page load
+            ScreenOrientation.unlockAsync();
+            const handleOrientationChange = async () => {
+                setIsHorizontal(await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_LEFT || await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_RIGHT);
+            }
+
+            const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
+
+            navigation.addListener('beforeRemove', async (e) => {
+                if (e.data.action.type == 'GO_BACK') {
+                    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+                }
+
+                const nextRoute = (e.data?.action?.payload as { name?: string, params: { [key: string]: string }, singular: any });
+                console.log('Navigating to:', nextRoute.name);
+                if (!nextRoute.name?.startsWith('index')) {
+                    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+                } else {
+                    ScreenOrientation.unlockAsync();
+                }
+                ScreenOrientation.removeOrientationChangeListener(subscription);
+            });
+
             if (!context || !songData) return;
             posthog.capture('hymn_viewed', {
                 hymnal_id: params.id,
@@ -132,7 +157,7 @@ export default function DisplayScreen() {
                 setSongData(data);
 
                 // prefetch adjecent songs
-                
+
                 const songNumbers = Object.keys(songData || {});
                 const currentIndex = songNumbers.indexOf(params.number);
                 const nextIndex = currentIndex + 1;
@@ -193,7 +218,12 @@ export default function DisplayScreen() {
 
                 if (!bookData) return;
 
-                const imageData = await getImageData(bookData, params.number);
+
+                // if invertSheetMusic is true AND theme is dark, invert the image
+                const inverted = context?.invertSheetMusic ?? false;
+                const shouldInvert = inverted && theme === 'dark';
+
+                const imageData = await getImageData(bookData, params.number, shouldInvert);
                 if (!imageData) return;
                 setImageData(imageData);
             } catch (error) {
@@ -205,29 +235,6 @@ export default function DisplayScreen() {
 
         fetchData();
 
-        // Unlock orientation on page load
-        ScreenOrientation.unlockAsync();
-        const handleOrientationChange = async () => {
-            setIsHorizontal(await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_LEFT || await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_RIGHT);
-        }
-
-        const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
-
-        navigation.addListener('beforeRemove', async (e) => {
-            if(e.data.action.type == 'GO_BACK') {
-                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-            }
-
-            const nextRoute = (e.data?.action?.payload as { name?: string, params: {[key: string]: string}, singular: any });
-            console.log('Navigating to:', nextRoute.name);
-            if(!nextRoute.name?.startsWith('index')) {
-                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-            } else {
-                ScreenOrientation.unlockAsync();
-            }
-            ScreenOrientation.removeOrientationChangeListener(subscription);
-        });
-
         return () => {
 
             // Clean up audio players
@@ -238,7 +245,7 @@ export default function DisplayScreen() {
                 pianoAudioPlayer.current.release();
             }
         };
-    }, [bookData]);
+    }, [bookData, context?.invertSheetMusic, theme]);
 
     const [isHorizontal, setIsHorizontal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -340,7 +347,7 @@ export default function DisplayScreen() {
                     }}
                     onPress={() => {
                         if (pianoAudioPlayer.current) {
-                            if(pianoAudioPlayer.current.playing) {
+                            if (pianoAudioPlayer.current.playing) {
                                 pianoAudioPlayer.current.pause();
                                 setIsPianoPlaying(false);
                             } else {
@@ -367,7 +374,7 @@ export default function DisplayScreen() {
                     )}
                 </TouchableOpacity>
                 <View style={{ width: 350, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }}>
-                    <Text style={{ width: 32, textAlign: 'left', color: Colors[theme].text}}>
+                    <Text style={{ width: 32, textAlign: 'left', color: Colors[theme].text }}>
                         {formatTime(currentTime)}
                     </Text>
                     <Slider
@@ -393,7 +400,7 @@ export default function DisplayScreen() {
         )
     };
 
-    const offset = useSharedValue(0);    
+    const offset = useSharedValue(0);
     const MAX_OFFSET = 75;
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -422,21 +429,21 @@ export default function DisplayScreen() {
                 offset.value = Math.max(event.translationX, -MAX_OFFSET);
             }
             const distance = Math.abs(offset.value);
-            if(distance > MAX_OFFSET/2) {
+            if (distance > MAX_OFFSET / 2) {
                 // if swiping left, set to 0
                 if (offset.value < 0) {
-                    if(!isSwipingLeft.value) {
+                    if (!isSwipingLeft.value) {
                         haptic()
                         isSwipingLeft.value = true;
                     }
                 } else {
-                    if(!isSwipingRight.value) {
+                    if (!isSwipingRight.value) {
                         haptic()
                         isSwipingRight.value = true;
                     }
                 }
             } else {
-                if(isSwipingLeft.value || isSwipingRight.value) {
+                if (isSwipingLeft.value || isSwipingRight.value) {
                     haptic();
                 }
                 isSwipingLeft.value = false;
@@ -525,7 +532,7 @@ export default function DisplayScreen() {
                                 </View>
                             );
                         })()}
-                        
+
                     </Animated.View>
                 </GestureDetector>
             ) : (
@@ -582,7 +589,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         container: {
             flex: 1,
-            backgroundColor: 'white',
+            backgroundColor: Colors[theme]['songBackground'],
         },
         contentContainer: {
             flex: 1,

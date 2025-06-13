@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useContext } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import React, { useContext, useCallback, useEffect } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
@@ -20,6 +20,9 @@ export default function PreferencesScreen() {
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+
+    const themeName = (theme: string) => theme === 'system' ? i18n.t('systemDefault') : theme === 'light' ? i18n.t('lightMode') : i18n.t('darkMode');
+    const languageName = (language: string) => getLanguageName(language);
 
     return (
         <>
@@ -53,7 +56,24 @@ export default function PreferencesScreen() {
                             <View style={styles.settingsItem}>
                                 <Text style={styles.settingsText}>{i18n.t('language')}</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{getLanguageName(context?.languageOverride ?? 'en')}</Text>
+                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{languageName(context?.languageOverride ?? 'en')}</Text>
+                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                </View>
+                            </View>
+                        </TouchableHighlight>
+                    </View>
+                    <View style={{ marginTop: 24 }}>
+                        <Text style={styles.settingsLabel}>{i18n.t('appearance')}</Text>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        <TouchableHighlight
+                            onPress={() => router.push('/(tabs)/(settings)/theme')}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <Text style={styles.settingsText}>{i18n.t('theme')}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{themeName(context?.themeOverride ?? 'system')}</Text>
                                     <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
