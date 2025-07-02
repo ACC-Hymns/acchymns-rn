@@ -95,7 +95,8 @@
     "react-native-zoom-toolkit": "^4.0.2",
     "rn-user-defaults": "^1.8.2",
     "stream-browserify": "^3.0.0",
-    "zeego": "^3.0.6"
+    "zeego": "^3.0.6",
+    "react-native-track-player": "github:doublesymmetry/react-native-track-player#pull/2478"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
