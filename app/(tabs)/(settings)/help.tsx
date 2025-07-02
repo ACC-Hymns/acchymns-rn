@@ -11,6 +11,7 @@ import { getLocales } from 'expo-localization';
 import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
 import PostHog, { usePostHog } from 'posthog-react-native';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
 
 export default function HelpScreen() {
 
@@ -35,7 +36,7 @@ export default function HelpScreen() {
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
             <ScrollView style={styles.scrollView}>
                 <View style={{}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('general')}</Text>
+                    <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight
@@ -45,7 +46,7 @@ export default function HelpScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{i18n.t('reportBug')}</Text>
+                            <StyledText style={styles.settingsText}>{i18n.t('reportBug')}</StyledText>
                             <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                         </View>
                     </TouchableHighlight>
@@ -57,7 +58,7 @@ export default function HelpScreen() {
                             underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{i18n.t('requestBook')}</Text>
+                            <StyledText style={styles.settingsText}>{i18n.t('requestBook')}</StyledText>
                             <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                         </View>
                     </TouchableHighlight>
@@ -69,7 +70,7 @@ export default function HelpScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{i18n.t('privacyPolicy')}</Text>
+                            <StyledText style={styles.settingsText}>{i18n.t('privacyPolicy')}</StyledText>
                             <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                         </View>
                     </TouchableHighlight>
@@ -104,12 +105,12 @@ export default function HelpScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.settingsText}>{context?.postHogOptedIn ? i18n.t('posthogOptIn') : i18n.t('posthogOptOut')}</Text>
+                            <StyledText style={styles.settingsText}>{context?.postHogOptedIn ? i18n.t('posthogOptIn') : i18n.t('posthogOptOut')}</StyledText>
                         </View>
                     </TouchableHighlight>
                 </View>
                 <View style={{marginTop: 24}}>
-                    <Text style={styles.settingsLabel}>{i18n.t('debug')}</Text>
+                    <StyledText style={styles.settingsLabel}>{i18n.t('debug')}</StyledText>
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight
@@ -135,7 +136,7 @@ export default function HelpScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.destructiveSettingsText}>{i18n.t('clearCache')}</Text>
+                            <StyledText style={styles.destructiveSettingsText}>{i18n.t('clearCache')}</StyledText>
                         </View>
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
@@ -166,7 +167,7 @@ export default function HelpScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <Text style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</Text>
+                            <StyledText style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</StyledText>
                         </View>
                         </TouchableHighlight>
                     </View>

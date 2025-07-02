@@ -16,6 +16,7 @@ import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
 
 export default function HymnalImporter() {
 
@@ -110,12 +111,12 @@ export default function HymnalImporter() {
 
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <IconSymbol name="network.slash" size={64} color={Colors[theme]['fadedText']} />
-                    <Text style={{ color: Colors[theme]['fadedText'], fontSize: 18, marginTop: 16, fontWeight: '500' }}>
+                    <StyledText style={{ color: Colors[theme]['fadedText'], fontSize: 18, marginTop: 16, fontWeight: '500' }}>
                         {i18n.t('failedToLoadHymnals')}
-                    </Text>
-                    <Text style={{ color: Colors[theme]['fadedText'], fontSize: 14, marginTop: 8, textAlign: 'center' }}>
+                    </StyledText>
+                    <StyledText style={{ color: Colors[theme]['fadedText'], fontSize: 14, marginTop: 8, textAlign: 'center' }}>
                         {i18n.t('failedToLoadHymnalsMessage')}
-                    </Text>
+                    </StyledText>
                     <TouchableOpacity
                         onPress={() => refetch()}
                         style={{
@@ -126,7 +127,7 @@ export default function HymnalImporter() {
                             borderRadius: 8,
                         }}
                     >
-                        <Text style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>{i18n.t('retry')}</Text>
+                        <StyledText style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>{i18n.t('retry')}</StyledText>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -149,7 +150,7 @@ export default function HymnalImporter() {
                             contentContainerStyle={[styles.scrollView, { flexGrow: 1 }]}
                             ListHeaderComponent={(
                                 <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <Text style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</Text>
+                                    <StyledText style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</StyledText>
                                 </View>
                             )}
                             renderItem={({ item }) => (
@@ -209,15 +210,15 @@ export default function HymnalImporter() {
                                         end={{ x: 1, y: 0 }}
                                         style={[styles.gradient]}
                                     >
-                                        <Text style={styles.buttonText}>{item.name.medium}</Text>
+                                        <StyledText style={styles.buttonText}>{item.name.medium}</StyledText>
                                         {context?.downloadProgressValues[item.name.short] === -1 ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</Text>
+                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</StyledText>
                                         ) : ((context?.downloadProgressValues[item.name.short] ?? 0) > 100) ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</Text>
+                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</StyledText>
                                         ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</Text>
+                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</StyledText>
                                         ) : (
-                                            <Text style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</Text>
+                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</StyledText>
                                         )}
                                         {(context?.downloadProgressValues[item.name.short] ?? 0) === 0 && (
                                             <View style={{ position: 'absolute', right: 20 }}>

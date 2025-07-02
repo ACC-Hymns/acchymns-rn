@@ -56,6 +56,13 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
+                name="discover"
+                options={{
+                    title: i18n.t('discover'),
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
+                }}
+            />
+            <Tabs.Screen
                 name="bookmarks"
                 options={{
                     title: i18n.t('bookmarks'),

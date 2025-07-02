@@ -25,6 +25,8 @@ import 'react-native-get-random-values';
 import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
 import DefaultPreference from 'react-native-default-preference';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import StyledText from '@/components/StyledText';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -36,8 +38,8 @@ SplashScreen.preventAutoHideAsync();
 
 // Set the animation options. This is optional.
 SplashScreen.setOptions({
-  duration: 1000,
-  fade: true,
+    duration: 1000,
+    fade: true,
 });
 
 export default function RootLayout() {
@@ -45,7 +47,13 @@ export default function RootLayout() {
     const theme = colorScheme ?? 'light';
     const [appIsReady, setAppIsReady] = useState(false);
     const [loaded] = useFonts({
-        SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+        Regular: require('@/assets/fonts/Lato-Regular.ttf'),
+        Bold: require('@/assets/fonts/Lato-Bold.ttf'),
+        Italic: require('@/assets/fonts/Lato-Italic.ttf'),
+        Light: require('@/assets/fonts/Lato-Light.ttf'),
+        LightItalic: require('@/assets/fonts/Lato-LightItalic.ttf'),
+        Black: require('@/assets/fonts/Lato-Black.ttf'),
+        BlackItalic: require('@/assets/fonts/Lato-BlackItalic.ttf'),
     });
 
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
@@ -62,7 +70,7 @@ export default function RootLayout() {
             themeOverride === 'system' || themeOverride === null
                 ? null // system default
                 : themeOverride;
-    
+
         Appearance.setColorScheme(appliedTheme as 'light' | 'dark' | null);
     }, [themeOverride]);
 
@@ -72,19 +80,19 @@ export default function RootLayout() {
         console.log('Saving preferences...');
         const savePreferences = async () => {
             try {
-                if(legacyNumberGrouping !== null)
+                if (legacyNumberGrouping !== null)
                     await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
-                
-                if(languageOverride !== null)
+
+                if (languageOverride !== null)
                     await AsyncStorage.setItem('languageOverride', languageOverride);
-                
-                if(postHogOptedIn !== null)
+
+                if (postHogOptedIn !== null)
                     await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
 
-                if(themeOverride !== null)
+                if (themeOverride !== null)
                     await AsyncStorage.setItem('themeOverride', themeOverride);
 
-                if(invertSheetMusic !== null)
+                if (invertSheetMusic !== null)
                     await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
 
                 console.log('Saved preferences.');
@@ -128,23 +136,23 @@ export default function RootLayout() {
     useEffect(() => {
         // load preferences from async storage
         AsyncStorage.getItem('legacyNumberGrouping').then(async (value) => {
-            if(value !== null)
+            if (value !== null)
                 setLegacyNumberGrouping(value === 'true');
         });
         AsyncStorage.getItem('languageOverride').then((value) => {
-            if(value !== null)
+            if (value !== null)
                 setLanguageOverride(value);
         });
         AsyncStorage.getItem('postHogOptedIn').then((value) => {
-            if(value !== null)
+            if (value !== null)
                 setPostHogOptedIn(value === 'true');
         });
         AsyncStorage.getItem('themeOverride').then((value) => {
-            if(value !== null)
+            if (value !== null)
                 setThemeOverride(value);
         });
         AsyncStorage.getItem('invertSheetMusic').then(async (value) => {
-            if(value !== null)
+            if (value !== null)
                 setInvertSheetMusic(value === 'true');
         });
 
@@ -165,7 +173,7 @@ export default function RootLayout() {
     }
 
     const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY;
-    if(!POSTHOG_API_KEY) {
+    if (!POSTHOG_API_KEY) {
         console.error('POSTHOG_API_KEY is not set');
     }
 
@@ -173,35 +181,37 @@ export default function RootLayout() {
         <PostHogProvider apiKey={POSTHOG_API_KEY} options={{
             host: "https://us.i.posthog.com",
         }}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <HymnalContext.Provider value={context}>
-                    <QueryClientProvider client={new QueryClient()}>
-                        <Stack screenOptions={{headerTitleAlign: 'center', headerShown: false}}>
-                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                            <Stack.Screen 
-                                name="hymnal_importer" 
-                                options={{ 
-                                    headerShown: true, 
-                                    headerTitle: i18n.t('addHymnal'),
-                                    headerBackTitle: i18n.t('back'),
-                                    headerLeft: () => (
-                                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
-                                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
-                                        </TouchableOpacity>
-                                    ),
-                                    headerShadowVisible: false,
-                                    presentation: 'modal', 
-                                }}
-                            />
-                            <Stack.Screen name="+not-found" />
-                        </Stack>
-                        <StatusBar style="auto" />
-                    </QueryClientProvider>
-                </HymnalContext.Provider>
-            </ThemeProvider>
-        </GestureHandlerRootView>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                    <HymnalContext.Provider value={context}>
+                        <QueryClientProvider client={new QueryClient()}>
+                            <BottomSheetModalProvider>
+                                <Stack screenOptions={{ headerTitleAlign: 'center', headerShown: false }}>
+                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                    <Stack.Screen
+                                        name="hymnal_importer"
+                                        options={{
+                                            headerShown: true,
+                                            headerTitle: i18n.t('addHymnal'),
+                                            headerBackTitle: i18n.t('back'),
+                                            headerLeft: () => (
+                                                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
+                                                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                                                    <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
+                                                </TouchableOpacity>
+                                            ),
+                                            headerShadowVisible: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
+                                    <Stack.Screen name="+not-found" />
+                                </Stack>
+                                <StatusBar style="auto" />
+                            </BottomSheetModalProvider>
+                        </QueryClientProvider>
+                    </HymnalContext.Provider>
+                </ThemeProvider>
+            </GestureHandlerRootView>
         </PostHogProvider>
     );
 }

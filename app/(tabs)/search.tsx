@@ -14,6 +14,8 @@ import React from 'react';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
+import GenericGradientButton from '@/components/GenericGradientButton';
 
 
 export default function SearchScreen() {
@@ -132,7 +134,7 @@ export default function SearchScreen() {
                 a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
                     b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
                 )
-        ));
+            ));
     }, [search, songList]);
     // Select 10 random songs from songList as featured songs
     const featuredList = songList
@@ -149,19 +151,11 @@ export default function SearchScreen() {
                     scrollEnabled={scrollEnabled}
                     data={dataSource}
                     keyboardShouldPersistTaps='always'
-                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
                     renderItem={({ item, index }) => (
-                        <TouchableOpacity
-                            style={{
-                                marginHorizontal: 20,
-                                borderRadius: 12,
-                                backgroundColor: item.book.primaryColor,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                paddingVertical: 10, // Add padding to allow content to grow
-                                minHeight: 60, // Ensure a minimum height of 60
-                            }}
-
+                        <GenericGradientButton
+                            primaryColor={item.book.primaryColor}
+                            secondaryColor={item.book.secondaryColor}
                             onPress={() => {
                                 if (isNavigating) return;
                                 if (item.book.name.short && item.number) {
@@ -172,27 +166,32 @@ export default function SearchScreen() {
                                 setIsNavigating(true);
                                 setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                             }}
-
-                            activeOpacity={0.7}
+                            style={{
+                                marginHorizontal: 20,
+                                borderRadius: 12,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                minHeight: 84, // Ensure a minimum height of 60
+                            }}
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
+                                <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                                    <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
+                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
                                 </View>
                                 <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
+                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
                                 </View>
                             </View>
-
-                        </TouchableOpacity>
-                    )}
+                        </GenericGradientButton>
+                    )
+                    }
                     style={[styles.scrollView]}
                     ListFooterComponent={() => <View style={{ height: 100 }} />}
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
-                                <Text style={styles.textStyle}>{i18n.t('search')}</Text>
+                                <StyledText style={styles.textStyle}>{i18n.t('search')}</StyledText>
                             </View>
                             <SearchBar
                                 ref={searchInputRef}
@@ -219,132 +218,75 @@ export default function SearchScreen() {
                                 placeholder={i18n.t('search')}
                                 style={styles.searchBar}
                             />
-                            {(searchHistory.length > 0 && search.trim().length == 0 && searchBarFocused) && (
-                                <View style={styles.searchHistoryContainer}>
-                                    <View style={styles.searchHistoryHeader}>
-                                        <Text style={styles.searchHistoryTitle}>{i18n.t('recent')}</Text>
-                                        <Button
-                                            onPress={() => {
-                                                Alert.alert(i18n.t('clearHistory'), i18n.t('clearHistoryMessage'), [
-                                                    {
-                                                        text: i18n.t('cancel'),
-                                                        onPress: () => {
-
-                                                        },
-                                                        style: 'cancel',
-                                                        isPreferred: true
-                                                    },
-                                                    {
-                                                        text: i18n.t('clearAll'),
-                                                        onPress: () => {
-                                                            setSearchHistory([]);
-                                                            saveSearches([]);
-                                                        },
-                                                        style: 'destructive'
-                                                    },
-                                                ]);
-                                            }}
-                                            accessibilityLabel={i18n.t('clearHistory')}
-                                            title={i18n.t('clear')}
-                                        />
-                                    </View>
-                                    <Divider />
-                                    <FlatList
-                                        style={{ maxHeight: 300 }}
-                                        scrollEnabled={scrollEnabled}
-                                        data={searchHistory}
-                                        keyboardShouldPersistTaps='handled'
-                                        renderItem={({ item }) => (
-                                            <SearchHistoryItem
-                                                item={item}
+                            {
+                                (searchHistory.length > 0 && search.trim().length == 0) && (
+                                    <View style={styles.searchHistoryContainer}>
+                                        <View style={styles.searchHistoryHeader}>
+                                            <StyledText style={styles.searchHistoryTitle}>{i18n.t('recent')}</StyledText>
+                                            <Button
                                                 onPress={() => {
-                                                    setSearch(item);
-                                                    addToSearchHistory(item);
-                                                }}
-                                                onGestureStart={() => {
-                                                    // disable scrolling when user is dragging
-                                                    setScrollEnabled(false);
-                                                }}
-                                                onGestureEnd={() => {
-                                                    // enable scrolling when user is done dragging
-                                                    setScrollEnabled(true);
-                                                }}
-                                                onDelete={() => {
-                                                    console.log('Deleting item:', item);
-                                                    setSearchHistory((prevHistory) => {
-                                                        const newHistory = [...prevHistory];
-                                                        newHistory.splice(newHistory.indexOf(item), 1);
+                                                    Alert.alert(i18n.t('clearHistory'), i18n.t('clearHistoryMessage'), [
+                                                        {
+                                                            text: i18n.t('cancel'),
+                                                            onPress: () => {
 
-                                                        saveSearches(newHistory); // Save the updated search history to AsyncStorage
-                                                        return newHistory;
-                                                    });
+                                                            },
+                                                            style: 'cancel',
+                                                            isPreferred: true
+                                                        },
+                                                        {
+                                                            text: i18n.t('clearAll'),
+                                                            onPress: () => {
+                                                                setSearchHistory([]);
+                                                                saveSearches([]);
+                                                            },
+                                                            style: 'destructive'
+                                                        },
+                                                    ]);
                                                 }}
-                                                isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                                accessibilityLabel={i18n.t('clearHistory')}
+                                                title={i18n.t('clear')}
                                             />
-                                        )}
-                                    >
-                                    </FlatList>
-                                </View>
-                            )}
-                            {(!searchBarFocused) && (
-                                <View style={{ marginTop: 24 }}>
-                                    {featuredList.length > 0 && (
-                                        <Text style={[styles.headerText, {marginHorizontal: 30}]}>{i18n.t('featured')}</Text>
-                                    )}
-                                    <ScrollView
-                                    horizontal
-                                    showsVerticalScrollIndicator={false}
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ padding: 20 }}>
+                                        </View>
+                                        <Divider />
                                         <FlatList
-                                            key={numColumns}
-                                            scrollEnabled={false}
-                                            contentContainerStyle={{
-                                            alignSelf: 'flex-start',
-                                            }}
-                                            numColumns={numColumns}
-                                            showsVerticalScrollIndicator={false}
-                                            showsHorizontalScrollIndicator={false}
-                                            data={featuredList}
-                                            renderItem={({item}) => (
-                                                <TouchableOpacity
-                                                    style={{
-                                                        margin: 4,
-                                                        width: Dimensions.get('window').width/1.5,
-                                                        borderRadius: 12,
-                                                        backgroundColor: item.book.primaryColor,
-                                                        justifyContent: 'center',
-                                                        alignItems: 'center',
-                                                        paddingVertical: 10, // Add padding to allow content to grow
-                                                        minHeight: 100, // Ensure a minimum height of 60
-                                                    }}
-
+                                            style={{ maxHeight: 300 }}
+                                            scrollEnabled={scrollEnabled}
+                                            data={searchHistory}
+                                            keyboardShouldPersistTaps='handled'
+                                            renderItem={({ item }) => (
+                                                <SearchHistoryItem
+                                                    item={item}
                                                     onPress={() => {
-                                                        if (isNavigating) return;
-                                                        if (item.book.name.short && item.number) {
-                                                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                                                        } else {
-                                                            console.error("Invalid item data: ", item);
-                                                        }
-                                                        setIsNavigating(true);
-                                                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                                        setSearch(item);
+                                                        addToSearchHistory(item);
                                                     }}
+                                                    onGestureStart={() => {
+                                                        // disable scrolling when user is dragging
+                                                        setScrollEnabled(false);
+                                                    }}
+                                                    onGestureEnd={() => {
+                                                        // enable scrolling when user is done dragging
+                                                        setScrollEnabled(true);
+                                                    }}
+                                                    onDelete={() => {
+                                                        console.log('Deleting item:', item);
+                                                        setSearchHistory((prevHistory) => {
+                                                            const newHistory = [...prevHistory];
+                                                            newHistory.splice(newHistory.indexOf(item), 1);
 
-                                                    activeOpacity={0.7}
-                                                >
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                                        <View style={{ width: '100%', alignSelf: 'flex-start' }}>
-                                                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                                                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
-                                                        </View>
-                                                    </View>
-
-                                                </TouchableOpacity>
+                                                            saveSearches(newHistory); // Save the updated search history to AsyncStorage
+                                                            return newHistory;
+                                                        });
+                                                    }}
+                                                    isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                                />
                                             )}
-                                        />
-                                    </ScrollView>
-                                </View>
-                            )}
+                                        >
+                                        </FlatList>
+                                    </View>
+                                )
+                            }
                         </>
                     }
                 />
@@ -368,7 +310,7 @@ function makeStyles(theme: "light" | "dark") {
         searchHistoryContainer: {
             backgroundColor: Colors[theme]['background'],
             borderRadius: 16,
-            paddingHorizontal: 20 
+            paddingHorizontal: 20
         },
         searchBar: {
             marginHorizontal: 20,

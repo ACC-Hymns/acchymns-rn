@@ -9,6 +9,7 @@ import { HymnalContext } from '@/constants/context';
 import { getLanguageName, translations } from '@/constants/localization';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import StyledText from '@/components/StyledText';
 
 export default function PreferencesScreen() {
 
@@ -29,14 +30,14 @@ export default function PreferencesScreen() {
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                 <ScrollView style={styles.scrollView}>
                     <View style={{}}>
-                        <Text style={styles.settingsLabel}>{i18n.t('accessibilityAndLanguage')}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('accessibilityAndLanguage')}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</StyledText>
                                 <Switch
                                     style={{ marginVertical: -8 }}
                                     trackColor={{ true: Colors[theme].primary }}
@@ -54,16 +55,16 @@ export default function PreferencesScreen() {
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('language')}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('language')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{languageName(context?.languageOverride ?? 'en')}</Text>
+                                    <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{languageName(context?.languageOverride ?? 'en')}</StyledText>
                                     <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
                     </View>
                     <View style={{ marginTop: 24 }}>
-                        <Text style={styles.settingsLabel}>{i18n.t('appearance')}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('appearance')}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
@@ -71,9 +72,9 @@ export default function PreferencesScreen() {
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('theme')}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('theme')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{themeName(context?.themeOverride ?? 'system')}</Text>
+                                    <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{themeName(context?.themeOverride ?? 'system')}</StyledText>
                                     <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>

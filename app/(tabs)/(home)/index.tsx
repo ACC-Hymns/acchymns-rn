@@ -24,6 +24,7 @@ import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js'
 import React from 'react';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
 
 export default function HomeScreen() {
 
@@ -207,7 +208,7 @@ export default function HomeScreen() {
                     renderItem={renderDraggableHymnalItem}
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
-                            <Text style={styles.textStyle}>{i18n.t('home')}</Text>
+                            <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
                         </View>
                     }
                     ListFooterComponent={
@@ -226,9 +227,9 @@ export default function HomeScreen() {
                     }
                     ListEmptyComponent={
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
-                            <Text style={styles.fadedText}>{i18n.t('noHymnals')}</Text>
+                            <StyledText style={styles.fadedText}>{i18n.t('noHymnals')}</StyledText>
                             <View style={{ height: 5 }} />
-                            <Text style={styles.descriptionText}>{i18n.t('addHymnal')}</Text>
+                            <StyledText style={styles.descriptionText}>{i18n.t('addHymnal')}</StyledText>
                         </View>
                     }
                 />
@@ -311,7 +312,7 @@ function makeStyles(theme: "light" | "dark") {
             fontSize: 32,
             fontWeight: '500',
             color: Colors[theme]['text'], // Dynamically set text color using useThemeColor
-            fontFamily: 'Lato'
+            fontFamily: 'Bold'
         },
         fadedText: {
             fontSize: 24,

@@ -161,3 +161,14 @@ export const getNotePng = (note: Note, clef: Clef = 'bass') => {
 }
 
 export type { Clef, Note };
+
+export const fontFamily = {
+    light: "Lato-Light",
+    lightItalic: "Lato-LightItalic",
+    regular: "Lato-Regular",
+    italic: "Lato-Italic",
+    bold: "Lato-Bold",
+    boldItalic: "Lato-BoldItalic",
+    black: "Lato-Black",
+    blackItalic: "Lato-BlackItalic",
+}

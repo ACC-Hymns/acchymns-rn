@@ -9,6 +9,7 @@ import { Text, TouchableOpacity, useColorScheme } from "react-native";
 import { useContext } from "react";
 import { HymnalContext } from "@/constants/context";
 import { translations } from "@/constants/localization";
+import StyledText from '@/components/StyledText';
 
 export default function DisplayLayout() {
     const theme = useColorScheme() ?? 'light';
@@ -55,7 +56,7 @@ export default function DisplayLayout() {
                     headerLeft: () => (
                         <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
                             <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                            <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</Text>
+                            <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
                         </TouchableOpacity>
                     ),
                 }}

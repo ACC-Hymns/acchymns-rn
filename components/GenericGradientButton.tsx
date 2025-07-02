@@ -3,46 +3,46 @@ import { TouchableOpacity, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import StyledText from '@/components/StyledText';
-interface GradientButtonProps {
-    title: string;
+import { StyleProp, ViewStyle } from 'react-native';
+
+interface GenericGradientButtonProps {
     onPress?: () => void;
     onLongPress?: () => void;
     primaryColor: string;
     secondaryColor: string;
+    children?: React.ReactNode;
+    style?: StyleProp<ViewStyle>;
 }
 
-const GradientButton: React.FC<GradientButtonProps> = ({
-    title,
+const GenericGradientButton: React.FC<GenericGradientButtonProps> = ({
     onPress,
     onLongPress,
     primaryColor,
     secondaryColor,
+    style,
+    children
 }) => {
     // save press duration to state
     const [pressStart, setPressStart] = React.useState<number | null>(null);
 
     return (
-            <Pressable
+            <TouchableOpacity
                 onPress={() => {
                     // check press duration
                     onPress?.();
                 }}
-
-                style={({ pressed }) => [
-                    styles.buttonContainer,
-                    pressed && { opacity: 0.7 },
-                ]}
-                    
-                >
+                onLongPress={onLongPress}
+                style={[style, styles.buttonContainer]}
+            >
                 <LinearGradient
                     colors={[primaryColor, secondaryColor]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={[styles.gradient]}
                 >
-                    <StyledText style={styles.buttonText}>{title}</StyledText>
+                    {children}
                 </LinearGradient>
-        </Pressable>
+        </TouchableOpacity>
     );
 };
 
@@ -52,12 +52,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     gradient: {
-        paddingVertical: 15,
-        paddingHorizontal: 20,
         borderRadius: 16,
         alignItems: 'flex-start',
         justifyContent: 'center',
-        height: 110,
         flex: 1
     },
     buttonText: {
@@ -67,4 +64,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default GradientButton;
+export default GenericGradientButton;

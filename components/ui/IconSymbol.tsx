@@ -48,7 +48,7 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<StyledTextStyle>;
   weight?: SymbolWeight;
 }) {
   return <Ionicons color={color} size={size} name={MAPPING[name]} style={style} />;

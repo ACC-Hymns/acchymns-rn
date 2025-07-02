@@ -22,6 +22,7 @@
     "@d11/react-native-fast-image": "^8.9.2",
     "@expo/ui": "~0.1.1-alpha.7",
     "@expo/vector-icons": "^14.1.0",
+    "@futurejj/react-native-checkbox": "^1.0.4",
     "@gorhom/bottom-sheet": "^5",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -70,6 +71,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-animated-border-view": "^0.0.2",
     "react-native-blob-util": "^0.21.2",
     "react-native-default-preference": "^1.4.4",
     "react-native-draggable-flatlist": "^4.0.3",
@@ -89,14 +91,14 @@
     "react-native-screens": "~4.10.0",
     "react-native-svg": "15.11.2",
     "react-native-swipeable-item": "^2.0.9",
+    "react-native-track-player": "github:doublesymmetry/react-native-track-player#pull/2478",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-toolkit": "^4.0.2",
     "rn-user-defaults": "^1.8.2",
     "stream-browserify": "^3.0.0",
-    "zeego": "^3.0.6",
-    "react-native-track-player": "github:doublesymmetry/react-native-track-player#pull/2478"
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -9,6 +9,7 @@ import { getLocales } from 'expo-localization';
 import { supportedLanguages, getLanguageName, translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
+import StyledText from '@/components/StyledText';
 
 export default function LanguageScreen() {
 
@@ -32,7 +33,7 @@ export default function LanguageScreen() {
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                 <ScrollView style={styles.scrollView}>
                     <View style={{}}>
-                        <Text style={styles.settingsLabel}>{i18n.t('language').toUpperCase()}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('language').toUpperCase()}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         {supportedLanguages.map((language) => (
@@ -42,9 +43,9 @@ export default function LanguageScreen() {
                                     underlayColor={Colors[theme].divider}
                                 >
                                     <View style={styles.settingsItem}>
-                                        <Text style={styles.settingsText}>
+                                        <StyledText style={styles.settingsText}>
                                             {getLanguageName(language)}
-                                        </Text>
+                                        </StyledText>
                                         {selectedLanguage === language && (
                                             <IconSymbol name="checkmark" size={18} weight='medium' color={Colors[theme].primary} />
                                         )}

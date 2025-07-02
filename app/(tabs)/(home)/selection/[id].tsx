@@ -9,6 +9,7 @@ import { Gesture, GestureHandlerRootView, Pressable, ScrollView } from 'react-na
 import { Colors } from '@/constants/Colors';
 import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import StyledText from '@/components/StyledText';
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
@@ -112,7 +113,7 @@ export default function SelectionScreen() {
                                                 router.navigate({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
                                             }}
                                         >
-                                            <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</Text>
+                                            <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</StyledText>
                                         </TouchableOpacity>
                                     )}
                                     onScroll={(event) => {
@@ -193,7 +194,7 @@ export default function SelectionScreen() {
                                                         elevation: 3,
                                                     }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
-                                                        <Text style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</Text>
+                                                        <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</StyledText>
                                                         <IconSymbol
                                                             name={openDropdowns[index.toString()] ? "chevron.up" : "chevron.down"}
                                                             size={18}
@@ -227,12 +228,12 @@ export default function SelectionScreen() {
                                                                         marginVertical: 2,
                                                                     }}>
                                                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                        <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
+                                                                        <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
                                                                             #{number}
-                                                                        </Text>
-                                                                        <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                                        </StyledText>
+                                                                        <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
                                                                             {songData[number].title}
-                                                                        </Text>
+                                                                        </StyledText>
                                                                     </View>
                                                                 </TouchableOpacity>
                                                             )}
@@ -294,10 +295,10 @@ export default function SelectionScreen() {
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
                                                 <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songData[item].title}</Text>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songData[item].title}</StyledText>
                                                 </View>
                                                 <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</Text>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</StyledText>
                                                 </View>
                                             </View>
 
@@ -332,12 +333,12 @@ export default function SelectionScreen() {
                                                 marginHorizontal: 15
                                             }}>
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
+                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
                                                     #{number}
-                                                </Text>
-                                                <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                </StyledText>
+                                                <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
                                                     {songData[number].title}
-                                                </Text>
+                                                </StyledText>
                                             </View>
                                         </TouchableOpacity>
                                     )}
@@ -388,7 +389,7 @@ export default function SelectionScreen() {
                                                     marginHorizontal: 15,
                                                 }}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
-                                                    <Text style={{ fontSize: 18, color: Colors[theme].text }}>{key}</Text>
+                                                    <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{key}</StyledText>
                                                     <IconSymbol
                                                         name={openDropdowns[key] ? "chevron.up" : "chevron.down"}
                                                         size={18}
@@ -422,12 +423,12 @@ export default function SelectionScreen() {
                                                                     marginVertical: 2,
                                                                 }}>
                                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <Text style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
+                                                                    <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
                                                                         #{song.number}
-                                                                    </Text>
-                                                                    <Text numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                                    </StyledText>
+                                                                    <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
                                                                         {song.title}
-                                                                    </Text>
+                                                                    </StyledText>
                                                                 </View>
                                                             </TouchableOpacity>
                                                         )}

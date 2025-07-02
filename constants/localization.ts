@@ -28,6 +28,13 @@ const translations = {
         goToHomeScreen: 'Go to home screen!',
         ignore: 'Ignore',
 
+        // Discover screen
+        discover: 'Discover',
+        promptPlaceholder: "Enter any topic, theme, or lyrics...",
+        topResults: 'Top Results',
+        filters: 'Filter Hymnals',
+        allHymnals: 'All Hymnals',
+
         // Search and Bookmarks screen
         search: 'Search',
         bookmarks: 'Bookmarks',

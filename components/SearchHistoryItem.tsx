@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, useColorScheme, StyleSheet, PanResponder,
 import { IconSymbol } from './ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
+import StyledText from './StyledText';
 
 
 interface SearchHistoryItemProps {
@@ -105,7 +106,7 @@ export function SearchHistoryItem({ item, onPress, onGestureStart, onGestureEnd,
                             size={24}
                             color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                         />
-                        <Text style={styles.searchHistoryText}>{item}</Text>
+                        <StyledText style={styles.searchHistoryText}>{item}</StyledText>
                     </Pressable>
                     <TouchableOpacity
                         style={styles.deleteButton}

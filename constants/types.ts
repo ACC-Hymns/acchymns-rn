@@ -54,12 +54,33 @@ type Bookmark = {
 
 type BookIndex = Record<string, string[]>;
 
+type DiscoverMatch = {
+    type: "VERSE" | "TITLE";
+    hymn_title: string;
+    hymn_number: string;
+    hymnal_id: string;
+    similarity: number;
+    verses?: {
+        verse_number: number;
+        verse_text: string;
+        similarity: number;
+    }[] | undefined;
+}
+
+type DiscoverResult = {
+    prompt: string;
+    allowed_hymnals: string[];
+    top_matches: DiscoverMatch[];
+}
+
 export type {
     BookSummary,
     Song,
     SongList,
     SongSearchInfo,
     SongReference,
+    DiscoverMatch,
+    DiscoverResult,
     Bookmark,
     BookIndex
 };

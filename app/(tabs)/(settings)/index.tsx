@@ -10,6 +10,7 @@ import { HymnalContext } from '@/constants/context';
 import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
 
 export default function SettingsScreen() {
 
@@ -27,18 +28,18 @@ export default function SettingsScreen() {
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                 <ScrollView style={styles.scrollView}>
                     <View style={styles.titleContainer}>
-                        <Text style={styles.textStyle}>{i18n.t('settings')}</Text>
+                        <StyledText style={styles.textStyle}>{i18n.t('settings')}</StyledText>
                     </View>
                     <View style={{ marginTop: 20 }}>
-                        <Text style={styles.settingsLabel}>{i18n.t('info')}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('info')}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('appVersion')}</Text>
-                                <Text style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('appVersion')}</StyledText>
+                                <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</StyledText>
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
@@ -47,13 +48,13 @@ export default function SettingsScreen() {
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('help')}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('help')}</StyledText>
                                 <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                             </View>
                         </TouchableHighlight>
                     </View>
                     <View style={{ marginTop: 24 }}>
-                        <Text style={styles.settingsLabel}>{i18n.t('general')}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
@@ -61,7 +62,7 @@ export default function SettingsScreen() {
                             onPress={() => router.push('/hymnal_importer')}
                             underlayColor={Colors[theme].divider}
                         >
-                            <Text style={styles.settingsText}>{i18n.t('addHymnal')}</Text>
+                            <StyledText style={styles.settingsText}>{i18n.t('addHymnal')}</StyledText>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                         <TouchableHighlight
@@ -69,7 +70,7 @@ export default function SettingsScreen() {
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
-                                <Text style={styles.settingsText}>{i18n.t('preferences')}</Text>
+                                <StyledText style={styles.settingsText}>{i18n.t('preferences')}</StyledText>
                                 <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
                             </View>
                         </TouchableHighlight>

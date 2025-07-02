@@ -20,6 +20,8 @@ import { padStart } from 'pdf-lib';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
+import StyledText from '@/components/StyledText';
+import GenericGradientButton from '@/components/GenericGradientButton';
 
 export default function BookmarkScreen() {
 
@@ -37,7 +39,7 @@ export default function BookmarkScreen() {
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
-    
+
 
     function stripSearchText(text: string) {
         return text
@@ -227,17 +229,9 @@ export default function BookmarkScreen() {
                 renderUnderlayLeft={() => <UnderlayRight />}
                 snapPointsLeft={[80]}
             >
-                <TouchableOpacity
-                    style={{
-                        borderRadius: 12,
-                        backgroundColor: item.book.primaryColor,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingVertical: 10, // Add padding to allow content to grow
-                        minHeight: 60, // Ensure a minimum height of 60
-                        marginBottom: 8,
-                    }}
-
+                <GenericGradientButton
+                    primaryColor={item.book.primaryColor}
+                    secondaryColor={item.book.secondaryColor}
                     onPress={() => {
                         if (isNavigating) return;
                         if (item.book.name.short && item.number) {
@@ -248,20 +242,23 @@ export default function BookmarkScreen() {
                         setIsNavigating(true);
                         setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                     }}
-
-                    activeOpacity={0.7}
+                    style={{
+                        borderRadius: 12,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 84 // Ensure a minimum height of 60
+                    }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                        <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</Text>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</Text>
+                        <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                            <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
+                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
                         </View>
                         <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                            <Text style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item.number}</Text>
+                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
                         </View>
                     </View>
-
-                </TouchableOpacity>
+                </GenericGradientButton>
             </SwipeableItem>
         );
     };
@@ -278,10 +275,11 @@ export default function BookmarkScreen() {
                     keyboardShouldPersistTaps='always'
                     renderItem={renderItem}
                     style={[styles.scrollView]}
+                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
                     ListHeaderComponent={
                         <>
                             <View style={styles.titleContainer}>
-                                <Text style={styles.textStyle}>{i18n.t('bookmarks')}</Text>
+                                <StyledText style={styles.textStyle}>{i18n.t('bookmarks')}</StyledText>
                             </View>
                             <SearchBar
                                 ref={searchInputRef}

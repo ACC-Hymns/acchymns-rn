@@ -30,6 +30,7 @@ import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
 import { translations } from '@/constants/localization';
 import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix  } from '@shopify/react-native-skia';
+import StyledText from '@/components/StyledText';
 
 
 export default function DisplayScreen() {
@@ -305,12 +306,12 @@ export default function DisplayScreen() {
                     <>
                         <View style={styles.noteButton}>
                             <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
-                            <Text style={{ fontSize: 18, color: Colors[theme].text }}>{i18n.t('all')}</Text>
+                            <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{i18n.t('all')}</StyledText>
                         </View>
                         {songNotes.map((note, index) => (
                             <View key={index} style={styles.noteButton}>
                                 <NoteButton note={note as Note} clef={getClef(note)} onClick={() => playNote(note)} />
-                                <Text style={{ fontSize: 18, color: Colors[theme].text }}>{note}</Text>
+                                <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{note}</StyledText>
                             </View>
                         ))}
                     </>
@@ -374,9 +375,9 @@ export default function DisplayScreen() {
                     )}
                 </TouchableOpacity>
                 <View style={{ width: 350, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }}>
-                    <Text style={{ width: 32, textAlign: 'left', color: Colors[theme].text }}>
+                    <StyledText style={{ width: 32, textAlign: 'left', color: Colors[theme].text }}>
                         {formatTime(currentTime)}
-                    </Text>
+                    </StyledText>
                     <Slider
                         value={Math.round(currentTime * 100)}
                         minimumValue={0}
@@ -392,9 +393,9 @@ export default function DisplayScreen() {
                         maximumTrackTintColor={Colors[theme].border}
                         style={{ flex: 1 }}
                     />
-                    <Text style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>
+                    <StyledText style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>
                         {formatTime(duration)}
-                    </Text>
+                    </StyledText>
                 </View>
             </View>
         )
@@ -495,9 +496,9 @@ export default function DisplayScreen() {
                             if (currentIndex <= 0) return null;
                             return (
                                 <View style={{ position: 'absolute', left: -60, top: 0, bottom: 0, justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
+                                    <StyledText style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
                                         {songNumbers[currentIndex - 1]}
-                                    </Text>
+                                    </StyledText>
                                 </View>
                             );
                         })()}
@@ -526,9 +527,9 @@ export default function DisplayScreen() {
                             if (currentIndex >= songNumbers.length - 1) return null;
                             return (
                                 <View style={{ position: 'absolute', right: -60, top: 0, bottom: 0, justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
+                                    <StyledText style={{ fontSize: 18, fontWeight: 600, color: Colors[theme]['text'], backgroundColor: Colors[theme].headerBackground, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 8, minWidth: 50, textAlign: 'center' }}>
                                         {songNumbers[currentIndex + 1]}
-                                    </Text>
+                                    </StyledText>
                                 </View>
                             );
                         })()}

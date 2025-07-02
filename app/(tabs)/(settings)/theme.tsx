@@ -9,6 +9,7 @@ import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
+import StyledText from '@/components/StyledText';
 
 export default function ThemeScreen() {
 
@@ -36,7 +37,7 @@ export default function ThemeScreen() {
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                 <ScrollView style={styles.scrollView}>
                     <View style={{}}>
-                        <Text style={styles.settingsLabel}>{i18n.t('theme').toUpperCase()}</Text>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('theme').toUpperCase()}</StyledText>
                     </View>
                     <View style={[styles.settingsContainer]}>
                         {supportedThemes.map((themeItem) => (
@@ -46,9 +47,9 @@ export default function ThemeScreen() {
                                     underlayColor={Colors[theme].divider}
                                 >
                                     <View style={styles.settingsItem}>
-                                        <Text style={styles.settingsText}>
+                                        <StyledText style={styles.settingsText}>
                                             {themeName(themeItem)}
-                                        </Text>
+                                        </StyledText>
                                         {selectedTheme === themeItem && (
                                             <IconSymbol name="checkmark" size={18} weight='medium' color={Colors[theme].primary} />
                                         )}
@@ -63,14 +64,14 @@ export default function ThemeScreen() {
                     {theme === 'dark' && (
                         <>
                             <View style={{ marginTop: 24 }}>
-                                <Text style={styles.settingsLabel}>{i18n.t('other').toUpperCase()}</Text>
+                                <StyledText style={styles.settingsLabel}>{i18n.t('other').toUpperCase()}</StyledText>
                             </View>
                             <View style={[styles.settingsContainer]}>
                                 <TouchableHighlight
                                     underlayColor={Colors[theme].divider}
                                 >
                                     <View style={styles.settingsItem}>
-                                        <Text style={styles.settingsText}>{i18n.t('invertSheetMusic')}</Text>
+                                        <StyledText style={styles.settingsText}>{i18n.t('invertSheetMusic')}</StyledText>
                                         <Switch
                                             style={{ marginVertical: -8 }}
                                             trackColor={{ true: Colors[theme].primary }}

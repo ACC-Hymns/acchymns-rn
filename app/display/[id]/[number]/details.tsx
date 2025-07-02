@@ -12,6 +12,7 @@ import { useContext } from "react";
 import { Text, FlatList, SafeAreaView, TouchableOpacity, useColorScheme, StyleSheet, View, ActivityIndicator } from "react-native";
 import { WebView } from "react-native-webview";
 import { translations } from "@/constants/localization";
+import StyledText from '@/components/StyledText';
 
 export default function HymnalImporter() {
 
@@ -89,9 +90,9 @@ export default function HymnalImporter() {
                         source={{ uri: `https://www.hymnary.org/text/${songDetails.textAuthNumber}` }}
                         renderError={() => (
                             <View style={styles.detailsContainer}>
-                                <Text style={styles.fadedText}>
+                                <StyledText style={styles.fadedText}>
                                     {i18n.t('noDetailsFound')}
-                                </Text>
+                                </StyledText>
                             </View>
                         )}
                     />
@@ -101,9 +102,9 @@ export default function HymnalImporter() {
                     </View>
                 ) : (
                     <View style={styles.detailsContainer}>
-                        <Text style={styles.fadedText}>
+                        <StyledText style={styles.fadedText}>
                             {i18n.t('noDetailsFound')}
-                        </Text>
+                        </StyledText>
                     </View>
                 )}
             </SafeAreaView>
