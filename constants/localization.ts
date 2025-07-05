@@ -1,7 +1,7 @@
 const supportedLanguages = ["en", "es", "fr", "de", "pt", "sr", "ja"];
 
 function getLanguageName(languageCode: string) {
-    switch(languageCode) {
+    switch (languageCode) {
         case 'en': return 'English';
         case 'es': return 'Español';
         case 'fr': return 'Français';
@@ -27,6 +27,8 @@ const translations = {
         screenDoesntExist: 'This screen doesn\'t exist.',
         goToHomeScreen: 'Go to home screen!',
         ignore: 'Ignore',
+        reset: 'Reset',
+        apply: 'Apply',
 
         // Discover screen
         discover: 'Discover',
@@ -93,7 +95,7 @@ const translations = {
         // Hymnal menu
         sortingLabel: 'Sorting Options',
         numerical: 'Numerical',
-        alphabetical: 'Alphabetical', 
+        alphabetical: 'Alphabetical',
         topical: 'Topical',
         deleteHymnal: 'Delete Hymnal',
 
@@ -134,6 +136,9 @@ const translations = {
         screenDoesntExist: 'Esta pantalla no existe.',
         goToHomeScreen: '¡Ir a la pantalla de inicio!',
         ignore: 'Ignorar',
+        reset: 'Restablecer',
+        apply: 'Aplicar',
+
         // Search and Bookmarks screen
         search: 'Buscar',
         bookmarks: 'Marcadores',
@@ -144,6 +149,13 @@ const translations = {
         clearHistoryMessage: 'No se puede deshacer esta acción',
         remove: 'Eliminar',
         removeMessage: '¿Estás seguro de querer eliminar este marcador?',
+
+        discover: 'Descubrir',
+        discoverSubtitle: 'Resultados relacionados con ',
+        promptPlaceholder: "Introduce cualquier tema, asunto o letra...",
+        topResults: 'Mejores Resultados',
+        filters: 'Filtrar Himnarios',
+        allHymnals: 'Todos los Himnarios',
 
         home: 'Inicio',
         noHymnals: 'No hay Himnarios',
@@ -226,6 +238,9 @@ const translations = {
         screenDoesntExist: 'Cette écran n\'existe pas.',
         goToHomeScreen: 'Retour à l\'écran d\'accueil !',
         ignore: 'Ignorer',
+        reset: 'Réinitialiser',
+        apply: 'Appliquer',
+
         // Search and Bookmarks screen
         search: 'Rechercher',
         bookmarks: 'Marque-pages',
@@ -236,6 +251,13 @@ const translations = {
         clearHistoryMessage: 'Vous ne pouvez pas annuler cette action',
         remove: 'Supprimer',
         removeMessage: 'Êtes-vous sûr de vouloir supprimer ce marque-page ?',
+
+        discover: 'Découvrir',
+        discoverSubtitle: 'Résultats liés à ',
+        promptPlaceholder: "Entrez un sujet, un thème ou des paroles...",
+        topResults: 'Meilleurs Résultats',
+        filters: 'Filtrer les Hymnaires',
+        allHymnals: 'Tous les Hymnaires',
 
         home: 'Accueil',
         noHymnals: 'Aucun Livre de Hymnes',
@@ -263,7 +285,7 @@ const translations = {
         posthogOptIn: 'Activer la collecte de données',
         posthogOptOutConfirmation: 'Désactiver la collecte de données?',
         posthogOptOutConfirmationMessage: 'Cela désactivera la collecte de données. Vous pouvez l\'activer à nouveau à tout moment.',
-        
+
 
         preferences: 'Préférences',
         accessibilityAndLanguage: 'ACCESSIBILITÉ ET LANGUE',
@@ -319,6 +341,9 @@ const translations = {
         screenDoesntExist: 'Diese Seite existiert nicht.',
         goToHomeScreen: 'Zurück zur Startseite!',
         ignore: 'Ignorieren',
+        reset: 'Zurücksetzen',
+        apply: 'Anwenden',
+
         // Search and Bookmarks screen
         search: 'Suchen',
         bookmarks: 'Lesezeichen',
@@ -329,6 +354,13 @@ const translations = {
         clearHistoryMessage: 'Sie können diese Aktion nicht rückgängig machen',
         remove: 'Löschen',
         removeMessage: 'Sind Sie sicher, dass Sie dieses Lesezeichen entfernen möchten?',
+
+        discover: 'Entdecken',
+        discoverSubtitle: 'Ergebnisse zu ',
+        promptPlaceholder: "Gib ein Thema, Motiv oder Liedtext ein...",
+        topResults: 'Top-Ergebnisse',
+        filters: 'Gesangbücher filtern',
+        allHymnals: 'Alle Gesangbücher',
 
         home: 'Startseite',
         noHymnals: 'Keine Gesangbücher',
@@ -411,6 +443,9 @@ const translations = {
         screenDoesntExist: 'Ova stranica ne postoji.',
         goToHomeScreen: 'Vrati se na početnu stranicu!',
         ignore: 'Zanemariti',
+        reset: 'Poništi',
+        apply: 'Primeni',
+
         // Search and Bookmarks screen
         search: 'Pretraži',
         bookmarks: 'Zabilježi',
@@ -422,6 +457,13 @@ const translations = {
         remove: 'Obriši',
         removeMessage: 'Jeste li sigurni da želite obrisati ovu zabilješku?',
 
+        discover: 'Otkrij',
+        discoverSubtitle: 'Rezultati povezani sa ',
+        promptPlaceholder: "Unesite bilo koju temu, motiv ili tekst pesme...",
+        topResults: 'Najbolji Rezultati',
+        filters: 'Filtriraj Himnare',
+        allHymnals: 'Svi Himnari',
+
         home: 'Početna',
         noHymnals: 'Nema himnala',
         addHymnal: 'Dodajte himnala',
@@ -432,22 +474,22 @@ const translations = {
         info: 'INFORMACIJE',
         appVersion: 'Verzija aplikacije',
 
-        help: 'Hilfe',
-        general: 'ALLGEMEIN',
-        reportBug: 'Fehler melden',
-        requestBook: 'Buch oder Funktion anfragen',
-        privacyPolicy: 'Datenschutzrichtlinie',
-        debug: 'Debuggen',
-        clearCache: 'Cache löschen',
-        deleteHymnals: 'Alle Hymnals löschen',
-        clearCacheConfirmation: 'Cache löschen?',
-        deleteHymnalsConfirmation: 'Alle Hymnals löschen?',
-        clearCacheConfirmationMessage: 'Dies wird alle zwischengespeicherten Dateien löschen, die von der App erstellt wurden.',
-        deleteHymnalsConfirmationMessage: 'Dies wird alle derzeit heruntergeladenen Hymnals löschen.',
-        posthogOptOut: 'Datensammlung deaktivieren',
-        posthogOptIn: 'Datensammlung aktivieren',
-        posthogOptOutConfirmation: 'Datensammlung deaktivieren?',
-        posthogOptOutConfirmationMessage: 'Dies deaktiviert die Datensammlung. Sie können sie jederzeit wieder aktivieren.',
+        help: 'Pomoć',
+        general: 'OPŠTE',
+        reportBug: 'Prijavi grešku',
+        requestBook: 'Zatražite knjigu ili funkciju',
+        privacyPolicy: 'Politika privatnosti',
+        debug: 'Otlaži',
+        clearCache: 'Očisti keš',
+        deleteHymnals: 'Obriši sve himnarije',
+        clearCacheConfirmation: 'Očisti keš?',
+        deleteHymnalsConfirmation: 'Obriši sve himnarije?',
+        clearCacheConfirmationMessage: 'Ovo će obrisati sve keš fajlove koje je napravila aplikacija.',
+        deleteHymnalsConfirmationMessage: 'Ovo će obrisati sve himnarije koje su trenutno preuzete.',
+        posthogOptOut: 'Deaktivirati prikupljanje podataka',
+        posthogOptIn: 'Aktivirati prikupljanje podataka',
+        posthogOptOutConfirmation: 'Deaktivirati prikupljanje podataka?',
+        posthogOptOutConfirmationMessage: 'Ovo će deaktivirati prikupljanje podataka. Možete ih ponovno aktivirati u bilo kojem trenutku.',
 
         preferences: 'Postavke',
         accessibilityAndLanguage: 'PRISTUP I JEZIK',
@@ -496,12 +538,15 @@ const translations = {
         delete: '削除',
         confirm: '確認',
         clear: 'クリア',
-        details: '詳細',    
+        details: '詳細',
         noDetailsFound: '詳細が見つかりません。',
         oops: 'あっ！',
         screenDoesntExist: 'この画面は存在しません。',
         goToHomeScreen: 'ホーム画面に戻る！',
         ignore: '無視',
+        reset: 'リセット',
+        apply: '適用',
+
         // Search and Bookmarks screen
         search: '検索',
         bookmarks: 'ブックマーク',
@@ -512,6 +557,13 @@ const translations = {
         clearHistoryMessage: 'この操作は元に戻せません',
         remove: '削除',
         removeMessage: 'このブックマークを削除してもよろしいですか？',
+
+        discover: '発見',
+        discoverSubtitle: '関連する結果: ',
+        promptPlaceholder: "トピック、テーマ、歌詞を入力...",
+        topResults: 'トップ結果',
+        filters: '聖歌集を絞り込む',
+        allHymnals: 'すべての聖歌集',
 
         home: 'ホーム',
         noHymnals: '賛美歌集なし',
@@ -537,7 +589,7 @@ const translations = {
         deleteHymnalsConfirmationMessage: 'これは現在ダウンロードされている賛美歌集をすべて削除します。',
         posthogOptOut: 'データ収集をオフにする',
         posthogOptIn: 'データ収集をオンにする',
-        posthogOptOutConfirmation: 'データ収集をオフにする?',   
+        posthogOptOutConfirmation: 'データ収集をオフにする?',
         posthogOptOutConfirmationMessage: 'これはデータ収集をオフにします。いつでもオンにすることができます。',
 
         preferences: '設定',
@@ -593,6 +645,9 @@ const translations = {
         screenDoesntExist: 'Esta tela não existe.',
         goToHomeScreen: 'Voltar para a tela inicial!',
         ignore: 'Ignorar',
+        reset: 'Redefinir',
+        apply: 'Aplicar',
+
         // Search and Bookmarks screen
         search: 'Pesquisar',
         bookmarks: 'Marcadores',
@@ -603,6 +658,13 @@ const translations = {
         clearHistoryMessage: 'Você não pode desfazer esta ação',
         remove: 'Remover',
         removeMessage: 'Tem certeza que deseja remover este marcador?',
+
+        discover: 'Descobrir',
+        discoverSubtitle: 'Resultados relacionados a ',
+        promptPlaceholder: "Digite qualquer assunto, tema ou letra...",
+        topResults: 'Principais Resultados',
+        filters: 'Filtrar Hinários',
+        allHymnals: 'Todos os Hinários',
 
         home: 'Início',
         noHymnals: 'Sem hinários',
@@ -668,7 +730,7 @@ const translations = {
         retry: 'Tentar novamente',
         verificationFailed: 'Verificação falhou',
         verificationFailedMessage: 'Alguns arquivos não puderam ser baixados corretamente. Tente novamente.',
-        ok: 'OK',   
+        ok: 'OK',
         startingDownload: 'Iniciando download...',
     }
 }

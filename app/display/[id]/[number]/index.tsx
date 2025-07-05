@@ -166,7 +166,7 @@ export default function DisplayScreen() {
                             artist: context?.BOOK_DATA[params.id]?.name?.medium,
                             artwork: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
                         };
-                        await TrackPlayer.removeUpcomingTracks();
+                        await TrackPlayer.reset();
                         await TrackPlayer.add([track_data]);
                     } else {
 

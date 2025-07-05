@@ -26,6 +26,7 @@ import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';
 import { ConicGradientRenderer } from '@/components/ConicGradient';
 import Animated, { KeyboardState, useAnimatedKeyboard, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function DiscoverScreen() {
 
@@ -84,6 +85,12 @@ export default function DiscoverScreen() {
 
         fetchData();
     }, [context?.BOOK_DATA]);
+
+    useFocusEffect(
+        useCallback(() => {
+            context?.setDiscoverPageVisited(true);
+        }, [])
+    );
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
@@ -147,7 +154,6 @@ export default function DiscoverScreen() {
             return;
         }
         setLoading(true);
-        setPrompt('');
         const data = await fetch('https://api.acchymns.app/discover', {
             method: 'POST',
             headers: {
@@ -163,6 +169,7 @@ export default function DiscoverScreen() {
             }),
         });
         setLoading(false);
+        setPrompt('');
         setLatestPrompt(input);
 
         if (!data.ok) {
@@ -342,7 +349,7 @@ export default function DiscoverScreen() {
                                                     color={Colors[theme]['fadedText']}
                                                 />
                                             </TouchableOpacity>
-                                            {prompt.trim().length > 0 && (
+                                            {prompt.trim().length > 0 && !loading && (
                                                 <TouchableOpacity
                                                     style={styles.promptButton}
                                                     onPress={() => {
@@ -441,7 +448,7 @@ export default function DiscoverScreen() {
                                     }}
                                     style={styles.resetButton}
                                 >
-                                    <StyledText style={styles.resetButtonText}>Reset</StyledText>
+                                    <StyledText style={styles.resetButtonText}>{i18n.t('reset')}</StyledText>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => {
@@ -449,7 +456,7 @@ export default function DiscoverScreen() {
                                     }}
                                     style={styles.applyButton}
                                 >
-                                    <StyledText style={styles.applyButtonText}>Apply</StyledText>
+                                    <StyledText style={styles.applyButtonText}>{i18n.t('apply')}</StyledText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -467,7 +474,7 @@ function makeStyles(theme: "light" | "dark") {
             marginLeft: 45,
             marginRight: 15,
             width: 30,
-            height: 80,
+            height: 90,
             transform: [{translateY: -10}],
             borderLeftWidth: 1,
             borderColor: Colors[theme]['fadedIcon'],

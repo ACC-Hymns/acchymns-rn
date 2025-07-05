@@ -61,6 +61,7 @@ export default function RootLayout() {
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
 
+    const [discoverPageVisited, setDiscoverPageVisited] = useState<boolean | null>(null);
     const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
     const [languageOverride, setLanguageOverride] = useState<string | null>(null);
     const [postHogOptedIn, setPostHogOptedIn] = useState<boolean | null>(null);
@@ -83,6 +84,9 @@ export default function RootLayout() {
         console.log('Saving preferences...');
         const savePreferences = async () => {
             try {
+                if (discoverPageVisited !== null)
+                    await AsyncStorage.setItem('discoverPageVisited', discoverPageVisited.toString());
+
                 if (legacyNumberGrouping !== null)
                     await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
 
@@ -104,7 +108,7 @@ export default function RootLayout() {
             }
         }
         savePreferences();
-    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic]);
+    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic, discoverPageVisited]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -119,6 +123,8 @@ export default function RootLayout() {
             onLayoutHomeView: onLayoutRootView,
             downloadProgressValues,
             setDownloadProgressValues,
+            discoverPageVisited,
+            setDiscoverPageVisited,
             legacyNumberGrouping,
             setLegacyNumberGrouping,
             languageOverride,
@@ -130,7 +136,7 @@ export default function RootLayout() {
             invertSheetMusic,
             setInvertSheetMusic
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited]);
     // Load hymnal data
 
     const i18n = new I18n(translations);
@@ -138,6 +144,10 @@ export default function RootLayout() {
     i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
     useEffect(() => {
         // load preferences from async storage
+        AsyncStorage.getItem('discoverPageVisited').then(async (value) => {
+            if (value !== null)
+                setDiscoverPageVisited(value === 'true');
+        });
         AsyncStorage.getItem('legacyNumberGrouping').then(async (value) => {
             if (value !== null)
                 setLegacyNumberGrouping(value === 'true');

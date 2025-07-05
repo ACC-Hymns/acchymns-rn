@@ -57,9 +57,27 @@ export default function TabLayout() {
             />
             <Tabs.Screen
                 name="discover"
-                options={{
+                options={context?.discoverPageVisited ? {
                     title: i18n.t('discover'),
                     tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
+                    tabBarBadgeStyle: {
+                        backgroundColor: Colors['light']['primary'], maxWidth: 10,
+                        maxHeight: 10,
+                        fontSize: 8,
+                        lineHeight: 9,
+                        alignSelf: undefined,
+                    },
+                } : {
+                    title: i18n.t('discover'),
+                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
+                    tabBarBadge: "",
+                    tabBarBadgeStyle: {
+                        backgroundColor: Colors['light']['primary'], maxWidth: 10,
+                        maxHeight: 10,
+                        fontSize: 8,
+                        lineHeight: 9,
+                        alignSelf: undefined,
+                    },
                 }}
             />
             <Tabs.Screen
