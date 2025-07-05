@@ -73,6 +73,15 @@ type DiscoverResult = {
     top_matches: DiscoverMatch[];
 }
 
+interface DiscoverSongInfo extends SongSearchInfo {
+    type: "VERSE" | "TITLE";
+    verses?: {
+        verse_number: number;
+        verse_text: string;
+        similarity: number;
+    }[] | undefined;
+}
+
 export type {
     BookSummary,
     Song,
@@ -85,4 +94,4 @@ export type {
     BookIndex
 };
 
-export { BookSourceType, SortMode }
+export { DiscoverSongInfo, BookSourceType, SortMode }

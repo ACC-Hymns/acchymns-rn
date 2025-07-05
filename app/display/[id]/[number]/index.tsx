@@ -29,9 +29,9 @@ import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
 import { translations } from '@/constants/localization';
-import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix  } from '@shopify/react-native-skia';
+import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix } from '@shopify/react-native-skia';
 import StyledText from '@/components/StyledText';
-
+import TrackPlayer, { State, usePlaybackState, useProgress } from 'react-native-track-player';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -44,7 +44,6 @@ export default function DisplayScreen() {
     const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
     const [loading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
-    const pianoAudioPlayer = useRef<AudioPlayer | null>(null);
     const navigation = useNavigation();
     const styles = makeStyles(theme);
     const scrollRef = useRef<ScrollView | null>(null);
@@ -112,6 +111,12 @@ export default function DisplayScreen() {
         return unsubscribe;
     }, [navigation]);
 
+    // piano
+    const progress = useProgress();
+    const playerState = usePlaybackState();
+    const isPianoPlaying = playerState.state === State.Playing;
+    const [hasPiano, setHasPiano] = useState(false);
+
     useFocusEffect(
         useCallback(() => {
 
@@ -144,7 +149,33 @@ export default function DisplayScreen() {
                 hymnal_name: context.BOOK_DATA[params.id]?.name?.medium,
                 song_id: params.number,
                 song_name: songData?.[params.number]?.title || '',
-            })
+            });
+
+            (async () => {
+                // try and load piano sound
+                const URL = `https://acchymnsmedia.s3.us-east-2.amazonaws.com/${params.id}/${params.number}.mp3`;
+                // Check if the mp3 exists before creating the player
+                try {
+                    const response = await fetch(URL, { method: 'HEAD' });
+                    if (response.ok) {
+                        setHasPiano(true);
+
+                        const track_data = {
+                            url: URL, // Load media from the network
+                            title: songData?.[params.number]?.title,
+                            artist: context?.BOOK_DATA[params.id]?.name?.medium,
+                            artwork: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
+                        };
+                        await TrackPlayer.removeUpcomingTracks();
+                        await TrackPlayer.add([track_data]);
+                    } else {
+
+                    }
+                } catch (e) {
+                    console.error(`Error fetching piano mp3`);
+                }
+            })();
+
         }, [params.id, params.number, songData, context])
     )
 
@@ -187,36 +218,6 @@ export default function DisplayScreen() {
                     interruptionModeAndroid: 'duckOthers'
                 })
 
-                // if pianoAudioPlayer is already created, release it
-                if (pianoAudioPlayer.current) {
-                    pianoAudioPlayer.current.release();
-                }
-
-                // try and load piano sound
-                const URL = `https://acchymnsmedia.s3.us-east-2.amazonaws.com/${params.id}/${params.number}.mp3`;
-                // Check if the mp3 exists before creating the player
-                try {
-                    const response = await fetch(URL, { method: 'HEAD' });
-                    if (response.ok) {
-                        pianoAudioPlayer.current = createAudioPlayer(URL);
-                        pianoAudioPlayer.current.addListener('playbackStatusUpdate', (status) => {
-                            if (status.isLoaded) {
-                                setCurrentTime(status.currentTime);
-                                setDuration(status.duration);
-
-                                if (status.didJustFinish) {
-                                    setIsPianoPlaying(false);
-                                }
-                            }
-                        });
-                    } else {
-                        pianoAudioPlayer.current = null;
-                    }
-                } catch (e) {
-                    pianoAudioPlayer.current = null;
-                    //console.error(`Error fetching piano mp3`);
-                }
-
                 if (!bookData) return;
 
 
@@ -237,14 +238,15 @@ export default function DisplayScreen() {
         fetchData();
 
         return () => {
-
             // Clean up audio players
             audioPlayers.current.forEach(player => {
                 player.release();
             });
-            if (pianoAudioPlayer.current) {
-                pianoAudioPlayer.current.release();
-            }
+
+            // Clean up TrackPlayer asynchronously
+            (async () => {
+                await TrackPlayer.reset();
+            })();
         };
     }, [bookData, context?.invertSheetMusic, theme]);
 
@@ -320,10 +322,6 @@ export default function DisplayScreen() {
         )
     };
 
-    const [isPianoPlaying, setIsPianoPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-
     function formatTime(currentTime: number) {
         const minutes = Math.floor(currentTime / 60);
         const seconds = Math.floor(currentTime % 60);
@@ -346,47 +344,31 @@ export default function DisplayScreen() {
                     style={{
                         marginTop: 8
                     }}
-                    onPress={() => {
-                        if (pianoAudioPlayer.current) {
-                            if (pianoAudioPlayer.current.playing) {
-                                pianoAudioPlayer.current.pause();
-                                setIsPianoPlaying(false);
-                            } else {
-                                // if track is at the end, seek to start
-                                if (currentTime >= duration) {
-                                    pianoAudioPlayer.current.seekTo(0);
-                                    setCurrentTime(0);
-                                }
-
-                                pianoAudioPlayer.current.play();
-                                setIsPianoPlaying(true);
-                            }
-                            // taptic
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        }
+                    onPress={async () => {
+                        const state = await TrackPlayer.getPlaybackState()
+                        if (state.state === State.Playing)
+                            await TrackPlayer.pause();
+                        else
+                            await TrackPlayer.play();
                     }}
                 >
-                    {pianoAudioPlayer.current && (
-                        <IconSymbol
-                            name={isPianoPlaying ? 'pause.fill' : 'play.fill'}
-                            size={48}
-                            color={theme === 'light' ? Colors.light.text : Colors.dark.text}
-                        />
-                    )}
+                    <IconSymbol
+                        name={isPianoPlaying ? 'pause.fill' : 'play.fill'}
+                        size={48}
+                        color={theme === 'light' ? Colors.light.text : Colors.dark.text}
+                    />
                 </TouchableOpacity>
                 <View style={{ width: 350, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }}>
                     <StyledText style={{ width: 32, textAlign: 'left', color: Colors[theme].text }}>
-                        {formatTime(currentTime)}
+                        {formatTime(progress.position)}
                     </StyledText>
                     <Slider
-                        value={Math.round(currentTime * 100)}
+                        value={Math.round(progress.position * 100)}
                         minimumValue={0}
-                        maximumValue={Math.round(duration * 100)}
+                        maximumValue={Math.round(progress.duration * 100)}
                         step={1}
-                        onValueChange={(value: number) => {
-                            pianoAudioPlayer.current?.pause();
-                            setIsPianoPlaying(false);
-                            pianoAudioPlayer.current?.seekTo(value / 100);
+                        onValueChange={async (value: number) => {
+                            await TrackPlayer.seekTo(value / 100);
                         }}
                         tapToSeek={true}
                         minimumTrackTintColor={Colors[theme].tint}
@@ -394,7 +376,7 @@ export default function DisplayScreen() {
                         style={{ flex: 1 }}
                     />
                     <StyledText style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>
-                        {formatTime(duration)}
+                        {formatTime(progress.duration)}
                     </StyledText>
                 </View>
             </View>
@@ -553,11 +535,11 @@ export default function DisplayScreen() {
                     <BottomSheetView style={styles.contentContainer}>
                         <SegmentedControl
                             style={{
-                                width: pianoAudioPlayer.current ? 300 : 100,
+                                width: hasPiano ? 300 : 100,
                                 height: 32,
                             }}
                             selectedIndex={selectedIndex}
-                            values={pianoAudioPlayer.current ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
+                            values={hasPiano ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
                             onChange={(event) => {
                                 setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

@@ -30,6 +30,7 @@ const translations = {
 
         // Discover screen
         discover: 'Discover',
+        discoverSubtitle: 'Results related to ',
         promptPlaceholder: "Enter any topic, theme, or lyrics...",
         topResults: 'Top Results',
         filters: 'Filter Hymnals',

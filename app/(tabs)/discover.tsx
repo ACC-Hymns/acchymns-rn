@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
-import { BookSummary, DiscoverResult, Song, SongList, SongSearchInfo } from '@/constants/types';
+import { BookSummary, DiscoverMatch, DiscoverResult, DiscoverSongInfo, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router } from 'expo-router';
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -24,6 +24,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import StyledText from '@/components/StyledText';
 import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';
+import { ConicGradientRenderer } from '@/components/ConicGradient';
+import Animated, { KeyboardState, useAnimatedKeyboard, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 
 export default function DiscoverScreen() {
 
@@ -85,23 +87,7 @@ export default function DiscoverScreen() {
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
-
-    
-    useEffect(() => {
-        const stripped_search = stripSearchText(search);
-        setDataSource([...(search.trim().length > 0 ? songList : [])]
-            .filter((s) =>
-                s.stripped_title?.includes(stripped_search) ||
-                s?.stripped_first_line?.includes(stripped_search) ||
-                s?.number == stripped_search
-            )
-            .sort((a, b) =>
-                a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
-                    b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-                )
-            ));
-    }, [search, songList]);
+    const [dataSource, setDataSource] = useState<DiscoverSongInfo[]>([]);
 
     const supportedHymnals = ["ZH", "GH"];
     const promptSuggestions = [
@@ -111,6 +97,7 @@ export default function DiscoverScreen() {
         "Victory over Death"
     ];
     const [prompt, setPrompt] = useState("");
+    const [latestPrompt, setLatestPrompt] = useState("");
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     useEffect(() => {
@@ -130,6 +117,10 @@ export default function DiscoverScreen() {
             keyboardDidHideListener.remove();
         };
     }, []);
+    const keyboard = useAnimatedKeyboard();
+    const keyboardHeightStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: -keyboard.height.value }]
+    }));
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
@@ -156,6 +147,7 @@ export default function DiscoverScreen() {
             return;
         }
         setLoading(true);
+        setPrompt('');
         const data = await fetch('https://api.acchymns.app/discover', {
             method: 'POST',
             headers: {
@@ -171,7 +163,7 @@ export default function DiscoverScreen() {
             }),
         });
         setLoading(false);
-        setPrompt('');
+        setLatestPrompt(input);
 
         if (!data.ok) {
             console.error("Error sending prompt:", data.statusText);
@@ -184,13 +176,18 @@ export default function DiscoverScreen() {
             return;
         }
 
-        if(context?.BOOK_DATA === undefined)
+        if (context?.BOOK_DATA === undefined)
             return;
-        const results: SongSearchInfo[] = response.top_matches.map((item: any) => ({
-            title: item.hymn_title,
-            number: item.hymn_number,
-            book: context?.BOOK_DATA[item.hymnal_id],
-        }));
+        const results: DiscoverSongInfo[] = response.top_matches.map((item: DiscoverMatch) => {
+            const song = songList.find(s => s.book.name.short === item.hymnal_id && s.number === item.hymn_number);
+            return {
+                title: song?.title,
+                number: song?.number,
+                book: context?.BOOK_DATA[item.hymnal_id],
+                type: item.type,
+                verses: item.verses?.sort((a, b) => a.verse_number - b.verse_number)
+            } as DiscoverSongInfo;
+        });
 
         setDataSource(results);
     }
@@ -206,47 +203,78 @@ export default function DiscoverScreen() {
                         ref={scrollViewRef}
                         scrollEnabled={scrollEnabled}
                         data={dataSource}
+                        keyExtractor={(item, index) => item.book.name.short+item.number}
                         keyboardShouldPersistTaps='always'
                         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                        renderItem={({ item, index }) => (
-                            <GenericGradientButton
-                                primaryColor={item.book.primaryColor}
-                                secondaryColor={item.book.secondaryColor}
-                                onPress={() => {
-                                    if (isNavigating) return;
-                                    if (item.book.name.short && item.number) {
-                                        router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                                    } else {
-                                        console.error("Invalid item data: ", item);
-                                    }
-                                    setIsNavigating(true);
-                                    setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
-                                }}
-                                style={{
-                                    marginHorizontal: 20,
-                                    borderRadius: 12,
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    minHeight: 84 // Ensure a minimum height of 60
-                                }}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                    <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
-                                        <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
-                                        <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
+                        renderItem={({ item, index }: { item: DiscoverSongInfo, index: number }) => (
+                            <View key={item.book.name.short+item.number}>
+                                <GenericGradientButton
+                                    primaryColor={item.book.primaryColor}
+                                    secondaryColor={item.book.secondaryColor}
+                                    onPress={() => {
+                                        if (isNavigating) return;
+                                        if (item.book.name.short && item.number) {
+                                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
+                                        } else {
+                                            console.error("Invalid item data: ", item);
+                                        }
+                                        setIsNavigating(true);
+                                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                    }}
+                                    style={{
+                                        marginHorizontal: 20,
+                                        borderRadius: 12,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        minHeight: 84 // Ensure a minimum height of 60
+                                    }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                        <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                                            <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
+                                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
+                                        </View>
+                                        <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
+                                        </View>
                                     </View>
-                                    <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                        <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
-                                    </View>
-                                </View>
-                            </GenericGradientButton>
+                                </GenericGradientButton>
+                                {item.type == "VERSE" && (
+                                    <>
+                                        {item.verses?.map((verse, id) => (
+                                            <View key={id}>
+                                                <View style={{ flexDirection: 'row' }}>
+                                                    <View>
+                                                        <View style={styles.verseArrowRect} />
+                                                        {id < (item.verses?.length || 0) - 1 && (
+                                                            <View style={styles.verseStraightRect} />
+                                                        )}
+                                                    </View>
+                                                    <StyledText style={[styles.verseText, { fontWeight: '700' }]}>
+                                                        {`${verse.verse_number}    `}
+                                                        <StyledText style={[styles.verseText, { fontWeight: '400' }]}>
+                                                            {verse.verse_text}
+                                                        </StyledText>
+                                                    </StyledText>
+                                                </View>
+                                            </View>
+                                        ))}
+                                    </>
+                                )}
+                            </View>
                         )}
                         style={[styles.scrollView]}
-                        ListFooterComponent={() => <View style={{ height: 260 }} />}
+                        ListFooterComponent={() => <View style={{ height: 200 }} />}
                         ListHeaderComponent={
                             <>
                                 <View style={styles.titleContainer}>
                                     <StyledText style={styles.textStyle}>{i18n.t('discover')}</StyledText>
+                                    {dataSource.length > 0 && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+                                            <StyledText style={styles.subtitleTextStyle}>{i18n.t('discoverSubtitle')}</StyledText>
+                                            <StyledText style={styles.subtitleTextStyleBold} numberOfLines={1}>{`"${latestPrompt}"`}</StyledText>
+                                        </View>
+                                    )}
                                 </View>
                             </>
                         }
@@ -255,80 +283,86 @@ export default function DiscoverScreen() {
             </TouchableWithoutFeedback>
             <BottomTabBarHeightContext.Consumer>
                 {(height) => (
-                    <View style={[
-                        { marginBottom: keyboardVisible ? keyboardHeight : height }, styles.footerContainer
+                    <Animated.View style={[
+                        { marginBottom: keyboardVisible ? 0 : height }
                     ]}>
-                        {(prompt.trim().length === 0 && dataSource.length == 0) && (
-                            <FlatList
-                                data={promptSuggestions}
-                                horizontal={true}
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 5 }}
-                                renderItem={({ item }) => (
-                                    <Pressable
-                                        style={styles.suggestionButton}
-                                        onPress={() => {
-                                            setPrompt(item);
-                                        }}>
-                                        <StyledText style={styles.suggestionButtonText}>{item}</StyledText>
-                                    </Pressable>
-                                )}
-                                keyExtractor={(item, index) => index.toString()}
-                            />
-                        )}
-                        <View style={styles.promptBox}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Ionicons
-                                    name="sparkles"
-                                    size={18}
-                                    color={Colors[theme]['fadedText']}
+                        <View style={[styles.footerContainer]}>
+                            {(prompt.trim().length === 0 && dataSource.length == 0) && (
+                                <FlatList
+                                    data={promptSuggestions}
+                                    horizontal={true}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 5 }}
+                                    renderItem={({ item }) => (
+                                        <Pressable
+                                            style={styles.suggestionButton}
+                                            onPress={() => {
+                                                setPrompt(item);
+                                            }}>
+                                            <StyledText style={styles.suggestionButtonText}>{item}</StyledText>
+                                        </Pressable>
+                                    )}
+                                    keyExtractor={(item, index) => index.toString()}
                                 />
-                                <TextInput
-                                    style={styles.promptInput}
-                                    onChangeText={setPrompt}
-                                    value={prompt}
-                                    placeholder={`${i18n.t('promptPlaceholder')}`}
-                                    keyboardType='default'
-                                />
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <TouchableOpacity
-                                    style={styles.promptButton}
-                                    onPress={() => {
-                                        Keyboard.dismiss();
-                                        handlePress();
-                                    }}
+                            )}
+                            <View style={{ position: "relative" }}>
+                                <ConicGradientRenderer
+                                    borderRadius={18}
+                                    poke={3}
+                                    colors={[Colors[theme]['settingsButton'], "#C95EFF", "#94ABFF", Colors[theme]['settingsButton']]}
+                                    spinRate={loading ? 450 : 15}
+                                    enabled={prompt.trim().length > 0 || loading}
                                 >
-                                    <Ionicons
-                                        name="filter"
-                                        size={24}
-                                        color={Colors[theme]['fadedText']}
-                                    />
-                                </TouchableOpacity>
-                                {prompt.trim().length > 0 && (
-                                    <>
-                                        {loading ? (
-                                            <ActivityIndicator size="large" color={Colors[theme]['text']} />
-                                        ) : (
+                                    <View style={styles.promptBox}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Ionicons
+                                                name="sparkles"
+                                                size={18}
+                                                color={Colors[theme]['fadedText']}
+                                            />
+                                            <TextInput
+                                                style={styles.promptInput}
+                                                onChangeText={setPrompt}
+                                                value={prompt}
+                                                placeholder={`${i18n.t('promptPlaceholder')}`}
+                                                keyboardType='default'
+                                            />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <TouchableOpacity
                                                 style={styles.promptButton}
                                                 onPress={() => {
                                                     Keyboard.dismiss();
-                                                    sendPrompt(prompt);
+                                                    handlePress();
                                                 }}
                                             >
                                                 <Ionicons
-                                                    name="arrow-up"
+                                                    name="filter"
                                                     size={24}
                                                     color={Colors[theme]['fadedText']}
                                                 />
                                             </TouchableOpacity>
-                                        )}
-                                    </>
-                                )}
+                                            {prompt.trim().length > 0 && (
+                                                <TouchableOpacity
+                                                    style={styles.promptButton}
+                                                    onPress={() => {
+                                                        Keyboard.dismiss();
+                                                        sendPrompt(prompt);
+                                                    }}
+                                                >
+                                                    <Ionicons
+                                                        name="arrow-up"
+                                                        size={24}
+                                                        color={Colors[theme]['fadedText']}
+                                                    />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    </View>
+                                </ConicGradientRenderer>
                             </View>
                         </View>
-                    </View>
+                    </Animated.View>
                 )}
             </BottomTabBarHeightContext.Consumer>
             <BottomSheetModal
@@ -395,6 +429,7 @@ export default function DiscoverScreen() {
                                     <Checkbox
                                         status={selectedHymnals.includes(item) ? 'checked' : 'unchecked'}
                                         color={context?.BOOK_DATA[item]?.primaryColor || Colors[theme]['primary']}
+                                        uncheckedColor={context?.BOOK_DATA[item]?.primaryColor || Colors[theme]['primary']}
                                     />
                                     <StyledText style={styles.filterText}>{context?.BOOK_DATA[item]?.name.medium || item}</StyledText>
                                 </Pressable>
@@ -427,6 +462,27 @@ export default function DiscoverScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        verseStraightRect: {
+            position: 'absolute',
+            marginLeft: 45,
+            marginRight: 15,
+            width: 30,
+            height: 80,
+            transform: [{translateY: -10}],
+            borderLeftWidth: 1,
+            borderColor: Colors[theme]['fadedIcon'],
+            zIndex: -1
+        },
+        verseArrowRect: {
+            marginLeft: 45,
+            marginRight: 15,
+            width: 30,
+            height: 30,
+            borderLeftWidth: 1,
+            borderBottomWidth: 1,
+            borderBottomLeftRadius: 12,
+            borderColor: Colors[theme]['fadedIcon']
+        },
         footerContainer: {
             position: 'absolute',
             bottom: 0,
@@ -438,7 +494,7 @@ function makeStyles(theme: "light" | "dark") {
             textAlign: 'center',
         },
         applyButtonText: {
-            color: Colors[theme]['songBackground'],
+            color: 'white',
             fontSize: 16,
             textAlign: 'center',
         },
@@ -497,7 +553,8 @@ function makeStyles(theme: "light" | "dark") {
             backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 32,
             padding: 15,
-            shadowRadius: 1,
+            shadowColor: Colors[theme]['text'],
+            shadowRadius: 2,
             shadowOpacity: 0.3,
             shadowOffset: {
                 width: 0,
@@ -547,7 +604,8 @@ function makeStyles(theme: "light" | "dark") {
             color: Colors[theme]['text'],
             width: '100%',
             fontSize: 16,
-            fontFamily: fontFamily.regular
+            fontFamily: fontFamily.regular,
+            maxWidth: '90%'
         },
         searchHistoryTitle: {
             fontSize: 18,
@@ -615,7 +673,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         titleContainer: {
             marginTop: 80,
-            marginBottom: 20,
+            marginBottom: 10,
             marginLeft: 30,
         },
         stepContainer: {
@@ -633,20 +691,33 @@ function makeStyles(theme: "light" | "dark") {
             fontSize: 32,
             fontWeight: '500',
             color: Colors[theme]['text'], // Dynamically set text color using useThemeColor
-            fontFamily: 'Lato'
+        },
+        subtitleTextStyle: {
+            fontSize: 18,
+            color: Colors[theme]['text']
+        },
+        subtitleTextStyleBold: {
+            fontSize: 18,
+            fontWeight: '500',
+            color: Colors[theme]['text'],
+            maxWidth: '60%'
         },
         fadedText: {
             fontSize: 24,
             fontWeight: '500',
             color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
-            fontFamily: 'Lato'
         },
         descriptionText: {
             fontSize: 16,
             fontWeight: '400',
             color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
-            fontFamily: 'Lato',
             textAlign: 'center'
+        },
+        verseText: {
+            marginTop: 8,
+            maxWidth: '70%',
+            fontSize: 12,
+            color: Colors[theme]['fadedText'],
         }
     });
 

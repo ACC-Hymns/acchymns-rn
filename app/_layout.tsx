@@ -27,6 +27,8 @@ import { decode, encode } from 'base-64';
 import DefaultPreference from 'react-native-default-preference';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import StyledText from '@/components/StyledText';
+import TrackPlayer, { Capability } from 'react-native-track-player';
+import { PlaybackService } from '@/scripts/track_player';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -77,6 +79,7 @@ export default function RootLayout() {
     // save preferences to async storage
     useEffect(() => {
 
+        
         console.log('Saving preferences...');
         const savePreferences = async () => {
             try {
@@ -155,6 +158,23 @@ export default function RootLayout() {
             if (value !== null)
                 setInvertSheetMusic(value === 'true');
         });
+
+        // register TrackPlayer
+        TrackPlayer.registerPlaybackService(() => PlaybackService);
+
+        const setup = async () => {
+            await TrackPlayer.setupPlayer();
+            TrackPlayer.updateOptions({
+                // Media controls capabilities
+                capabilities: [
+                    Capability.Play,
+                    Capability.Pause,
+                    Capability.JumpBackward,
+                    Capability.JumpForward
+                ]
+            });
+        }
+        setup();
 
         const data = loadHymnals();
         data.then((data) => {
