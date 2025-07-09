@@ -10,6 +10,8 @@ import { Colors } from '@/constants/Colors';
 import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import StyledText from '@/components/StyledText';
+import { useSongListData } from '@/hooks/useSongListData';
+import { useBookData } from '@/hooks/useBookData';
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
@@ -17,11 +19,11 @@ export default function SelectionScreen() {
 
     // get book data from context
     const context = useContext(HymnalContext);
-    const [bookData, setBookData] = useState<BookSummary | null>(null);
-    const [songData, setSongData] = useState<SongList | null>(null);
-    const [bookIndex, setBookIndex] = useState<BookIndex | null>(null);
+
+    const book = useBookData(id as string, context);
+    const {songs, topicalIndex, loading, error } = useSongListData(book);
+
     const [sortMode, setSortMode] = useState<SortMode>(SortMode.NUMERICAL);
-    const [loading, setLoading] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const navigation = useNavigation();
     if (context) {
@@ -29,36 +31,16 @@ export default function SelectionScreen() {
     }
 
     useLayoutEffect(() => {
-        if (!context) return;
+        if (!book) return;
 
-        const bData = context.BOOK_DATA[id as string];
-        setBookData(bData);
-        if (!bookData) return;
         navigation.setOptions({
-            title: bookData.name.medium,
+            title: book.name.medium,
             headerTitleAlign: 'center',
             headerRight: () => (
-                <HymnalMoreMenu bookSummary={bookData} />
+                <HymnalMoreMenu bookSummary={book} />
             ),
         });
-
-        const fetchData = async () => {
-            try {
-                const data = await getSongData(id as string);
-                setSongData(data);
-                if (bookData.indexAvailable) {
-                    const index = await getBookIndex(id as string);
-                    setBookIndex(index);
-                }
-            } catch (error) {
-                console.error("Error loading song data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [bookData, id, navigation]);
+    }, [book, id, navigation]);
 
     function handleSortModeChange(mode: SortMode) {
         setSortMode(mode);
@@ -78,13 +60,13 @@ export default function SelectionScreen() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            {songData && bookData && (
+            {book && songs && (
                 <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                     {sortMode === SortMode.NUMERICAL && (
                         <View style={{ flex: 1 }}>
                             {(context?.legacyNumberGrouping) ? (
                                 <FlatList // NUMERICAL LIST
-                                    data={Object.keys(songData).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))}
+                                    data={Object.keys(songs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))}
                                     keyExtractor={(item) => item}
                                     key='legacy'
                                     numColumns={5}
@@ -101,16 +83,16 @@ export default function SelectionScreen() {
                                                 width: 60,
                                                 height: 60,
                                                 borderRadius: 30,
-                                                backgroundColor: bookData.primaryColor,
+                                                backgroundColor: book.primaryColor,
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
                                             }}
                                             onPressIn={() => {
-                                                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
                                             }}
                                             onPress={() => {
                                                 // check if im already navigating
-                                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
                                             }}
                                         >
                                             <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</StyledText>
@@ -130,18 +112,19 @@ export default function SelectionScreen() {
                                 />
                             ) : (
                                 <FlatList
-                                    data={Object.keys(songData).reduce((ranges: number[], number: string) => {
+                                    data={Object.keys(songs).reduce((ranges: number[], number: string) => {
                                         const num = parseInt(number);
-                                        let rangeStart;
+                                        let rangeStart, rangeEnd;
                                         if (num <= 99) {
                                             rangeStart = 1;
+                                            rangeEnd = 99
                                         } else {
                                             rangeStart = Math.floor(num / 100) * 100;
+                                            rangeEnd = rangeStart + 99;
                                         }
-                                        const rangeEnd = rangeStart + 99;
 
                                         // Check if there are any songs in this range
-                                        const songsInRange = Object.keys(songData).some(songNumber => {
+                                        const songsInRange = Object.keys(songs).some(songNumber => {
                                             const n = parseInt(songNumber);
                                             return n >= rangeStart && n <= rangeEnd;
                                         });
@@ -157,14 +140,14 @@ export default function SelectionScreen() {
                                     renderItem={({ item: rangeStart, index }) => {
                                         // Find the highest song number in this range
                                         const maxInRange = Math.min(
-                                            rangeStart + 99,
-                                            Math.max(...Object.keys(songData)
+                                            (index == 0 ? rangeStart + 98 : rangeStart + 99),
+                                            Math.max(...Object.keys(songs)
                                                 .map(num => parseInt(num))
                                                 .filter(num => num >= rangeStart && num <= rangeStart + 99)
                                             )
                                         );
 
-                                        const songsInRange = Object.keys(songData)
+                                        const songsInRange = Object.keys(songs)
                                             .filter(num => {
                                                 const songNum = parseInt(num);
                                                 return songNum >= rangeStart && songNum <= maxInRange;
@@ -216,7 +199,7 @@ export default function SelectionScreen() {
                                                                         if (isNavigating) return;
                                                                         router.push({
                                                                             pathname: '/display/[id]/[number]',
-                                                                            params: { id: bookData.name.short, number }
+                                                                            params: { id: book.name.short, number }
                                                                         });
                                                                         setIsNavigating(true);
                                                                         setTimeout(() => setIsNavigating(false), 400);
@@ -232,7 +215,7 @@ export default function SelectionScreen() {
                                                                             #{number}
                                                                         </StyledText>
                                                                         <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
-                                                                            {songData[number].title}
+                                                                            {songs[number].title}
                                                                         </StyledText>
                                                                     </View>
                                                                 </TouchableOpacity>
@@ -262,7 +245,7 @@ export default function SelectionScreen() {
                         <View style={{ flex: 1 }}>
                             {(context?.legacyNumberGrouping) ? (
                                 <FlatList // ALPHABETICAL LIST
-                                    data={Object.keys(songData).sort((a, b) => songData[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songData[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    data={Object.keys(songs).sort((a, b) => songs[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songs[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
                                     keyExtractor={(item) => item}
                                     key='legacy'
                                     contentContainerStyle={{
@@ -277,7 +260,7 @@ export default function SelectionScreen() {
                                                 margin: 4,
                                                 width: Dimensions.get('window').width - 60,
                                                 borderRadius: 12,
-                                                backgroundColor: bookData.primaryColor,
+                                                backgroundColor: book.primaryColor,
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
                                                 paddingVertical: 10, // Add padding to allow content to grow
@@ -286,7 +269,7 @@ export default function SelectionScreen() {
 
                                             onPress={() => {
                                                 if (isNavigating) return;
-                                                router.push({ pathname: '/display/[id]/[number]', params: { id: bookData.name.short, number: item } });
+                                                router.push({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
                                                 setIsNavigating(true);
                                                 setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                                             }}
@@ -295,7 +278,7 @@ export default function SelectionScreen() {
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
                                                 <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songData[item].title}</StyledText>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songs[item].title}</StyledText>
                                                 </View>
                                                 <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
                                                     <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</StyledText>
@@ -307,7 +290,7 @@ export default function SelectionScreen() {
                                 />
                             ) : (
                                 <FlatList // ALPHABETICAL LIST
-                                    data={Object.keys(songData).sort((a, b) => songData[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songData[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    data={Object.keys(songs).sort((a, b) => songs[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songs[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
                                     keyExtractor={(number) => number}
                                     key='new'
                                     contentContainerStyle={{
@@ -320,7 +303,7 @@ export default function SelectionScreen() {
                                                 if (isNavigating) return;
                                                 router.push({
                                                     pathname: '/display/[id]/[number]',
-                                                    params: { id: bookData.name.short, number }
+                                                    params: { id: book.name.short, number }
                                                 });
                                                 setIsNavigating(true);
                                                 setTimeout(() => setIsNavigating(false), 400);
@@ -337,7 +320,7 @@ export default function SelectionScreen() {
                                                     #{number}
                                                 </StyledText>
                                                 <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
-                                                    {songData[number].title}
+                                                    {songs[number].title}
                                                 </StyledText>
                                             </View>
                                         </TouchableOpacity>
@@ -360,12 +343,12 @@ export default function SelectionScreen() {
                     {sortMode === SortMode.TOPICAL && (
                         <View style={{ flex: 1 }}>
                             <FlatList
-                                data={Object.keys(bookIndex || {})}
+                                data={Object.keys(topicalIndex || {})}
                                 contentContainerStyle={{ paddingBottom: 120 }}
                                 keyExtractor={(key) => key}
                                 renderItem={({ item: key, index }) => {
 
-                                    const songsInTopic = (bookIndex || {})[key]?.map(song => ({ ...songData[song], number: song })) || [];
+                                    const songsInTopic = (topicalIndex || {})[key]?.map(song => ({ ...songs[song], number: song })) || [];
 
                                     return (
                                         <View key={key} style={{ marginTop: index === 0 ? 12 : 0 }}>
@@ -411,7 +394,7 @@ export default function SelectionScreen() {
                                                                     if (isNavigating) return;
                                                                     router.push({
                                                                         pathname: '/display/[id]/[number]',
-                                                                        params: { id: bookData.name.short, number: song.number }
+                                                                        params: { id: book.name.short, number: song.number }
                                                                     });
                                                                     setIsNavigating(true);
                                                                     setTimeout(() => setIsNavigating(false), 400);

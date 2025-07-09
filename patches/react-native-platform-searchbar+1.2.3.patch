@@ -8,7 +8,7 @@ index 38e71a0..0a7ad6e 100644
      onPress(): void;
 +    setComponentWidth?(width: number): void;
      style?: StyleProp<ViewStyle>;
-     textStyle?: StyleProp<StyledTextStyle>;
+     textStyle?: StyleProp<TextStyle>;
      accessibilityLabel?: string;
 @@ -27,6 +28,7 @@ const CancelButton: React.FC<Props> = ({
      textStyle,
@@ -46,7 +46,7 @@ index 38e71a0..0a7ad6e 100644
 -                hitSlop={8}
 +                hitSlop={16}
              >
-                 <StyledText
+                 <Text
                      style={[styles.cancelButtonText, textStyle]}
 @@ -83,9 +84,9 @@ const CancelButton: React.FC<Props> = ({
  const styles = StyleSheet.create({
@@ -77,7 +77,7 @@ index ce60e6e..d497057 100644
      LayoutAnimation,
      NativeSyntheticEvent,
      StyleSheet,
-@@ -56,6 +59,17 @@ const SearchBar = forwardRef<StyledTextInput | null, SearchBarProps>(
+@@ -56,6 +59,17 @@ const SearchBar = forwardRef<TextInput | null, SearchBarProps>(
  
          const styles = theme === 'light' ? defaultStyles : darkStyles;
          const [cancelButtonVisible, setCancelButtonVisible] = useState(false);
@@ -92,10 +92,10 @@ index ce60e6e..d497057 100644
 +              useNativeDriver: false,
 +            }).start();
 +          };
-         const inputRef = useRef<StyledTextInput>(null);
+         const inputRef = useRef<TextInput>(null);
          useImperativeHandle(ref, () => inputRef.current!);
  
-@@ -64,9 +78,10 @@ const SearchBar = forwardRef<StyledTextInput | null, SearchBarProps>(
+@@ -64,9 +78,10 @@ const SearchBar = forwardRef<TextInput | null, SearchBarProps>(
          ) => {
              LayoutAnimation.configureNext({
                  ...LayoutAnimation.Presets.easeInEaseOut,
@@ -107,7 +107,7 @@ index ce60e6e..d497057 100644
              if (onFocus) {
                  onFocus(e);
              }
-@@ -90,61 +105,79 @@ const SearchBar = forwardRef<StyledTextInput | null, SearchBarProps>(
+@@ -90,61 +105,79 @@ const SearchBar = forwardRef<TextInput | null, SearchBarProps>(
              }
              LayoutAnimation.configureNext({
                  ...LayoutAnimation.Presets.easeInEaseOut,
@@ -121,7 +121,7 @@ index ce60e6e..d497057 100644
          return (
 -            <View style={[styles.wrapper, style]}>
 -                <View style={styles.inputWrapper}>
--                    <StyledTextInput
+-                    <TextInput
 -                        ref={inputRef}
 -                        value={value}
 -                        clearButtonMode="never"
@@ -171,7 +171,7 @@ index ce60e6e..d497057 100644
 +                    <View style={[
 +                            styles.inputWrapper
 +                        ]}>
-+                        <StyledTextInput
++                        <TextInput
 +                            ref={inputRef}
 +                            value={value}
 +                            clearButtonMode="never"

@@ -252,10 +252,10 @@ export default function DiscoverScreen() {
                                             <View key={id}>
                                                 <View style={{ flexDirection: 'row' }}>
                                                     <View>
-                                                        <View style={styles.verseArrowRect} />
-                                                        {id < (item.verses?.length || 0) - 1 && (
-                                                            <View style={styles.verseStraightRect} />
+                                                        {id > 0 && (
+                                                            <View style={[styles.verseStraightRect, {height: 80}]} />
                                                         )}
+                                                        <View style={styles.verseArrowRect} />
                                                     </View>
                                                     <StyledText style={[styles.verseText, { fontWeight: '700' }]}>
                                                         {`${verse.verse_number}    `}
@@ -474,8 +474,7 @@ function makeStyles(theme: "light" | "dark") {
             marginLeft: 45,
             marginRight: 15,
             width: 30,
-            height: 90,
-            transform: [{translateY: -10}],
+            transform: [{translateY: -80}],
             borderLeftWidth: 1,
             borderColor: Colors[theme]['fadedIcon'],
             zIndex: -1

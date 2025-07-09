@@ -32,14 +32,20 @@ import { translations } from '@/constants/localization';
 import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix } from '@shopify/react-native-skia';
 import StyledText from '@/components/StyledText';
 import TrackPlayer, { State, usePlaybackState, useProgress } from 'react-native-track-player';
+import { useBookData } from '@/hooks/useBookData';
+import { useSongData } from '@/hooks/useSongData';
+import { useSongListData } from '@/hooks/useSongListData';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';
 
     const context = useContext(HymnalContext);
-    const [bookData, setBookData] = useState<BookSummary | null>(null);
-    const [songData, setSongData] = useState<SongList | null>(null);
+
+    const book = useBookData(params.id, context);
+    const { songs, error } = useSongListData(book);
+    const { song } = useSongData(params.id, params.number);
+
     const [songNotes, setSongNotes] = useState<string[]>([]);
     const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
     const [loading, setLoading] = useState(false);
@@ -75,13 +81,9 @@ export default function DisplayScreen() {
     }
 
     useLayoutEffect(() => {
-        if (!context || !params.id || !params.number) return;
-        const bData = context.BOOK_DATA[params.id];
-        if (!bData) return;
-
-        setBookData(bData); // still update state for image use later
+        if (!context) return;
         context.openDetailsBottomSheet = openDetailsPage;
-    }, [context, params.id, params.number]);
+    }, [context]);
 
     function setHeaderOptions() {
         navigation.setOptions({
@@ -128,6 +130,19 @@ export default function DisplayScreen() {
 
             const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
+            // prefetch
+
+            const songNumbers = Object.keys(songs || {});
+            const currentIndex = songNumbers.indexOf(params.number);
+            const nextIndex = currentIndex + 1;
+            const prevIndex = currentIndex - 1;
+            if (nextIndex < songNumbers.length) {
+                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[nextIndex] } });
+            }
+            if (prevIndex >= 0) {
+                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[prevIndex] } });
+            }
+
             navigation.addListener('beforeRemove', async (e) => {
                 if (e.data.action.type == 'GO_BACK') {
                     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
@@ -143,12 +158,13 @@ export default function DisplayScreen() {
                 ScreenOrientation.removeOrientationChangeListener(subscription);
             });
 
-            if (!context || !songData) return;
+            if (!context || !song || !book) return;
+
             posthog.capture('hymn_viewed', {
                 hymnal_id: params.id,
                 hymnal_name: context.BOOK_DATA[params.id]?.name?.medium,
                 song_id: params.number,
-                song_name: songData?.[params.number]?.title || '',
+                song_name: song.title,
             });
 
             (async () => {
@@ -162,8 +178,8 @@ export default function DisplayScreen() {
 
                         const track_data = {
                             url: URL, // Load media from the network
-                            title: songData?.[params.number]?.title,
-                            artist: context?.BOOK_DATA[params.id]?.name?.medium,
+                            title: song.title,
+                            artist: book.name.medium,
                             artwork: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
                         };
                         await TrackPlayer.reset();
@@ -176,7 +192,7 @@ export default function DisplayScreen() {
                 }
             })();
 
-        }, [params.id, params.number, songData, context])
+        }, [params.id, params.number, context])
     )
 
     const posthog = usePostHog()
@@ -184,25 +200,12 @@ export default function DisplayScreen() {
 
         const fetchData = async () => {
             try {
+                if (!song || !book)
+                    return;
+
                 setLoading(true);
-                const data = await getSongData(params.id as string);
-                setSongData(data);
-
-                // prefetch adjecent songs
-
-                const songNumbers = Object.keys(songData || {});
-                const currentIndex = songNumbers.indexOf(params.number);
-                const nextIndex = currentIndex + 1;
-                const prevIndex = currentIndex - 1;
-                if (nextIndex < songNumbers.length) {
-                    router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[nextIndex] } });
-                }
-                if (prevIndex >= 0) {
-                    router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[prevIndex] } });
-                }
-
                 // set song notes
-                const songNotes = data?.[params.number]?.notes;
+                const songNotes = song.notes;
                 // reverse notes
                 const reversedNotes = songNotes?.slice().reverse();
                 setSongNotes(reversedNotes || []);
@@ -218,18 +221,15 @@ export default function DisplayScreen() {
                     interruptionModeAndroid: 'duckOthers'
                 })
 
-                if (!bookData) return;
-
-
                 // if invertSheetMusic is true AND theme is dark, invert the image
                 const inverted = context?.invertSheetMusic ?? false;
                 const shouldInvert = inverted && theme === 'dark';
 
-                const imageData = await getImageData(bookData, params.number, shouldInvert);
+                const imageData = await getImageData(book, params.number, shouldInvert);
                 if (!imageData) return;
                 setImageData(imageData);
-            } catch (error) {
-                console.error("Error loading song data");
+            } catch (e) {
+                console.error(e);
             } finally {
                 setLoading(false);
             }
@@ -248,7 +248,7 @@ export default function DisplayScreen() {
                 await TrackPlayer.reset();
             })();
         };
-    }, [bookData, context?.invertSheetMusic, theme]);
+    }, [context?.invertSheetMusic, song, theme]);
 
     const [isHorizontal, setIsHorizontal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -304,7 +304,7 @@ export default function DisplayScreen() {
                     minHeight: 100, // Ensures consistent height
                 }}
             >
-                {songData && songData[params.number] && (
+                {song && (
                     <>
                         <View style={styles.noteButton}>
                             <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
@@ -437,7 +437,7 @@ export default function DisplayScreen() {
             if (Math.abs(offset.value) > MAX_OFFSET / 2) {
                 if (offset.value > 0) {
                     // Swipe right
-                    const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex > 0) {
                         runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex - 1] } });
@@ -445,7 +445,7 @@ export default function DisplayScreen() {
 
                 } else {
                     // Swipe left
-                    const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex < songNumbers.length - 1) {
                         runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex + 1] } });
@@ -473,7 +473,7 @@ export default function DisplayScreen() {
                     >
                         {/* Offscreen left text */}
                         {(() => {
-                            const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                            const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                             const currentIndex = songNumbers.indexOf(params.number);
                             if (currentIndex <= 0) return null;
                             return (
@@ -504,7 +504,7 @@ export default function DisplayScreen() {
                             />
                         </ScrollView>
                         {(() => {
-                            const songNumbers = Object.keys(songData || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                            const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                             const currentIndex = songNumbers.indexOf(params.number);
                             if (currentIndex >= songNumbers.length - 1) return null;
                             return (

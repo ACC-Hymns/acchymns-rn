@@ -9,8 +9,8 @@ import * as FileSystem from 'expo-file-system';
 import { hashFile, hashFolder } from '@/scripts/hash';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
 import { useNavigation, useRouter } from 'expo-router';
-import { use, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, InteractionManager, Alert, Dimensions } from 'react-native';
+import { memo, use, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, InteractionManager, Alert, Dimensions, ListRenderItemInfo, Platform } from 'react-native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
 import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
@@ -18,13 +18,21 @@ import * as ContextMenu from 'zeego/context-menu';
 import { ContextMenuView } from 'react-native-ios-context-menu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from 'react-native-elements';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js'
 import React from 'react';
 import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
+import ReorderableList, {
+    ReorderableListReorderEvent,
+    reorderItems,
+    useIsActive,
+    useReorderableDrag,
+    useReorderableDragEnd,
+    useReorderableDragStart,
+} from 'react-native-reorderable-list';
 
 export default function HomeScreen() {
 
@@ -43,7 +51,7 @@ export default function HomeScreen() {
     // if not, push the user to the hymnal importer
 
     useEffect(() => {
-        if(!context)
+        if (!context)
             return;
 
         context.deleteHymnal = deleteHymnal;
@@ -100,8 +108,8 @@ export default function HomeScreen() {
                 opacity: percentOpen.value,
             }));
             return (
-                <Animated.View style={[styles.deleteButtonContainer,animatedStyles]}>
-                    <TouchableOpacity 
+                <Animated.View style={[styles.deleteButtonContainer, animatedStyles]}>
+                    <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={() => {
                             if (bookData && bookData[item]) {
@@ -137,9 +145,43 @@ export default function HomeScreen() {
             );
         };
     }, [context?.languageOverride, i18n.locale]);
-    
-    
-    const renderDraggableHymnalItem = useMemo(() => {
+
+    const HymnalItem: React.FC<{ item: string }> = memo(({ item }) => {
+
+        const drag = useReorderableDrag();
+        const isActive = useIsActive();
+        
+        return (
+            <View style={{ marginBottom: 15 }}>
+                <Pressable
+                    onPress={() => {
+                        router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: item } });
+                    }}
+                    onLongPress={drag}
+                    disabled={isActive}
+                    style={({ pressed }) => [
+                        {
+                            opacity: (pressed) ? 0.8 : 1,
+                        }
+                    ]}
+                    unstable_pressDelay={0}
+                >
+                    <GradientButton
+                        key={item}
+                        title={bookData![item].name.medium}
+                        primaryColor={bookData![item].primaryColor}
+                        secondaryColor={bookData![item].secondaryColor}
+                    />
+                </Pressable>
+            </View>
+        )
+    });
+
+    const renderItem = ({ item }: ListRenderItemInfo<string>) => (
+        <HymnalItem item={item} />
+    )
+
+    const renderDraggableHymnalItemOld = useMemo(() => {
         return ({ item: bookKey, drag, isActive }: RenderItemParams<string>) => (
             <View style={{ marginBottom: 15 }}>
                 <SwipeableItem
@@ -150,18 +192,12 @@ export default function HomeScreen() {
                     swipeEnabled={!isActive}
                 >
                     <ScaleDecorator activeScale={1.05}>
-                        <Pressable
+                        <TouchableOpacity
                             onPress={() => {
                                 router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
                             }}
                             onLongPress={drag}
                             disabled={isActive}
-                            style={({ pressed }) => [
-                                {
-                                    opacity: (pressed) ? 0.8 : 1,
-                                }
-                            ]}
-                            unstable_pressDelay={0}
                         >
                             <GradientButton
                                 key={bookKey}
@@ -169,20 +205,26 @@ export default function HomeScreen() {
                                 primaryColor={bookData![bookKey].primaryColor}
                                 secondaryColor={bookData![bookKey].secondaryColor}
                             />
-                        </Pressable>
+                        </TouchableOpacity>
                     </ScaleDecorator>
                 </SwipeableItem>
             </View>
         );
-    // Add dependencies as needed
+        // Add dependencies as needed
     }, [bookData, router, context?.languageOverride, i18n.locale]);
 
+    function haptic() {
+        'worklet';
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+    }
     return (
         <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }} onLayout={() => context?.onLayoutHomeView()}>
-                <DraggableFlatList
+                <ReorderableList
+                    autoscrollSpeedScale={0}
+                    shouldUpdateActiveItem={true}
                     style={[styles.scrollView]}
-                    activationDistance={15}
+                    cellAnimations={{opacity: 1}}
                     contentContainerStyle={{ paddingBottom: 90 }}
                     data={
                         bookData
@@ -191,21 +233,17 @@ export default function HomeScreen() {
                                 ...sortOrder.filter((key) => bookData[key]),
                                 // Then, any keys in bookData not in sortOrder
                                 ...Object.keys(bookData).filter((key) => !sortOrder.includes(key))
-                              ]
+                            ]
                             : []
                     }
-                    keyExtractor={(bookKey) => bookKey}
-                    onDragEnd={({ data }) => {
-                        setSortOrder(data);
-                        saveOrder(data);
+                    keyExtractor={(item: string) => item}
+                    onReorder={({ from, to }: ReorderableListReorderEvent) => {
+                        setSortOrder(value => reorderItems(value, from, to));
                     }}
-                    onDragBegin={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                    }}
-                    onPlaceholderIndexChange={(index => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    })}
-                    renderItem={renderDraggableHymnalItem}
+                    
+                    onIndexChange={haptic}
+                    onDragStart={haptic}
+                    renderItem={renderItem}
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
                             <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
@@ -255,19 +293,19 @@ function makeStyles(theme: "light" | "dark") {
             height: '100%',
             borderRadius: 16,
             alignItems: 'center',
-            justifyContent: 'center',  
+            justifyContent: 'center',
         },
         rowItem: {
-          height: 100,
-          width: 100,
-          alignItems: "center",
-          justifyContent: "center",
+            height: 100,
+            width: 100,
+            alignItems: "center",
+            justifyContent: "center",
         },
         text: {
-          color: "white",
-          fontSize: 24,
-          fontWeight: "bold",
-          textAlign: "center",
+            color: "white",
+            fontSize: 24,
+            fontWeight: "bold",
+            textAlign: "center",
         },
         scrollView: {
             paddingTop: 15,
