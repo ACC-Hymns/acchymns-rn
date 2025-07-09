@@ -51,6 +51,7 @@
     "expo-image-picker": "~16.1.4",
     "expo-linear-gradient": "~14.1.4",
     "expo-linking": "~7.1.4",
+    "expo-local-authentication": "~16.0.5",
     "expo-localization": "~16.1.5",
     "expo-router": "~5.0.6",
     "expo-screen-orientation": "~8.1.6",
@@ -98,8 +99,7 @@
     "react-native-zoom-toolkit": "^4.0.2",
     "rn-user-defaults": "^1.8.2",
     "stream-browserify": "^3.0.0",
-    "zeego": "^3.0.6",
-    "expo-local-authentication": "~16.0.5"
+    "zeego": "^3.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

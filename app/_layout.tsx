@@ -67,6 +67,8 @@ export default function RootLayout() {
     const [postHogOptedIn, setPostHogOptedIn] = useState<boolean | null>(null);
     const [themeOverride, setThemeOverride] = useState<string | null>(null);
     const [invertSheetMusic, setInvertSheetMusic] = useState<boolean | null>(null);
+    const [broadcastingToken, setBroadcastingToken] = useState<string | null>(null);
+    const [broadcastingChurch, setBroadcastingChurch] = useState<string | null>(null);
 
     useEffect(() => {
         const appliedTheme =
@@ -101,6 +103,12 @@ export default function RootLayout() {
 
                 if (invertSheetMusic !== null)
                     await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
+                
+                if (broadcastingToken !== null)
+                    await AsyncStorage.setItem('broadcastingToken', broadcastingToken);
+                
+                if (broadcastingChurch !== null)
+                    await AsyncStorage.setItem('broadcastingChurch', broadcastingChurch);
 
                 console.log('Saved preferences.');
             } catch (error) {
@@ -108,7 +116,7 @@ export default function RootLayout() {
             }
         }
         savePreferences();
-    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic, discoverPageVisited]);
+    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic, discoverPageVisited, broadcastingToken, broadcastingChurch]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -134,9 +142,13 @@ export default function RootLayout() {
             themeOverride,
             setThemeOverride,
             invertSheetMusic,
-            setInvertSheetMusic
+            setInvertSheetMusic,
+            broadcastingToken,
+            setBroadcastingToken,
+            broadcastingChurch,
+            setBroadcastingChurch
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited]);
+    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited, broadcastingToken, setBroadcastingToken, broadcastingChurch, setBroadcastingChurch]);
     // Load hymnal data
 
     const i18n = new I18n(translations);
@@ -167,6 +179,14 @@ export default function RootLayout() {
         AsyncStorage.getItem('invertSheetMusic').then(async (value) => {
             if (value !== null)
                 setInvertSheetMusic(value === 'true');
+        });
+        AsyncStorage.getItem('broadcastingToken').then(async (value) => {
+            if (value !== null)
+                setBroadcastingToken(value);
+        });
+        AsyncStorage.getItem('broadcastingChurch').then(async (value) => {
+            if (value !== null)
+                setBroadcastingChurch(value);
         });
 
         // register TrackPlayer

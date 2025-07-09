@@ -38,6 +38,15 @@ const translations = {
         filters: 'Filter Hymnals',
         allHymnals: 'All Hymnals',
 
+        // Broadcast screen
+        broadcast: 'Broadcast',
+        selectedChurch: 'Selected Church',
+        actions: 'ACTIONS',
+        setSongNumber: 'Set Song Number',
+        setBibleReading: 'Set Bible Reading',
+        clearScreen: 'Clear Screen',
+        logOut: 'Log Out',
+
         // Search and Bookmarks screen
         search: 'Search',
         bookmarks: 'Bookmarks',

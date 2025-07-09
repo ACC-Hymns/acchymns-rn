@@ -47,6 +47,50 @@ export default function HomeLayout() {
                 }}
             />
             <Stack.Screen
+                name="broadcast_bible"
+                options={{ 
+                    title: i18n.t('setBibleReading'),
+                    headerShown: true, 
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                }}
+            />
+            <Stack.Screen
+                name="broadcast_song"
+                options={{ 
+                    title: i18n.t('setSongNumber'),
+                    headerShown: true, 
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                }}
+            />
+            <Stack.Screen
+                name="broadcast_options"
+                options={{ 
+                    title: i18n.t('broadcast'),
+                    headerShown: true, 
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                }}
+            />
+            <Stack.Screen
+                name="broadcast"
+                options={{ 
+                    title: i18n.t('broadcast'),
+                    headerShown: true, 
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerTransparent: true,
+                    headerShadowVisible: false,
+                }}
+            />
+            <Stack.Screen
                 name="language"
                 options={{ 
                     title: i18n.t('language'),

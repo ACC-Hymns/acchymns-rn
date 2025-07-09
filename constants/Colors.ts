@@ -27,7 +27,8 @@ export const Colors = {
     fadedIcon: '#C5C8CC',
     divider: '#e8e8e8',
     destructive: '#fd3b31',
-    settingsButton: '#fff'
+    settingsButton: '#fff',
+    buttonTap: '#DDDDDD'
   },
   dark: {
     text: '#FFFFFF',
@@ -48,7 +49,8 @@ export const Colors = {
     handleBar: '#dcdcdc',
     fadedIcon: '#9BA1A6',
     divider: '#333333',
-    destructive: '#fd3b31'
+    destructive: '#fd3b31',
+    buttonTap: '#141414'
   },
 };
 

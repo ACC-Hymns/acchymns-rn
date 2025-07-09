@@ -17,6 +17,10 @@ interface HymnalContextType {
     setInvertSheetMusic: (invertSheetMusic: boolean) => void;
     postHogOptedIn: boolean | null;
     setPostHogOptedIn: (postHogOptedIn: boolean) => void;
+    broadcastingToken: string | null;
+    setBroadcastingToken: (token: string | null) => void;
+    broadcastingChurch: string | null;
+    setBroadcastingChurch: (church: string | null) => void;
 
     onLayoutHomeView: () => void;
     openDetailsBottomSheet?: () => void;

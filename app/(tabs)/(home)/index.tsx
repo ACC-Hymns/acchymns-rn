@@ -99,6 +99,9 @@ export default function HomeScreen() {
             console.error("Error loading sort order:", error);
         }
     };
+    useEffect(() => {
+        saveOrder(sortOrder)
+    }, [sortOrder])
 
     const UnderlayRight = useMemo(() => {
         return () => {
