@@ -14,7 +14,7 @@ import { WebView } from "react-native-webview";
 import { translations } from "@/constants/localization";
 import StyledText from '@/components/StyledText';
 
-export default function HymnalImporter() {
+export default function DetailsPanel() {
 
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';

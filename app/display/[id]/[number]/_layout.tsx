@@ -61,6 +61,24 @@ export default function DisplayLayout() {
                     ),
                 }}
             />
+            <Stack.Screen
+                name="broadcast"
+                options={{
+                    title: i18n.t('broadcast'),
+                    headerShown: true,
+                    headerTitleAlign: 'center',
+                    headerBackTitle: i18n.t('back'),
+                    headerBackVisible: true,
+                    headerShadowVisible: false,
+                    presentation: 'modal',
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
+                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                            <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
+                        </TouchableOpacity>
+                    ),
+                }}
+            />
         </Stack>
     );
 }

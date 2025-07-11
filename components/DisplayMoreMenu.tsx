@@ -26,7 +26,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const reportAPI = useReportAPI();
-    
+
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
@@ -64,18 +64,22 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
         }
     };
 
-    
+
 
     const reportIssue = async () => {
         let result = await reportAPI.report({
             book: bookId,
             number: songId ?? '',
         });
-        if(result) {
+        if (result) {
             Alert.alert(i18n.t('reportIssueSuccess'));
         } else {
             Alert.alert(i18n.t('reportIssueFailure'));
         }
+    }
+
+    const broadcast = async () => {
+
     }
 
     const [songData, setSongData] = useState<Song | null>(null);
@@ -101,7 +105,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-                <TouchableOpacity onPress={() => {}}>
+                <TouchableOpacity onPress={() => { }}>
                     <IconSymbol
                         name="ellipsis.circle"
                         size={24}
@@ -151,6 +155,18 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                         </DropdownMenu.ItemIcon>
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
+                {context?.broadcastingToken && (
+                    <DropdownMenu.Group>
+                        <DropdownMenu.Item key="broadcast" onSelect={() => {
+                            router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: bookId, number: songId || "" } });
+                        }} destructive={false} >
+                            <DropdownMenu.ItemTitle>{i18n.t('broadcast')}</DropdownMenu.ItemTitle>
+                            <DropdownMenu.ItemIcon ios={{ name: 'dot.radiowaves.left.and.right' }}>
+                                <IconSymbol name='dot.radiowaves.left.and.right' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                            </DropdownMenu.ItemIcon>
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Group>
+                )}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     )

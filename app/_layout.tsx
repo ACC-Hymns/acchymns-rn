@@ -29,6 +29,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import StyledText from '@/components/StyledText';
 import TrackPlayer, { Capability } from 'react-native-track-player';
 import { PlaybackService } from '@/scripts/track_player';
+import { validate_token } from '@/scripts/broadcast';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -181,8 +182,14 @@ export default function RootLayout() {
                 setInvertSheetMusic(value === 'true');
         });
         AsyncStorage.getItem('broadcastingToken').then(async (value) => {
-            if (value !== null)
-                setBroadcastingToken(value);
+            if (value !== null) {
+                let response = await validate_token(value);
+                if(response.status == 200) {
+                    setBroadcastingToken(value);
+                } else {
+                    setBroadcastingToken(null);
+                }
+            }
         });
         AsyncStorage.getItem('broadcastingChurch').then(async (value) => {
             if (value !== null)
@@ -200,7 +207,8 @@ export default function RootLayout() {
                     Capability.Play,
                     Capability.Pause,
                     Capability.JumpBackward,
-                    Capability.JumpForward
+                    Capability.JumpForward,
+                    Capability.SeekTo
                 ]
             });
         }

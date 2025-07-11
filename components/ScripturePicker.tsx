@@ -307,8 +307,7 @@ function makeStyles(theme: "light" | "dark") {
             aspectRatio: 2,
             justifyContent: 'center',
             alignItems: 'center',
-            borderWidth: 1,
-            borderColor: '#ddd',
+            backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 15,
         },
         tile: {
@@ -317,8 +316,7 @@ function makeStyles(theme: "light" | "dark") {
             aspectRatio: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            borderWidth: 1,
-            borderColor: '#ddd',
+            backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 15
         },
         tileSelected: {

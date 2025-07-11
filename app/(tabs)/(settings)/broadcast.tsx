@@ -67,7 +67,11 @@ export default function BroadcastScreen() {
                 return;
             }
             const validate = async () => {
-                let token_response = await validate_token(context.broadcastingToken || "");
+                if(!context.broadcastingToken) {
+                    return;
+                }
+
+                let token_response = await validate_token(context.broadcastingToken);
                 if (token_response.status != 200) return signout();
                 let token_response_data = token_response.data as TokenAuthResponse;
                 context.setBroadcastingChurch(token_response_data.church_id);
@@ -132,7 +136,7 @@ export default function BroadcastScreen() {
                 }),
             );
             context?.setBroadcastingToken(response.data.token);
-            console.log('rerouting')
+            context?.setBroadcastingChurch(response.data.church_id);
             router.replace('/(tabs)/(settings)/broadcast_options');
         }
     }

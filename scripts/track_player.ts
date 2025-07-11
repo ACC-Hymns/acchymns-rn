@@ -1,4 +1,4 @@
-import TrackPlayer, { Event } from 'react-native-track-player';
+import TrackPlayer, { Event, RemoteSeekEvent } from 'react-native-track-player';
 
 export const PlaybackService = async function() {
 
@@ -9,4 +9,6 @@ export const PlaybackService = async function() {
     TrackPlayer.addEventListener(Event.RemoteJumpForward, () => TrackPlayer.seekBy(15))
 
     TrackPlayer.addEventListener(Event.RemoteJumpBackward, () => TrackPlayer.seekBy(-15))
+
+    TrackPlayer.addEventListener(Event.RemoteSeek, (event: RemoteSeekEvent) => TrackPlayer.seekTo(event.position))
 };

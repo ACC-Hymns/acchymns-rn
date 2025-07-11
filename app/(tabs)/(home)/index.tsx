@@ -33,6 +33,7 @@ import ReorderableList, {
     useReorderableDragEnd,
     useReorderableDragStart,
 } from 'react-native-reorderable-list';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
 
@@ -184,38 +185,6 @@ export default function HomeScreen() {
         <HymnalItem item={item} />
     )
 
-    const renderDraggableHymnalItemOld = useMemo(() => {
-        return ({ item: bookKey, drag, isActive }: RenderItemParams<string>) => (
-            <View style={{ marginBottom: 15 }}>
-                <SwipeableItem
-                    item={bookKey}
-                    key={bookKey}
-                    renderUnderlayLeft={() => <UnderlayRight />}
-                    snapPointsLeft={[115]}
-                    swipeEnabled={!isActive}
-                >
-                    <ScaleDecorator activeScale={1.05}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: bookKey } });
-                            }}
-                            onLongPress={drag}
-                            disabled={isActive}
-                        >
-                            <GradientButton
-                                key={bookKey}
-                                title={bookData![bookKey].name.medium}
-                                primaryColor={bookData![bookKey].primaryColor}
-                                secondaryColor={bookData![bookKey].secondaryColor}
-                            />
-                        </TouchableOpacity>
-                    </ScaleDecorator>
-                </SwipeableItem>
-            </View>
-        );
-        // Add dependencies as needed
-    }, [bookData, router, context?.languageOverride, i18n.locale]);
-
     function haptic() {
         'worklet';
         runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
@@ -250,6 +219,13 @@ export default function HomeScreen() {
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
                             <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
+                            <TouchableOpacity>
+                                <Ionicons 
+                                    name='person-circle-outline'
+                                    size={36}
+                                    color={Colors[theme]['text']}
+                                />
+                            </TouchableOpacity>
                         </View>
                     }
                     ListFooterComponent={
@@ -336,7 +312,9 @@ function makeStyles(theme: "light" | "dark") {
         titleContainer: {
             marginTop: 80,
             marginBottom: 20,
-            marginLeft: 10,
+            marginHorizontal: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between'
         },
         stepContainer: {
             gap: 8,

@@ -16,6 +16,7 @@ export function useSongData(book_id: string, number: string): {
         const fetchData = async () => {
             try {
                 const data = await getSongData(book_id);
+                console.log('songs', data)
                 setData(data);
             } catch (error) {
                 setError(error as string);

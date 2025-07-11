@@ -43,12 +43,11 @@ export default function DisplayScreen() {
     const context = useContext(HymnalContext);
 
     const book = useBookData(params.id, context);
-    const { songs, error } = useSongListData(book);
-    const { song } = useSongData(params.id, params.number);
+    const { loading, songs, error } = useSongListData(book);
 
     const [songNotes, setSongNotes] = useState<string[]>([]);
     const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [imageLoading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
     const navigation = useNavigation();
     const styles = makeStyles(theme);
@@ -122,6 +121,9 @@ export default function DisplayScreen() {
     useFocusEffect(
         useCallback(() => {
 
+            if(loading)
+                return;
+
             // Unlock orientation on page load
             ScreenOrientation.unlockAsync();
             const handleOrientationChange = async () => {
@@ -158,14 +160,15 @@ export default function DisplayScreen() {
                 ScreenOrientation.removeOrientationChangeListener(subscription);
             });
 
-            if (!context || !song || !book) return;
+            if (!context || !songs || !book) return;
 
             posthog.capture('hymn_viewed', {
                 hymnal_id: params.id,
                 hymnal_name: context.BOOK_DATA[params.id]?.name?.medium,
                 song_id: params.number,
-                song_name: song.title,
+                song_name: songs[params.number].title,
             });
+
 
             (async () => {
                 // try and load piano sound
@@ -178,7 +181,7 @@ export default function DisplayScreen() {
 
                         const track_data = {
                             url: URL, // Load media from the network
-                            title: song.title,
+                            title: songs[params.number].title,
                             artist: book.name.medium,
                             artwork: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
                         };
@@ -192,7 +195,7 @@ export default function DisplayScreen() {
                 }
             })();
 
-        }, [params.id, params.number, context])
+        }, [params.id, params.number, context, loading])
     )
 
     const posthog = usePostHog()
@@ -200,12 +203,12 @@ export default function DisplayScreen() {
 
         const fetchData = async () => {
             try {
-                if (!song || !book)
+                if (!songs || !book)
                     return;
 
                 setLoading(true);
                 // set song notes
-                const songNotes = song.notes;
+                const songNotes = songs[params.number].notes;
                 // reverse notes
                 const reversedNotes = songNotes?.slice().reverse();
                 setSongNotes(reversedNotes || []);
@@ -248,7 +251,7 @@ export default function DisplayScreen() {
                 await TrackPlayer.reset();
             })();
         };
-    }, [context?.invertSheetMusic, song, theme]);
+    }, [context?.invertSheetMusic, songs, theme]);
 
     const [isHorizontal, setIsHorizontal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -304,7 +307,7 @@ export default function DisplayScreen() {
                     minHeight: 100, // Ensures consistent height
                 }}
             >
-                {song && (
+                {songs && (
                     <>
                         <View style={styles.noteButton}>
                             <NoteButton note={"" as Note} clef={'none'} onClick={() => playAllNotes()} />
