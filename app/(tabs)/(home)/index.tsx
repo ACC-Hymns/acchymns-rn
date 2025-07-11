@@ -219,7 +219,9 @@ export default function HomeScreen() {
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
                             <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
-                            <TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => router.push('/auth')}
+                            >
                                 <Ionicons 
                                     name='person-circle-outline'
                                     size={36}

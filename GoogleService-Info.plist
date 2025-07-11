@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>588329663299-2c32e1ee5ed3gt3hpjrjnpqo3k4lpbb8.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.588329663299-2c32e1ee5ed3gt3hpjrjnpqo3k4lpbb8</string>
 	<key>API_KEY</key>
 	<string>AIzaSyDKonLIl9M1RfGuGRZ_v24FMGENdKvUzWI</string>
 	<key>GCM_SENDER_ID</key>
@@ -26,5 +30,7 @@
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
 	<string>1:588329663299:ios:8ea864887c05b258404df6</string>
+	<key>DATABASE_URL</key>
+	<string>https://acc-hymns-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

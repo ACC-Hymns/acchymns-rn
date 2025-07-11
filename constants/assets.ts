@@ -70,6 +70,8 @@ export const trebleNotePngs = {
     G5: require('../assets/icons/note_icons/treble/G5.png'),
 } as const;
 
+export const loginIconImage = require('../assets/icons/adaptive-icon.png');
+
 export const noteMp3s = {
     'C2': require('@/assets/sounds/C2.mp3'),
     'Db2': require('@/assets/sounds/Db2.mp3'),

@@ -30,6 +30,7 @@ import StyledText from '@/components/StyledText';
 import TrackPlayer, { Capability } from 'react-native-track-player';
 import { PlaybackService } from '@/scripts/track_player';
 import { validate_token } from '@/scripts/broadcast';
+import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -59,6 +60,8 @@ export default function RootLayout() {
         BlackItalic: require('@/assets/fonts/Lato-BlackItalic.ttf'),
     });
 
+    const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
 
@@ -83,7 +86,7 @@ export default function RootLayout() {
     // save preferences to async storage
     useEffect(() => {
 
-        
+
         console.log('Saving preferences...');
         const savePreferences = async () => {
             try {
@@ -104,10 +107,10 @@ export default function RootLayout() {
 
                 if (invertSheetMusic !== null)
                     await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
-                
+
                 if (broadcastingToken !== null)
                     await AsyncStorage.setItem('broadcastingToken', broadcastingToken);
-                
+
                 if (broadcastingChurch !== null)
                     await AsyncStorage.setItem('broadcastingChurch', broadcastingChurch);
 
@@ -155,7 +158,15 @@ export default function RootLayout() {
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
+
+    function handleAuthStateChanged(user: FirebaseAuthTypes.User | null) {
+        setUser(user);
+    }
+
+
     useEffect(() => {
+        onAuthStateChanged(getAuth(), handleAuthStateChanged);
+
         // load preferences from async storage
         AsyncStorage.getItem('discoverPageVisited').then(async (value) => {
             if (value !== null)
@@ -184,7 +195,7 @@ export default function RootLayout() {
         AsyncStorage.getItem('broadcastingToken').then(async (value) => {
             if (value !== null) {
                 let response = await validate_token(value);
-                if(response.status == 200) {
+                if (response.status == 200) {
                     setBroadcastingToken(value);
                 } else {
                     setBroadcastingToken(null);
@@ -252,6 +263,28 @@ export default function RootLayout() {
                                             headerShown: true,
                                             headerTitle: i18n.t('addHymnal'),
                                             headerBackTitle: i18n.t('back'),
+                                            headerStyle: {
+                                                backgroundColor: Colors[theme].background,
+                                            },
+                                            headerLeft: () => (
+                                                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
+                                                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
+                                                    <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
+                                                </TouchableOpacity>
+                                            ),
+                                            headerShadowVisible: false,
+                                            presentation: 'modal',
+                                        }}
+                                    />
+                                    <Stack.Screen
+                                        name="auth"
+                                        options={{
+                                            headerShown: true,
+                                            headerTitle: "",
+                                            headerBackTitle: i18n.t('back'),
+                                            headerStyle: {
+                                                backgroundColor: Colors[theme].background,
+                                            },
                                             headerLeft: () => (
                                                 <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
                                                     <IconSymbol name="chevron.left" size={18} color="#007AFF" />
