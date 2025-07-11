@@ -88,7 +88,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
