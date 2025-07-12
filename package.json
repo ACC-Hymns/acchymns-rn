@@ -104,7 +104,8 @@
     "react-native-zoom-toolkit": "^4.0.2",
     "rn-user-defaults": "^1.8.2",
     "stream-browserify": "^3.0.0",
-    "zeego": "^3.0.6"
+    "zeego": "^3.0.6",
+    "expo-apple-authentication": "~7.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
