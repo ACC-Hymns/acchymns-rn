@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "588329663299",
+    "firebase_url": "https://acc-hymns-default-rtdb.firebaseio.com",
+    "project_id": "acc-hymns",
+    "storage_bucket": "acc-hymns.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588329663299:android:08ec7919f0f50816404df6",
+        "android_client_info": {
+          "package_name": "com.ChristopherW.acchmns"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588329663299-0kts9a0egf4s70gbb0lpg15jfks201bd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvdSnsqWOlTrTapsqzDOz28nA2CTviF1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588329663299-0kts9a0egf4s70gbb0lpg15jfks201bd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "588329663299-2c32e1ee5ed3gt3hpjrjnpqo3k4lpbb8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ChristopherW.acchmns",
+                "app_store_id": "1634426405"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

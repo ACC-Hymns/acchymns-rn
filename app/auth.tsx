@@ -19,14 +19,19 @@ import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
 import { loginIconImage } from '@/constants/assets';
 import { AppleButton } from '@invertase/react-native-apple-authentication';
-import { AppleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
+import { AppleAuthProvider, GoogleAuthProvider, getAuth, signInWithCredential } from '@react-native-firebase/auth';
 import { appleAuth } from '@invertase/react-native-apple-authentication';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function Auth() {
 
     async function onAppleButtonPress() {
         // Start the sign-in request
+        console.log('apple sign in availalble: ', appleAuth.Error)
+
         const appleAuthRequestResponse = await appleAuth.performRequest({
             requestedOperation: appleAuth.Operation.LOGIN,
             // As per the FAQ of react-native-apple-authentication, the name should come first in the following array.
