@@ -1,6 +1,6 @@
 import { BookSummary } from "@/constants/types";
 import { HYMNAL_FOLDER } from "./hymnals";
-import * as FileSystem from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system/next';
 import PdfPageImage from 'react-native-pdf-page-image';
 import { BlendMode, Canvas, Skia, Image as SkiaImage, SkImage, useCanvasRef, useImage } from "@shopify/react-native-skia";
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
@@ -9,9 +9,8 @@ import { Image } from "react-native";
 
 async function loadSkiaImageFromUri(uri: string) {
     try {
-        const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-        });
+        const file = new File(uri);
+        const base64 = file.base64();
         const imageBytes = Skia.Data.fromBase64(base64);
         const image = Skia.Image.MakeImageFromEncoded(imageBytes);
         return image;
@@ -22,19 +21,17 @@ async function loadSkiaImageFromUri(uri: string) {
 }
 
 async function getImageData(bookData: BookSummary, songId: string, inverted: boolean): Promise<{ uri: string; aspectRatio: number } | null> {
-    const filePath = `${FileSystem.documentDirectory}${HYMNAL_FOLDER}/${bookData.name.short}/songs/${songId}.${bookData.fileExtension}`.replace(/\/\//g, '/');
+    const filePath = `${HYMNAL_FOLDER}/${bookData.name.short}/songs/${songId}.${bookData.fileExtension}`.replace(/\/\//g, '/');
     const normalizedFilePath = filePath.replace(/\\/g, '/').replace(/\/\//g, '/');
-    const fileInfo = await FileSystem.getInfoAsync(normalizedFilePath);
-    if (fileInfo.exists) {
+    const file = new File(Paths.document, normalizedFilePath);
+    if (file.exists) {
         let result = null;
-        const imageURI = fileInfo.exists ? normalizedFilePath : null;
+        const imageURI = file.exists ? normalizedFilePath : null;
         // check if file is a PDF
         if (bookData.fileExtension === 'pdf') {
 
             // get base64 string from file
-            const base64Input = await FileSystem.readAsStringAsync(normalizedFilePath, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
+            const base64Input = file.base64();
 
             if(!imageURI) 
                 return null;

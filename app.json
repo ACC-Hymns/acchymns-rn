@@ -86,10 +86,14 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "ndkVersion": "29.0.14206865"
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

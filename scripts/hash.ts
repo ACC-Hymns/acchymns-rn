@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system/next';
 import { sha1 } from 'js-sha1';
 import * as Crypto from 'expo-crypto';
 
@@ -6,14 +6,13 @@ import * as Crypto from 'expo-crypto';
  * Recursively get all file URIs in a folder.
  */
 async function getAllFiles(folderUri: string): Promise<string[]> {
-    const entries = await FileSystem.readDirectoryAsync(folderUri);
+    const folder = new Directory(folderUri);
     const files: string[] = [];
     const allowedExtensions = ['.png', '.pdf', '.jpg', '.json', '.js'];
 
-    for (const entry of entries) {
+    for (const entry of folder.list()) {
         const path = folderUri + "/" + entry;
-        const info = await FileSystem.getInfoAsync(path);
-        if (info.isDirectory) {
+        if (entry instanceof Directory) {
             const subFiles = await getAllFiles(path);
             files.push(...subFiles);
         } else {
@@ -28,9 +27,8 @@ async function getAllFiles(folderUri: string): Promise<string[]> {
 
 // hash indvidiual file
 export async function hashFile(fileUri: string): Promise<string> {
-    const base64 = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.Base64,
-    });
+    const file = new File(fileUri);
+    const base64 = file.base64();
 
     // Convert Base64 to Uint8Array
     const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
@@ -57,14 +55,14 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
     
     // load .signature file
     const signatureFileUri = folderUri + '/.signature_v2';
-    const signatureFileInfo = await FileSystem.getInfoAsync(signatureFileUri);
+    const signatureFile = new File(signatureFileUri);
 
-    if(!signatureFileInfo.exists) {
+    if(!signatureFile.exists) {
         console.log('Signature file not found');
         return false;
     }
 
-    const signatureContent = await FileSystem.readAsStringAsync(signatureFileUri);
+    const signatureContent = await signatureFile.text();
     const signature = JSON.parse(signatureContent) as BookSignature;
 
     // for all BookSignatures

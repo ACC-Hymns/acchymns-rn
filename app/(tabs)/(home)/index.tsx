@@ -15,7 +15,6 @@ import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-nativ
 import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
 import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
 import * as ContextMenu from 'zeego/context-menu';
-import { ContextMenuView } from 'react-native-ios-context-menu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from 'react-native-elements';
 import Animated, { runOnJS, useAnimatedStyle, withSpring } from 'react-native-reanimated';
