@@ -4,10 +4,9 @@ import { BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router } from 'expo-router';
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
-import SearchBar from 'react-native-platform-searchbar';
-import { Divider } from 'react-native-elements'
+import { Divider, Icon } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import React from 'react';
@@ -16,6 +15,8 @@ import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
 import GenericGradientButton from '@/components/GenericGradientButton';
+import { SearchBar } from '@rneui/themed';
+
 
 
 export default function SearchScreen() {
@@ -142,156 +143,164 @@ export default function SearchScreen() {
         .slice(0, 10);
     const numColumns = Math.ceil(featuredList.length / 2);
     return (
-        <>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             {loading ? (
                 <ActivityIndicator size="large" color={Colors[theme]['text']} />
             ) : (
-                <FlatList
-                    ref={scrollViewRef}
-                    scrollEnabled={scrollEnabled}
-                    data={dataSource}
-                    keyboardShouldPersistTaps='always'
-                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-                    renderItem={({ item, index }) => (
-                        <GenericGradientButton
-                            primaryColor={item.book.primaryColor}
-                            secondaryColor={item.book.secondaryColor}
-                            onPress={() => {
-                                if (isNavigating) return;
-                                if (item.book.name.short && item.number) {
-                                    router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                                } else {
-                                    console.error("Invalid item data: ", item);
-                                }
-                                setIsNavigating(true);
-                                setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
-                            }}
-                            style={{
-                                marginHorizontal: 20,
-                                borderRadius: 12,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                minHeight: 84, // Ensure a minimum height of 60
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
-                                    <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
-                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
-                                </View>
-                                <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
-                                </View>
-                            </View>
-                        </GenericGradientButton>
-                    )
-                    }
-                    style={[styles.scrollView]}
-                    ListFooterComponent={() => <View style={{ height: 100 }} />}
-                    ListHeaderComponent={
-                        <>
-                            <View style={styles.titleContainer}>
-                                <StyledText style={styles.textStyle}>{i18n.t('search')}</StyledText>
-                            </View>
-                            <SearchBar
-                                ref={searchInputRef}
-                                value={search}
-                                onChangeText={setSearch}
-                                onFocus={() => {
-                                    setSearchBarFocused(true);
-                                }}
-                                onCancel={() => {
-                                    setSearchBarFocused(false);
-                                }}
-                                onEndEditing={() => {
-                                    // when user searches, add to search history
-                                    if (search.trim().length > 0) {
-                                        addToSearchHistory(search);
+                <View style={{ flex: 1 }}>
+                    <FlatList
+                        ref={scrollViewRef}
+                        scrollEnabled={scrollEnabled}
+                        data={dataSource}
+                        keyboardShouldPersistTaps='always'
+                        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                        renderItem={({ item, index }) => (
+                            <GenericGradientButton
+                                primaryColor={item.book.primaryColor}
+                                secondaryColor={item.book.secondaryColor}
+                                onPress={() => {
+                                    if (isNavigating) return;
+                                    if (item.book.name.short && item.number) {
+                                        router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
                                     } else {
-                                        // cancel the search
-                                        if (searchInputRef.current) {
-                                            searchInputRef.current.blur();
-                                        }
+                                        console.error("Invalid item data: ", item);
                                     }
+                                    setIsNavigating(true);
+                                    setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
                                 }}
-                                inputStyle={styles.searchBarContainer}
-                                placeholder={i18n.t('search')}
-                                style={styles.searchBar}
-                            />
-                            {
-                                (searchHistory.length > 0 && search.trim().length == 0) && (
-                                    <View style={styles.searchHistoryContainer}>
-                                        <View style={styles.searchHistoryHeader}>
-                                            <StyledText style={styles.searchHistoryTitle}>{i18n.t('recent')}</StyledText>
-                                            <Button
-                                                onPress={() => {
-                                                    Alert.alert(i18n.t('clearHistory'), i18n.t('clearHistoryMessage'), [
-                                                        {
-                                                            text: i18n.t('cancel'),
-                                                            onPress: () => {
-
-                                                            },
-                                                            style: 'cancel',
-                                                            isPreferred: true
-                                                        },
-                                                        {
-                                                            text: i18n.t('clearAll'),
-                                                            onPress: () => {
-                                                                setSearchHistory([]);
-                                                                saveSearches([]);
-                                                            },
-                                                            style: 'destructive'
-                                                        },
-                                                    ]);
-                                                }}
-                                                accessibilityLabel={i18n.t('clearHistory')}
-                                                title={i18n.t('clear')}
-                                            />
-                                        </View>
-                                        <Divider />
-                                        <FlatList
-                                            style={{ maxHeight: 300 }}
-                                            scrollEnabled={scrollEnabled}
-                                            data={searchHistory}
-                                            keyboardShouldPersistTaps='handled'
-                                            renderItem={({ item }) => (
-                                                <SearchHistoryItem
-                                                    item={item}
-                                                    onPress={() => {
-                                                        setSearch(item);
-                                                        addToSearchHistory(item);
-                                                    }}
-                                                    onGestureStart={() => {
-                                                        // disable scrolling when user is dragging
-                                                        setScrollEnabled(false);
-                                                    }}
-                                                    onGestureEnd={() => {
-                                                        // enable scrolling when user is done dragging
-                                                        setScrollEnabled(true);
-                                                    }}
-                                                    onDelete={() => {
-                                                        console.log('Deleting item:', item);
-                                                        setSearchHistory((prevHistory) => {
-                                                            const newHistory = [...prevHistory];
-                                                            newHistory.splice(newHistory.indexOf(item), 1);
-
-                                                            saveSearches(newHistory); // Save the updated search history to AsyncStorage
-                                                            return newHistory;
-                                                        });
-                                                    }}
-                                                    isLastItem={item === searchHistory[searchHistory.length - 1]}
-                                                />
-                                            )}
-                                        >
-                                        </FlatList>
+                                style={{
+                                    marginHorizontal: 20,
+                                    borderRadius: 12,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    minHeight: 84, // Ensure a minimum height of 84
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                    <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                                        <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
+                                        <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
                                     </View>
-                                )
-                            }
-                        </>
-                    }
-                />
+                                    <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                        <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
+                                    </View>
+                                </View>
+                            </GenericGradientButton>
+                        )
+                        }
+                        style={[styles.scrollView]}
+                        ListFooterComponent={() => <View style={{ height: 100 }} />}
+                        ListHeaderComponent={
+                            <>
+                                <View style={styles.titleContainer}>
+                                    <StyledText style={styles.textStyle}>{i18n.t('search')}</StyledText>
+                                </View>
+                                <SearchBar
+                                    ref={searchInputRef}
+                                    value={search}
+                                    onChangeText={setSearch}
+                                    onFocus={() => {
+                                        setSearchBarFocused(true);
+                                    }}
+                                    onCancel={() => {
+                                        setSearchBarFocused(false);
+                                    }}
+                                    onEndEditing={() => {
+                                        // when user searches, add to search history
+                                        if (search.trim().length > 0) {
+                                            addToSearchHistory(search);
+                                        } else {
+                                            // cancel the search
+                                            if (searchInputRef.current) {
+                                                searchInputRef.current.blur();
+                                            }
+                                        }
+                                    }}
+                                    inputStyle={styles.searchBarInput}
+                                    containerStyle={styles.searchBarContainer}
+                                    placeholder={i18n.t('search')}
+                                    placeholderTextColor={Colors[theme].fadedText}
+                                    inputContainerStyle={styles.searchBarInnerContainer}
+                                    searchIcon={<Icon name="search" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
+                                    cancelIcon={<Icon name="close" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
+                                    round={true}
+                                    showCancel={true}
+                                />
+                                {
+                                    (searchHistory.length > 0 && search.trim().length == 0) && (
+                                        <View style={styles.searchHistoryContainer}>
+                                            <View style={styles.searchHistoryHeader}>
+                                                <StyledText style={styles.searchHistoryTitle}>{i18n.t('recent')}</StyledText>
+                                                <Button
+                                                    onPress={() => {
+                                                        Alert.alert(i18n.t('clearHistory'), i18n.t('clearHistoryMessage'), [
+                                                            {
+                                                                text: i18n.t('cancel'),
+                                                                onPress: () => {
+
+                                                                },
+                                                                style: 'cancel',
+                                                                isPreferred: true
+                                                            },
+                                                            {
+                                                                text: i18n.t('clearAll'),
+                                                                onPress: () => {
+                                                                    setSearchHistory([]);
+                                                                    saveSearches([]);
+                                                                },
+                                                                style: 'destructive'
+                                                            },
+                                                        ]);
+                                                    }}
+                                                    accessibilityLabel={i18n.t('clearHistory')}
+                                                    title={i18n.t('clear')}
+                                                />
+                                            </View>
+                                            <Divider />
+                                            <FlatList
+                                                style={{ maxHeight: 300 }}
+                                                scrollEnabled={scrollEnabled}
+                                                data={searchHistory}
+                                                keyboardShouldPersistTaps='handled'
+                                                renderItem={({ item }) => (
+                                                    <SearchHistoryItem
+                                                        item={item}
+                                                        onPress={() => {
+                                                            setSearch(item);
+                                                            addToSearchHistory(item);
+                                                        }}
+                                                        onGestureStart={() => {
+                                                            // disable scrolling when user is dragging
+                                                            setScrollEnabled(false);
+                                                        }}
+                                                        onGestureEnd={() => {
+                                                            // enable scrolling when user is done dragging
+                                                            setScrollEnabled(true);
+                                                        }}
+                                                        onDelete={() => {
+                                                            console.log('Deleting item:', item);
+                                                            setSearchHistory((prevHistory) => {
+                                                                const newHistory = [...prevHistory];
+                                                                newHistory.splice(newHistory.indexOf(item), 1);
+
+                                                                saveSearches(newHistory); // Save the updated search history to AsyncStorage
+                                                                return newHistory;
+                                                            });
+                                                        }}
+                                                        isLastItem={item === searchHistory[searchHistory.length - 1]}
+                                                    />
+                                                )}
+                                            >
+                                            </FlatList>
+                                        </View>
+                                    )
+                                }
+                            </>
+                        }
+                    />
+                </View>
             )}
-        </>
+        </TouchableWithoutFeedback>
     );
 }
 
@@ -312,15 +321,21 @@ function makeStyles(theme: "light" | "dark") {
             borderRadius: 16,
             paddingHorizontal: 20
         },
-        searchBar: {
-            marginHorizontal: 20,
-            marginBottom: 20
-        },
         searchBarContainer: {
+            backgroundColor: Colors[theme].background,
+            marginHorizontal: 12,
+            marginBottom: 20,
+            borderBottomColor: 'transparent',
+            borderTopColor: 'transparent'
+        },
+        searchBarInnerContainer: {
             backgroundColor: Colors[theme].searchBarBackground,
+            height: 38,
+            padding: 2,
+        },
+        searchBarInput: {
             color: Colors[theme].text,
             fontSize: 18,
-            height: 38,
         },
         rowItem: {
             height: 100,
@@ -362,8 +377,8 @@ function makeStyles(theme: "light" | "dark") {
             backgroundColor: Colors[theme].background // Dynamically set background color using useThemeColor
         },
         titleContainer: {
-            marginTop: 80,
-            marginBottom: 20,
+            marginTop: 18,
+            marginBottom: 15,
             marginLeft: 30,
         },
         stepContainer: {

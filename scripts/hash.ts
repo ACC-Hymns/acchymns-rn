@@ -11,7 +11,8 @@ async function getAllFiles(folderUri: string): Promise<string[]> {
     const allowedExtensions = ['.png', '.pdf', '.jpg', '.json', '.js'];
 
     for (const entry of folder.list()) {
-        const path = folderUri + "/" + entry;
+        const path = Paths.join(folderUri, entry.name);
+        console.log("entry: " + entry.name);
         if (entry instanceof Directory) {
             const subFiles = await getAllFiles(path);
             files.push(...subFiles);
@@ -28,13 +29,10 @@ async function getAllFiles(folderUri: string): Promise<string[]> {
 // hash indvidiual file
 export async function hashFile(fileUri: string): Promise<string> {
     const file = new File(fileUri);
-    const base64 = file.base64();
-
-    // Convert Base64 to Uint8Array
-    const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const bytes = await file.bytes();
 
     // Compute true SHA-1 hash of binary data
-    const hash = sha1(binary);
+    const hash = sha1(bytes);
 
     return hash;
 }
@@ -54,7 +52,7 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
     const fileUris = await getAllFiles(folderUri);
     
     // load .signature file
-    const signatureFileUri = folderUri + '/.signature_v2';
+    const signatureFileUri = folderUri + '/signature_v2.txt';
     const signatureFile = new File(signatureFileUri);
 
     if(!signatureFile.exists) {

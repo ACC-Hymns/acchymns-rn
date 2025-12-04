@@ -1,3 +1,4 @@
+import { HeaderButton } from "@/components/HeaderButton";
 import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
@@ -27,14 +28,14 @@ export default function HomeLayout() {
                         backgroundColor: Colors[theme].background,
                     },
                     headerLeft: () => (
-                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
+                        <HeaderButton onPress={() => router.back()} style={{ padding: 10 }}>
                             <IconSymbol
                                 name="chevron.left"
                                 size={18}
                                 weight="medium"
                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                             />
-                        </TouchableOpacity>
+                        </HeaderButton>
                     )
                 }}
             />

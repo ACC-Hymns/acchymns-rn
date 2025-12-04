@@ -85,7 +85,8 @@
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "forceStaticLinking": ["RNFBApp", "RNFBAuth"]
           },
           "android": {
             "ndkVersion": "29.0.14206865"

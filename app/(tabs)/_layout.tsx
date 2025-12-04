@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { NativeTabs, Icon, Label, VectorIcon } from 'expo-router/unstable-native-tabs';
 import React, { useContext } from 'react';
 import { Platform } from 'react-native';
 
@@ -23,77 +24,99 @@ export default function TabLayout() {
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
 
     return (
-        <Tabs
-            screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                headerShown: false,
-                headerTitleAlign: 'center',
-                tabBarButton: HapticTab,
-                tabBarBackground: TabBarBackground,
-                tabBarStyle: Platform.select({
-                    ios: {
-                        // Use a transparent background on iOS to show the blur effect
-                        position: 'absolute',
-                        height: 85, // Increase the height of the tab bar
-                    },
-                    default: {
-                        height: 55, // Increase the height of the tab bar
-                    },
-                }),
-            }}>
-            <Tabs.Screen
-                name="(home)"
-                options={{
-                    title: i18n.t('home'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "home" : 'home-outline'} color={color} />,
-                }}
-            />
-            <Tabs.Screen
-                name="search"
-                options={{
-                    title: i18n.t('search'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "search" : 'search-outline'} color={color} />,
-                }}
-            />
-            <Tabs.Screen
-                name="discover"
-                options={context?.discoverPageVisited ? {
-                    title: i18n.t('discover'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
-                    tabBarBadgeStyle: {
-                        backgroundColor: Colors['light']['primary'], maxWidth: 10,
-                        maxHeight: 10,
-                        fontSize: 8,
-                        lineHeight: 9,
-                        alignSelf: undefined,
-                    },
-                } : {
-                    title: i18n.t('discover'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
-                    tabBarBadge: "",
-                    tabBarBadgeStyle: {
-                        backgroundColor: Colors['light']['primary'], maxWidth: 10,
-                        maxHeight: 10,
-                        fontSize: 8,
-                        lineHeight: 9,
-                        alignSelf: undefined,
-                    },
-                }}
-            />
-            <Tabs.Screen
-                name="bookmarks"
-                options={{
-                    title: i18n.t('bookmarks'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "bookmarks" : 'bookmarks-outline'} color={color} />,
-                }}
-            />
-            <Tabs.Screen
-                name="(settings)"
-                options={{
-                    title: i18n.t('settings'),
-                    tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "settings" : 'settings-outline'} color={color} />,
-                }}
-            />
-        </Tabs>
+        <NativeTabs>
+            <NativeTabs.Trigger name="(home)">
+                <Label>Home</Label>
+                <Icon src={{ default: <VectorIcon family={Ionicons} name='home-outline'/>, selected: <VectorIcon family={Ionicons} name='home'/> }}/>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="search">
+                <Label>Search</Label>
+                <Icon src={{ default: <VectorIcon family={Ionicons} name='search-outline'/>, selected: <VectorIcon family={Ionicons} name='search'/> }}/>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="discover">
+                <Label>Discover</Label>
+                <Icon src={{ default: <VectorIcon family={Ionicons} name='telescope-outline'/>, selected: <VectorIcon family={Ionicons} name='telescope'/> }}/>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="bookmarks">
+                <Label>Bookmarks</Label>
+                <Icon src={{ default: <VectorIcon family={Ionicons} name='bookmark-outline'/>, selected: <VectorIcon family={Ionicons} name='bookmark'/> }}/>
+            </NativeTabs.Trigger>
+            <NativeTabs.Trigger name="(settings)">
+                <Label>Settings</Label>
+                <Icon src={{ default: <VectorIcon family={Ionicons} name='settings-outline'/>, selected: <VectorIcon family={Ionicons} name='settings'/> }}/>
+            </NativeTabs.Trigger>
+        </NativeTabs>
+        // <Tabs
+        //     screenOptions={{
+        //         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        //         headerShown: false,
+        //         headerTitleAlign: 'center',
+        //         tabBarButton: HapticTab,
+        //         tabBarBackground: TabBarBackground,
+        //         tabBarStyle: Platform.select({
+        //             ios: {
+        //                 // Use a transparent background on iOS to show the blur effect
+        //                 position: 'absolute',
+        //                 height: 85, // Increase the height of the tab bar
+        //             },
+        //             default: {
+        //                 height: 55, // Increase the height of the tab bar
+        //             },
+        //         }),
+        //     }}>
+        //     <Tabs.Screen
+        //         name="(home)"
+        //         options={{
+        //             title: i18n.t('home'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "home" : 'home-outline'} color={color} />,
+        //         }}
+        //     />
+        //     <Tabs.Screen
+        //         name="search"
+        //         options={{
+        //             title: i18n.t('search'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "search" : 'search-outline'} color={color} />,
+        //         }}
+        //     />
+        //     <Tabs.Screen
+        //         name="discover"
+        //         options={context?.discoverPageVisited ? {
+        //             title: i18n.t('discover'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
+        //             tabBarBadgeStyle: {
+        //                 backgroundColor: Colors['light']['primary'], maxWidth: 10,
+        //                 maxHeight: 10,
+        //                 fontSize: 8,
+        //                 lineHeight: 9,
+        //                 alignSelf: undefined,
+        //             },
+        //         } : {
+        //             title: i18n.t('discover'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "telescope" : 'telescope-outline'} color={color} />,
+        //             tabBarBadge: "",
+        //             tabBarBadgeStyle: {
+        //                 backgroundColor: Colors['light']['primary'], maxWidth: 10,
+        //                 maxHeight: 10,
+        //                 fontSize: 8,
+        //                 lineHeight: 9,
+        //                 alignSelf: undefined,
+        //             },
+        //         }}
+        //     />
+        //     <Tabs.Screen
+        //         name="bookmarks"
+        //         options={{
+        //             title: i18n.t('bookmarks'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "bookmarks" : 'bookmarks-outline'} color={color} />,
+        //         }}
+        //     />
+        //     <Tabs.Screen
+        //         name="(settings)"
+        //         options={{
+        //             title: i18n.t('settings'),
+        //             tabBarIcon: ({ color, focused }) => <Ionicons size={26} name={focused ? "settings" : 'settings-outline'} color={color} />,
+        //         }}
+        //     />
+        // </Tabs>
     );
 }

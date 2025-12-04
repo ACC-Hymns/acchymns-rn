@@ -1,13 +1,14 @@
-import { Alert, Button, TouchableOpacity, useColorScheme } from 'react-native'
+import { Alert, Button, Pressable, TouchableOpacity, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary, SortMode } from '@/constants/types';
 import { router } from 'expo-router';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
+import { HeaderButton } from './HeaderButton';
 
 interface HymnalMoreMenuProps {
     bookSummary: BookSummary;
@@ -106,13 +107,13 @@ export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
     return (
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-                <TouchableOpacity onPress={() => { }}>
+                <HeaderButton onPress={() => {}}>
                     <IconSymbol
                         name="ellipsis.circle"
                         size={24}
                         color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                     />
-                </TouchableOpacity>
+                </HeaderButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
                 <DropdownMenu.Group>

@@ -29,8 +29,10 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import StyledText from '@/components/StyledText';
 import TrackPlayer, { Capability } from 'react-native-track-player';
 import { PlaybackService } from '@/scripts/track_player';
+import { ensurePlayerSetup } from '@/scripts/track_player_setup';
 import { validate_token } from '@/scripts/broadcast';
 import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { HeaderButton } from '@react-navigation/elements';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -211,18 +213,25 @@ export default function RootLayout() {
         TrackPlayer.registerPlaybackService(() => PlaybackService);
 
         const setup = async () => {
-            await TrackPlayer.setupPlayer();
-            TrackPlayer.updateOptions({
-                // Media controls capabilities
-                capabilities: [
-                    Capability.Play,
-                    Capability.Pause,
-                    Capability.JumpBackward,
-                    Capability.JumpForward,
-                    Capability.SeekTo
-                ]
-            });
-        }
+            try {
+                // ensurePlayerSetup uses a module-level flag so this becomes a no-op
+                // if the player was already initialized earlier in the app lifecycle.
+                await ensurePlayerSetup();
+
+                TrackPlayer.updateOptions({
+                    // Media controls capabilities
+                    capabilities: [
+                        Capability.Play,
+                        Capability.Pause,
+                        Capability.JumpBackward,
+                        Capability.JumpForward,
+                        Capability.SeekTo
+                    ]
+                });
+            } catch (error) {
+                console.error('TrackPlayer setup failed:', error);
+            }
+        };
         setup();
 
         const data = loadHymnals();
@@ -262,15 +271,13 @@ export default function RootLayout() {
                                         options={{
                                             headerShown: true,
                                             headerTitle: i18n.t('addHymnal'),
-                                            headerBackTitle: i18n.t('back'),
                                             headerStyle: {
                                                 backgroundColor: Colors[theme].background,
                                             },
                                             headerLeft: () => (
-                                                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
-                                                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                                                    <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
-                                                </TouchableOpacity>
+                                                <HeaderButton onPress={() => router.back()}>
+                                                    <IconSymbol name="chevron.left" size={18} color={Colors[theme].text} />
+                                                </HeaderButton>
                                             ),
                                             headerShadowVisible: false,
                                             presentation: 'modal',

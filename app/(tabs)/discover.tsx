@@ -6,8 +6,6 @@ import { router } from 'expo-router';
 import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, KeyboardAvoidingView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
-import SearchBar from 'react-native-platform-searchbar';
-import { Divider } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import React from 'react';
@@ -201,7 +199,7 @@ export default function DiscoverScreen() {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: Colors[theme].background }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -291,7 +289,7 @@ export default function DiscoverScreen() {
             <BottomTabBarHeightContext.Consumer>
                 {(height) => (
                     <Animated.View style={[
-                        { marginBottom: keyboardVisible ? 0 : height }
+                        { marginBottom: keyboardVisible ? 0 : 80 }
                     ]}>
                         <View style={[styles.footerContainer]}>
                             {(prompt.trim().length === 0 && dataSource.length == 0) && (

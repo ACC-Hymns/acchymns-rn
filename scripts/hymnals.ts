@@ -67,6 +67,7 @@ async function loadHymnals() {
 
 async function downloadHymnal(book: string, onProgress?: (progress: number) => void, onFinish?: (success: boolean) => void) {
     const folderUrl = `${GITHUB_BASE_URL}/${book}/`;
+    const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}`);
     const localFolder = new Directory(Paths.document, `${TEMP_FOLDER}/${book}/`);
     const finalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
 
@@ -163,9 +164,9 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
 
 
     // Move the downloaded files to the hymnal folder
-    finalFolder.create({ intermediates: true });
-    localFolder.move(finalFolder);
-    console.log(`Moved ${book} folder to ${finalFolder.info().uri || "ERROR"}`);
+    //finalFolder.create({ intermediates: true });
+    localFolder.move(hymnalFolder);
+    console.log(`Moved ${book} folder to ${hymnalFolder.info().uri || "ERROR"}`);
 
     console.log(`Finished downloading ${summary.name.short}.`);
 

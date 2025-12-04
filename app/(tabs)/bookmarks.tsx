@@ -7,8 +7,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
-import SearchBar from 'react-native-platform-searchbar';
-import { Divider } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import DefaultPreference from 'react-native-default-preference';
@@ -22,6 +20,7 @@ import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
 import GenericGradientButton from '@/components/GenericGradientButton';
+import { Icon, SearchBar } from '@rneui/themed';
 
 export default function BookmarkScreen() {
 
@@ -291,9 +290,15 @@ export default function BookmarkScreen() {
                                 onCancel={() => {
                                     setSearchBarFocused(false);
                                 }}
-                                inputStyle={styles.searchBarContainer}
+                                inputStyle={styles.searchBarInput}
+                                containerStyle={styles.searchBarContainer}
                                 placeholder={i18n.t('search')}
-                                style={styles.searchBar}
+                                placeholderTextColor={Colors[theme].fadedText}
+                                inputContainerStyle={styles.searchBarInnerContainer}
+                                round={true}
+                                searchIcon={<Icon name="search" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
+                                cancelIcon={<Icon name="close" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
+                                showCancel={true}
                             />
                         </>
                     }
@@ -338,14 +343,21 @@ function makeStyles(theme: "light" | "dark") {
             backgroundColor: Colors[theme]['background'],
             borderRadius: 16,
         },
-        searchBar: {
-            marginBottom: 20
-        },
         searchBarContainer: {
+            backgroundColor: Colors[theme].background,
+            marginBottom: 20,
+            marginHorizontal: -8,
+            borderBottomColor: 'transparent',
+            borderTopColor: 'transparent'
+        },
+        searchBarInnerContainer: {
             backgroundColor: Colors[theme].searchBarBackground,
+            height: 38,
+            padding: 2,
+        },
+        searchBarInput: {
             color: Colors[theme].text,
             fontSize: 18,
-            height: 38,
         },
         rowItem: {
             height: 100,
@@ -384,8 +396,8 @@ function makeStyles(theme: "light" | "dark") {
             backgroundColor: Colors[theme].background // Dynamically set background color using useThemeColor
         },
         titleContainer: {
-            marginTop: 80,
-            marginBottom: 20,
+            marginTop: 18,
+            marginBottom: 15,
             marginLeft: 10,
         },
         stepContainer: {
