@@ -26,17 +26,7 @@ export default function HomeLayout() {
                     headerShadowVisible: false,
                     headerStyle: {
                         backgroundColor: Colors[theme].background,
-                    },
-                    headerLeft: () => (
-                        <HeaderButton onPress={() => router.back()} style={{ padding: 10 }}>
-                            <IconSymbol
-                                name="chevron.left"
-                                size={18}
-                                weight="medium"
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
-                        </HeaderButton>
-                    )
+                    }
                 }}
             />
         </Stack>

@@ -5,10 +5,13 @@ import { HymnalContext } from '@/constants/context';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
 
     const context = useContext(HymnalContext);
+    const theme = useColorScheme() ?? 'light';
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -17,23 +20,23 @@ export default function TabLayout() {
     return (
         <NativeTabs>
             <NativeTabs.Trigger name="(home)">
-                <Label>Home</Label>
+                <Label>{i18n.t('home')}</Label>
                 <Icon src={{ default: <VectorIcon family={Ionicons} name='home-outline'/>, selected: <VectorIcon family={Ionicons} name='home'/> }}/>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="search">
-                <Label>Search</Label>
+                <Label>{i18n.t('search')}</Label>
                 <Icon src={{ default: <VectorIcon family={Ionicons} name='search-outline'/>, selected: <VectorIcon family={Ionicons} name='search'/> }}/>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="discover">
-                <Label>Discover</Label>
+                <Label>{i18n.t('discover')}</Label>
                 <Icon src={{ default: <VectorIcon family={Ionicons} name='telescope-outline'/>, selected: <VectorIcon family={Ionicons} name='telescope'/> }}/>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="bookmarks">
-                <Label>Bookmarks</Label>
+                <Label>{i18n.t('bookmarks')}</Label>
                 <Icon src={{ default: <VectorIcon family={Ionicons} name='bookmark-outline'/>, selected: <VectorIcon family={Ionicons} name='bookmark'/> }}/>
             </NativeTabs.Trigger>
             <NativeTabs.Trigger name="(settings)">
-                <Label>Settings</Label>
+                <Label>{i18n.t('settings')}</Label>
                 <Icon src={{ default: <VectorIcon family={Ionicons} name='settings-outline'/>, selected: <VectorIcon family={Ionicons} name='settings'/> }}/>
             </NativeTabs.Trigger>
         </NativeTabs>

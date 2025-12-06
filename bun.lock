@@ -81,7 +81,7 @@
         "react-native-pdf-renderer": "^1.6.0",
         "react-native-pdf-to-image": "^3.3.0",
         "react-native-reanimated": "~4.1.1",
-        "react-native-reorderable-list": "^0.16.2",
+        "react-native-reorderable-list": "^0.17.0",
         "react-native-safe-area-context": "~5.6.0",
         "react-native-screens": "~4.18.0",
         "react-native-svg": "15.12.1",
@@ -109,7 +109,7 @@
     },
   },
   "patchedDependencies": {
-    "expo-router@6.0.17": "patches/expo-router@6.0.17.patch"
+    "expo-router@6.0.17": "patches/expo-router@6.0.17.patch",
   },
   "packages": {
     "@0no-co/graphql.web": ["@0no-co/graphql.web@1.2.0", "", { "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["graphql"] }, "sha512-/1iHy9TTr63gE1YcR5idjx8UREz1s0kFhydf3bBLCXyqjhkIc6igAzTOx3zPifCwFR87tsh/4Pa9cNts6d2otw=="],
@@ -2198,7 +2198,7 @@
 
     "react-native-reanimated": ["react-native-reanimated@4.1.6", "", { "dependencies": { "react-native-is-edge-to-edge": "^1.2.1", "semver": "7.7.2" }, "peerDependencies": { "@babel/core": "^7.0.0-0", "react": "*", "react-native": "*", "react-native-worklets": ">=0.5.0" } }, "sha512-F+ZJBYiok/6Jzp1re75F/9aLzkgoQCOh4yxrnwATa8392RvM3kx+fiXXFvwcgE59v48lMwd9q0nzF1oJLXpfxQ=="],
 
-    "react-native-reorderable-list": ["react-native-reorderable-list@0.16.2", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-gesture-handler": ">=2.12.0", "react-native-reanimated": ">=3.12.0" } }, "sha512-+MwIpFj9HZQl/oko/hgqolvMUIYrRyFWu88YTNnmzguEsTS2C+MslUu3rN9tKe+BlHfqSlgRYSbHZeBlnsSYBw=="],
+    "react-native-reorderable-list": ["react-native-reorderable-list@0.17.0", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-gesture-handler": ">=2.12.0", "react-native-reanimated": ">=3.12.0" } }, "sha512-xOrZVwds8AmSOvfPYPna8ODl2Q2b2+lkvGGvFhhhKbNh/sjpWFWZlZO2hsVP8LUzjzmDKiUJDZPq+/tPxVN/jQ=="],
 
     "react-native-safe-area-context": ["react-native-safe-area-context@5.6.2", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-4XGqMNj5qjUTYywJqpdWZ9IG8jgkS3h06sfVjfw5yZQZfWnRFXczi0GnYyFyCc2EBps/qFmoCH8fez//WumdVg=="],
 

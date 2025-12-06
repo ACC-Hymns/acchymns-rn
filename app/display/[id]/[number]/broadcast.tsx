@@ -13,7 +13,7 @@ import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
 import { BookSummary } from '@/constants/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';

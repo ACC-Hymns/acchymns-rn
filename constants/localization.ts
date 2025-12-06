@@ -115,7 +115,7 @@ const translations = {
         removeBookmark: 'Remove Bookmark',
         saveBookmark: 'Save as Bookmark',
         share: 'Share',
-        reportIssueMessage: 'Report an issue for this song?',
+        reportIssueMessage: 'Report wrong titles, starting notes, etc.',
         reportIssue: 'Report Issue',
         reportIssueSuccess: 'Issue reported successfully',
         reportIssueFailure: 'Failed to report issue',
@@ -219,6 +219,7 @@ const translations = {
         saveBookmark: 'Guardar como Marcador',
         share: 'Compartir',
         reportIssue: 'Reportar Problema',
+        reportIssueMessage: 'Reportar títulos incorrectos, notas de inicio, etc.',
         reportIssueSuccess: 'Problema reportado correctamente',
         reportIssueFailure: 'Error al reportar el problema',
 
@@ -322,6 +323,7 @@ const translations = {
         saveBookmark: 'Enregistrer comme Marque-page',
         share: 'Partager',
         reportIssue: 'Signaler un Problème',
+        reportIssueMessage: 'Signaler les titres incorrects, les notes de début, etc.',
         reportIssueSuccess: 'Problème signalé avec succès',
         reportIssueFailure: 'Échec du signalement du problème',
 
@@ -424,6 +426,7 @@ const translations = {
         saveBookmark: 'Speichern als Lesezeichen',
         share: 'Teilen',
         reportIssue: 'Problem melden',
+        reportIssueMessage: 'Falsche Titel, Startnotizen usw. melden',
         reportIssueSuccess: 'Problem erfolgreich gemeldet',
         reportIssueFailure: 'Fehler beim Melden des Problems',
 
@@ -526,6 +529,7 @@ const translations = {
         saveBookmark: 'Sačuvaj kao Bookmark',
         share: 'Podelite',
         reportIssue: 'Prijavite Problem',
+        reportIssueMessage: 'Prijavi pogrešne naslove, početne beleške, itd.',
         reportIssueSuccess: 'Problem uspešno prijavljen',
         reportIssueFailure: 'Greška pri prijavi problema',
         // Hymnal Importer screen
@@ -627,6 +631,7 @@ const translations = {
         saveBookmark: 'ブックマークとして保存',
         share: '共有',
         reportIssue: '問題を報告',
+        reportIssueMessage: '誤ったタイトル、開始ノートなどを報告する',
         reportIssueSuccess: '問題が報告されました',
         reportIssueFailure: '問題の報告に失敗しました',
         // Hymnal Importer screen
@@ -728,6 +733,7 @@ const translations = {
         saveBookmark: 'Salvar como Marcador',
         share: 'Compartilhar',
         reportIssue: 'Relatar Problema',
+        reportIssueMessage: 'Reportar títulos errados, notas iniciais, etc.',
         reportIssueSuccess: 'Problema reportado com sucesso',
         reportIssueFailure: 'Falha ao reportar problema',
         // Hymnal Importer screen

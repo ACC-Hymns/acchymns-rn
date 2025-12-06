@@ -104,8 +104,8 @@ export default function SelectionScreen() {
     // get book data from context
     const context = useContext(HymnalContext);
     const i18n = new I18n(translations);
-        i18n.enableFallback = true;
-        i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    i18n.enableFallback = true;
+    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
     
 
     const book = useBookData(id as string, context);
@@ -123,14 +123,29 @@ export default function SelectionScreen() {
 
         navigation.setOptions({
             title: book.name.medium,
+            unstable_headerLeftItems: () => [
+                {
+                    type: 'button',
+                    label: 'Back',
+                    icon: {
+                        type: 'sfSymbol',
+                        name: 'chevron.left'
+                    },
+                    tintColor: Colors[theme].icon,
+                    onPress: () => {
+                        router.back();
+                    }
+                }
+            ],
             unstable_headerRightItems: () => [
                 {
                     type: 'menu',
-                    label: 'Sorting Options',
+                    label: i18n.t('sortingOptions'),
                     icon: {
                         type: 'sfSymbol',
                         name: 'ellipsis',
                     },
+                    tintColor: Colors[theme].icon,
                     menu: {
                         title: i18n.t("sortingLabel"),
                         items: [
@@ -157,6 +172,7 @@ export default function SelectionScreen() {
                             }, {
                                 type: 'action',
                                 label: i18n.t('topical'),
+                                disabled: !book.indexAvailable,
                                 icon: {
                                     type: 'sfSymbol',
                                     name: 'book',
@@ -199,7 +215,7 @@ export default function SelectionScreen() {
                 },
             ],
         });
-    }, [book, id, navigation]);
+    }, [book, id, navigation, context?.languageOverride]);
 
     function handleSortModeChange(mode: SortMode) {
         setSortMode(mode);
@@ -220,7 +236,7 @@ export default function SelectionScreen() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             {book && songs && (
-                <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
+                <View style={{ flex: 1 }}>
                     {sortMode === SortMode.NUMERICAL && (
                         <View style={{ flex: 1 }}>
                             {(context?.legacyNumberGrouping) ? (

@@ -28,16 +28,6 @@ export default function DisplayLayout() {
                     headerTransparent: true,
                     headerTitleAlign: 'center',
                     headerBackVisible: false,
-                    headerLeft: () => (
-                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                            <IconSymbol
-                                name="chevron.left"
-                                size={18}
-                                weight="medium"
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
-                        </TouchableOpacity>
-                    ),
                     animation: 'none'
                 }}
             />

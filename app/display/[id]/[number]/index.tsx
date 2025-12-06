@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Dimensions, Alert } from 'react-native';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -40,6 +40,8 @@ import WebView from 'react-native-webview';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useReportAPI } from '@/scripts/report';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scheduleOnRN } from 'react-native-worklets';
+import { ScreenHeight } from 'react-native-elements/dist/helpers';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
@@ -56,20 +58,17 @@ export default function DisplayScreen() {
     const addBookmark = async (bookmark: Bookmark) => {
         try {
             const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            console.log(existingBookmarks);
             // Check if the bookmark already exists
             const exists = bookmarks.some(b => b.book === bookmark.book && b.number === bookmark.number);
             if (exists) {
                 removeBookmark(bookmark);
                 return;
             }
-            console.log('Adding bookmark for', params.id, params.number);
             bookmarks.push(bookmark);
             await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
             setExistingBookmarks(bookmarks); // Update the current bookmarks
             setIsBookmarked(true); // Set the bookmark state to true
 
-            console.log("set header options")
             setHeaderOptions();
         } catch (error) {
             console.error("Error saving bookmarks:", error);
@@ -77,7 +76,6 @@ export default function DisplayScreen() {
     };
 
     const removeBookmark = async (bookmark: Bookmark) => {
-        console.log('Removing bookmark for', bookmark);
         try {
             const bookmarks: Bookmark[] = existingBookmarks ?? [];
             // Filter out the bookmark to be removed
@@ -85,7 +83,6 @@ export default function DisplayScreen() {
             await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
             setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
             setIsBookmarked(false); // Set the bookmark state to false
-            console.log(bookmark, updatedBookmarks);
             setHeaderOptions();
         } catch (error) {
             console.error("Error removing bookmark:", error);
@@ -125,7 +122,7 @@ export default function DisplayScreen() {
     useLayoutEffect(() => {
         if (params.number) {
             getSongData(params.id).then((data) => {
-                setSongData(data[params.number]);
+                setSongData(data?.[params.number] || null);
             });
 
             AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
@@ -143,7 +140,7 @@ export default function DisplayScreen() {
     const book = useBookData(params.id, context);
     const { loading, songs, error } = useSongListData(book);
 
-    const [songNotes, setSongNotes] = useState<string[]>([]);
+    const [songNotes, setSongNotes] = useState<string[]>([""]);
     const [imageData, setImageData] = useState<string>();
     const [imageLoading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
@@ -182,26 +179,28 @@ export default function DisplayScreen() {
         context.openDetailsBottomSheet = openDetailsPage;
     }, [context]);
 
-    const menu = useCallback(() => {
-        return [
-        {
+    function setHeaderOptions() {
+        let initial = [{
             type: 'button',
             label: 'Music',
             icon: {
                 type: 'sfSymbol',
                 name: 'music.quarternote.3',
             },
+            tintColor: Colors[theme].icon,
             onPress: () => {
                 handlePress();
             },
-        },
-        {
+        }];
+
+        const m = {
             type: 'menu',
             label: '',
             icon: {
                 type: 'sfSymbol',
                 name: 'ellipsis',
             },
+            tintColor: Colors[theme].icon,
             menu: {
                 title: 'Options',
                 items: [
@@ -220,7 +219,7 @@ export default function DisplayScreen() {
                         },
                     }, {
                         type: 'action',
-                        label: 'Share',
+                        label: i18n.t("share"),
                         icon: {
                             type: 'sfSymbol',
                             name: 'square.and.arrow.up',
@@ -233,7 +232,7 @@ export default function DisplayScreen() {
                         },
                     }, {
                         type: 'action',
-                        label: 'Report',
+                        label: i18n.t('reportIssue'),
                         destructive: true,
                         icon: {
                             type: 'sfSymbol',
@@ -245,15 +244,25 @@ export default function DisplayScreen() {
                     }
                 ],
             },
-        },
-    ]
-    }, [existingBookmarks]);
+        };
 
-    function setHeaderOptions() {
-        console.log('running');
         navigation.setOptions({
             title: "",
-            unstable_headerRightItems: menu,
+            unstable_headerLeftItems: () => [
+                {
+                    type: 'button',
+                    label: 'Back',
+                    icon: {
+                        type: 'sfSymbol',
+                        name: 'chevron.left'
+                    },
+                    tintColor: Colors[theme].icon,
+                    onPress: () => {
+                        router.back();
+                    }
+                }
+            ],
+            unstable_headerRightItems: () => songNotes.length > 0 ? [...initial, m] : [m],
         });
     }
 
@@ -261,9 +270,10 @@ export default function DisplayScreen() {
         const unsubscribe = navigation.addListener('focus', () => {
             setHeaderOptions();
         });
+        setHeaderOptions();
 
         return unsubscribe;
-    }, [navigation]);
+    }, [navigation, songNotes, existingBookmarks, isBookmarked]);
 
     // piano
     const progress = useProgress();
@@ -287,17 +297,6 @@ export default function DisplayScreen() {
             const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
 
             // prefetch
-
-            const songNumbers = Object.keys(songs || {});
-            const currentIndex = songNumbers.indexOf(params.number);
-            const nextIndex = currentIndex + 1;
-            const prevIndex = currentIndex - 1;
-            if (nextIndex < songNumbers.length) {
-                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[nextIndex] } });
-            }
-            if (prevIndex >= 0) {
-                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[prevIndex] } });
-            }
 
             navigation.addListener('beforeRemove', async (e) => {
                 if (e.data.action.type == 'GO_BACK') {
@@ -391,6 +390,7 @@ export default function DisplayScreen() {
                     const player = createAudioPlayer(assetId);
                     audioPlayers.current.push(player);
                 }
+                setHeaderOptions();
 
                 await setAudioModeAsync({
                     playsInSilentMode: true,
@@ -568,7 +568,7 @@ export default function DisplayScreen() {
 
     function haptic() {
         'worklet';
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+        scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
     }
 
     const swipeGesture = Gesture.Pan()
@@ -609,7 +609,7 @@ export default function DisplayScreen() {
                     const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex > 0) {
-                        runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex - 1] } });
+                        scheduleOnRN(router.replace, { pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex - 1] } });
                     }
 
                 } else {
@@ -617,7 +617,7 @@ export default function DisplayScreen() {
                     const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                     const currentIndex = songNumbers.indexOf(params.number);
                     if (currentIndex < songNumbers.length - 1) {
-                        runOnJS(router.replace)({ pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex + 1] } });
+                        scheduleOnRN(router.replace, { pathname: '/display/[id]/[number]', params: { id: params.id, number: songNumbers[currentIndex + 1] } });
                     }
                 }
             }

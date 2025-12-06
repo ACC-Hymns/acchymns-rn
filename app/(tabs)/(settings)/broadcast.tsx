@@ -13,8 +13,9 @@ import { translations } from '@/constants/localization';
 import StyledText from '@/components/StyledText';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { TokenAuthResponse, validate_token } from '@/scripts/broadcast';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export default function BroadcastScreen() {
 
@@ -113,7 +114,7 @@ export default function BroadcastScreen() {
                 ),
                 // go back to 0 at the end
                 withTiming(0, { duration: TIME / 2, easing: EASING }, () => {
-                    runOnJS(animFinishCallback)();
+                    scheduleOnRN(animFinishCallback);
                 }),
             );
         } else {
@@ -132,7 +133,7 @@ export default function BroadcastScreen() {
                 ),
                 // go back to 0 at the end
                 withTiming(0, { duration: TIME / 2, easing: EASING }, () => {
-                    runOnJS(animFinishCallback)();
+                    scheduleOnRN(animFinishCallback);
                 }),
             );
             context?.setBroadcastingToken(response.data.token);

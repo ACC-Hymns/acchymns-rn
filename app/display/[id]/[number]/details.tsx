@@ -37,6 +37,8 @@ export default function DetailsPanel() {
                 const data = await getSongData(params.id as string);
                 setSongData(data);
 
+                if(!data)
+                    throw new Error("No song data for " + params.id + " was found.");
 
                 // load song details
                 searchHymnary(data[params.number].title).then((detailData) => {

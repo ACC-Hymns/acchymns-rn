@@ -281,11 +281,20 @@ export default function RootLayout() {
                                             headerStyle: {
                                                 backgroundColor: Colors[theme].background,
                                             },
-                                            headerLeft: () => (
-                                                <HeaderButton onPress={() => router.back()}>
-                                                    <IconSymbol name="chevron.left" size={18} color={Colors[theme].text} />
-                                                </HeaderButton>
-                                            ),
+                                            unstable_headerLeftItems: () => [
+                                                {
+                                                    type: 'button',
+                                                    label: 'Back',
+                                                    icon: {
+                                                        type: 'sfSymbol',
+                                                        name: 'chevron.left'
+                                                    },
+                                                    tintColor: Colors[theme].icon,
+                                                    onPress: () => {
+                                                        router.back();
+                                                    }
+                                                }
+                                            ],
                                             headerShadowVisible: false,
                                             presentation: 'modal',
                                         }}

@@ -17,7 +17,7 @@ import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler'
 import * as ContextMenu from 'zeego/context-menu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from 'react-native-elements';
-import Animated, { runOnJS, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { getLocales } from 'expo-localization';
 import { I18n } from 'i18n-js'
@@ -33,6 +33,7 @@ import ReorderableList, {
     useReorderableDragStart,
 } from 'react-native-reorderable-list';
 import { Ionicons } from '@expo/vector-icons';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export default function HomeScreen() {
 
@@ -40,8 +41,6 @@ export default function HomeScreen() {
     const styles = makeStyles(theme);
     const context = useContext(HymnalContext);
     const router = useRouter();
-
-    const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
 
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
@@ -61,8 +60,6 @@ export default function HomeScreen() {
         };
         loadInitialData();
 
-        const books = context.BOOK_DATA;
-        setBookData(books);
     }, [context?.BOOK_DATA]);
 
     async function deleteHymnal(bookKey: string) {
@@ -91,63 +88,45 @@ export default function HomeScreen() {
     };
     const loadOrder = async () => {
         try {
+            console.log("Loading order...")
             const order = await AsyncStorage.getItem(HYMNAL_SORT_KEY);
-            if (order !== null) {
-                setSortOrder(JSON.parse(order));
+            if (order !== null && context?.BOOK_DATA) {
+                let order_data: string[] = JSON.parse(order);
+                order_data = [...new Set(order_data)]
+                console.log("Book order: " + order);
+                if(order_data.some(el => el == null)) {
+                    order_data = Object.keys(context.BOOK_DATA).map((b) => context.BOOK_DATA[b].name.short);
+                    await saveOrder(order_data);
+                }
+                let data = [
+                                // First, keys in sortOrder that exist in bookData
+                                ...order_data.filter((key) => context?.BOOK_DATA[key]),
+                                // Then, any keys in bookData not in sortOrder
+                                ...Object.keys(context?.BOOK_DATA).filter((key) => !order_data.includes(key))
+                            ]
+                            console.log(data)
+                setSortOrder(data);
+            } else {
+                console.log("bookData is null");
             }
         } catch (error) {
             console.error("Error loading sort order:", error);
         }
     };
     useEffect(() => {
-        saveOrder(sortOrder)
+        const loadInitialData = async () => {
+            await loadOrder();
+        };
+        loadInitialData();
+    },[]);
+
+    useEffect(() => {
+        const save = async () => {
+            await saveOrder(sortOrder)
+        }
+        save();
     }, [sortOrder])
 
-    const UnderlayRight = useMemo(() => {
-        return () => {
-            const { close, percentOpen, item } = useSwipeableItemParams<string>();
-            const animatedStyles = useAnimatedStyle(() => ({
-                transform: [{ translateX: (1 - (percentOpen.value)) * 100 }],
-                opacity: percentOpen.value,
-            }));
-            return (
-                <Animated.View style={[styles.deleteButtonContainer, animatedStyles]}>
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => {
-                            if (bookData && bookData[item]) {
-                                Alert.alert(`${i18n.t('deleteAlertTitle')}"${bookData[item].name.medium}"`, i18n.t('deleteAlertMessage'), [
-                                    {
-                                        text: i18n.t('cancel'),
-                                        onPress: () => {
-                                            close();
-                                        },
-                                        style: 'cancel',
-                                        isPreferred: true
-                                    },
-                                    {
-                                        text: i18n.t('delete'),
-                                        onPress: () => {
-                                            close();
-                                            deleteHymnal(item);
-                                        },
-                                        style: 'destructive'
-                                    },
-                                ]);
-                            }
-                        }}
-                        style={[styles.deleteButton]}
-                    >
-                        <IconSymbol
-                            name="trash"
-                            size={24}
-                            weight='light'
-                            color='white' />
-                    </TouchableOpacity>
-                </Animated.View>
-            );
-        };
-    }, [context?.languageOverride, i18n.locale]);
 
     const HymnalItem: React.FC<{ item: string }> = memo(({ item }) => {
 
@@ -171,9 +150,9 @@ export default function HomeScreen() {
                 >
                     <GradientButton
                         key={item}
-                        title={bookData![item].name.medium}
-                        primaryColor={bookData![item].primaryColor}
-                        secondaryColor={bookData![item].secondaryColor}
+                        title={context?.BOOK_DATA?.[item].name.medium || ""}
+                        primaryColor={context?.BOOK_DATA?.[item].primaryColor || ""}
+                        secondaryColor={context?.BOOK_DATA?.[item].secondaryColor || ""}
                     />
                 </Pressable>
             </View>
@@ -186,10 +165,10 @@ export default function HomeScreen() {
 
     function haptic() {
         'worklet';
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+        scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
     }
     return (
-            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }} onLayout={() => context?.onLayoutHomeView()}>
+            <View style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
                 <ReorderableList
                     autoscrollSpeedScale={0}
                     shouldUpdateActiveItem={true}
@@ -197,12 +176,12 @@ export default function HomeScreen() {
                     cellAnimations={{opacity: 1}}
                     contentContainerStyle={{ paddingBottom: 90 }}
                     data={
-                        bookData
+                        context?.BOOK_DATA
                             ? [
                                 // First, keys in sortOrder that exist in bookData
-                                ...sortOrder.filter((key) => bookData[key]),
+                                ...sortOrder.filter((key) => context?.BOOK_DATA[key]),
                                 // Then, any keys in bookData not in sortOrder
-                                ...Object.keys(bookData).filter((key) => !sortOrder.includes(key))
+                                ...Object.keys(context?.BOOK_DATA).filter((key) => !sortOrder.includes(key))
                             ]
                             : []
                     }
@@ -300,7 +279,7 @@ function makeStyles(theme: "light" | "dark") {
             backgroundColor: Colors[theme]['background'] // Dynamically set background color using useThemeColor
         },
         titleContainer: {
-            marginTop: 80,
+            marginTop: 18,
             marginBottom: 20,
             marginHorizontal: 10,
             flexDirection: 'row',

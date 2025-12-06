@@ -41,6 +41,8 @@ export default function BookmarkScreen() {
 
 
     function stripSearchText(text: string) {
+        if(!text)
+            return "";
         return text
             .replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
             .replace(/s{2,}/g, " ")
@@ -113,14 +115,17 @@ export default function BookmarkScreen() {
                     const bookData = context.BOOK_DATA[bookmark.book];
                     const songData = await getSongData(bookmark.book);
                     if (songData && bookData) {
+                        
                         const song = songData[bookmark.number];
                         if (song) {
+                            console.log(song);
+                            console.log("title: " + song.title);
                             return {
                                 ...song,
                                 book: bookData,
                                 number: bookmark.number,
                                 stripped_title: stripSearchText(song.title),
-                                stripped_first_line: stripSearchText(song.first_line ?? "")
+                                stripped_first_line: stripSearchText(song.first_line || "")
                             } as SongSearchInfo;
                         } else {
                             console.warn(`Song number ${bookmark.number} not found in book ${bookmark.book}`);
@@ -183,10 +188,10 @@ export default function BookmarkScreen() {
                             return;
                         }
                         const songData = await getSongData(bookShort);
-                        const song = songData[number];
+                        const song = songData?.[number];
 
                         Alert.alert(
-                            i18n.t('remove') + ` "${song.title}"`,
+                            i18n.t('remove') + ` "${song?.title}"`,
                             i18n.t('removeMessage'),
                             [
                                 {

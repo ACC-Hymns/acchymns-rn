@@ -208,6 +208,8 @@ async function cachedReadFile(filePath: string): Promise<string> {
 async function getSongData(book: string) {
     const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
     const songsFile = new File(hymnalFolder, `songs.json`);
+    if(!songsFile.exists)
+        return undefined;
     const songsContent = await cachedReadFile(songsFile.info().uri || "");
     const songsList = JSON.parse(songsContent) as SongList;
     return songsList;
