@@ -1,5 +1,5 @@
 import React, { use, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions, Button, TouchableHighlight } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, useColorScheme, Dimensions, Button, TouchableHighlight, Alert } from 'react-native';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,16 +12,104 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import StyledText from '@/components/StyledText';
 import { useSongListData } from '@/hooks/useSongListData';
 import { useBookData } from '@/hooks/useBookData';
+import { I18n } from 'i18n-js';
+import { getLocales } from 'expo-localization';
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
     const theme = useColorScheme() ?? 'light';
 
+        const translations = {
+        en: {
+            sortingLabel: 'Sorting Options',
+            numerical: 'Numerical',
+            alphabetical: 'Alphabetical',
+            topical: 'Topical',
+            deleteHymnal: 'Delete Hymnal',
+            deleteAlertTitle: 'Delete ',
+            deleteAlertMessage: 'You can always download the hymnal again later.',
+            cancel: 'Cancel',
+            delete: 'Delete',
+        },
+        es: {
+            sortingLabel: 'Opciones de Ordenamiento',
+            numerical: 'Numérico',
+            alphabetical: 'Alfabético',
+            topical: 'Tópico',
+            deleteHymnal: 'Borrar Himnario',
+            deleteAlertTitle: 'Borrar ',
+            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
+            cancel: 'Cancelar',
+            delete: 'Borrar',
+        },
+        fr: {
+            sortingLabel: 'Options de Tri',
+            numerical: 'Numérique',
+            alphabetical: 'Alphabétique',
+            topical: 'Topique',
+            deleteHymnal: 'Supprimer le Livre de Hymnes',
+            deleteAlertTitle: 'Supprimer ',
+            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
+            cancel: 'Annuler',
+            delete: 'Supprimer',
+        },
+        de: {
+            sortingLabel: 'Sortieroptionen',
+            numerical: 'Numerisch',
+            alphabetical: 'Alphabetisch',
+            topical: 'Thematisch',
+            deleteHymnal: 'Gesangbuch löschen',
+            deleteAlertTitle: 'Löschen ',
+            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
+            cancel: 'Stornieren',
+            delete: 'Löschen',
+        },
+        sr: {
+            sortingLabel: 'Sortiranje',
+            numerical: 'Numerički',
+            alphabetical: 'Abecedni',
+            topical: 'Tematički',
+            deleteHymnal: 'Obriši himnolog',
+            deleteAlertTitle: 'Obriši ',
+            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
+            cancel: 'Otkaži',
+            delete: 'Obriši',
+        },
+        ja: {
+            sortingLabel: '並べ替えオプション',
+            numerical: '数字順',
+            alphabetical: 'アルファベット順',
+            topical: 'トピック順',
+            deleteHymnal: '賛美歌を削除する',
+            deleteAlertTitle: '削除 ',
+            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
+            cancel: 'キャンセル',
+            delete: '削除',
+        },
+        pt: {
+            sortingLabel: 'Opções de Ordenação',
+            numerical: 'Numérico',
+            alphabetical: 'Alfabético',
+            topical: 'Tópico',
+            deleteHymnal: 'Deletar Hinário',
+            deleteAlertTitle: 'Deletar ',
+            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
+            cancel: 'Cancelar',
+            delete: 'Deletar',
+        }
+    }
+
+    
+
     // get book data from context
     const context = useContext(HymnalContext);
+    const i18n = new I18n(translations);
+        i18n.enableFallback = true;
+        i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    
 
     const book = useBookData(id as string, context);
-    const {songs, topicalIndex, loading, error } = useSongListData(book);
+    const { songs, topicalIndex, loading, error } = useSongListData(book);
 
     const [sortMode, setSortMode] = useState<SortMode>(SortMode.NUMERICAL);
     const [isNavigating, setIsNavigating] = useState(false);
@@ -35,10 +123,81 @@ export default function SelectionScreen() {
 
         navigation.setOptions({
             title: book.name.medium,
-            headerTitleAlign: 'center',
-            headerRight: () => (
-                <HymnalMoreMenu bookSummary={book} />
-            ),
+            unstable_headerRightItems: () => [
+                {
+                    type: 'menu',
+                    label: 'Sorting Options',
+                    icon: {
+                        type: 'sfSymbol',
+                        name: 'ellipsis',
+                    },
+                    menu: {
+                        title: i18n.t("sortingLabel"),
+                        items: [
+                            {
+                                type: 'action',
+                                label: i18n.t('numerical'),
+                                icon: {
+                                    type: 'sfSymbol',
+                                    name: 'textformat.123',
+                                },
+                                onPress: async () => {
+                                    context?.setSortMode?.(SortMode.NUMERICAL);
+                                },
+                            }, {
+                                type: 'action',
+                                label: i18n.t('alphabetical'),
+                                icon: {
+                                    type: 'sfSymbol',
+                                    name: 'textformat.abc',
+                                },
+                                onPress: async () => {
+                                    context?.setSortMode?.(SortMode.ALPHABETICAL)
+                                },
+                            }, {
+                                type: 'action',
+                                label: i18n.t('topical'),
+                                icon: {
+                                    type: 'sfSymbol',
+                                    name: 'book',
+                                },
+                                onPress: () => {
+                                    context?.setSortMode?.(SortMode.TOPICAL)
+                                },
+                            }, {
+                                type: 'action',
+                                label: i18n.t('deleteHymnal'),
+                                destructive: true,
+                                icon: {
+                                    type: 'sfSymbol',
+                                    name: 'trash',
+                                },
+                                onPress: () => {
+                                    Alert.alert(`${i18n.t('deleteAlertTitle')}"${book.name.medium}"`, i18n.t('deleteAlertMessage'), [
+                                        {
+                                            text: i18n.t('cancel'),
+                                            onPress: () => {
+            
+                                            },
+                                            style: 'cancel',
+                                            isPreferred: true
+                                        },
+                                        {
+                                            text: i18n.t('delete'),
+                                            onPress: async () => {
+                                                // navigate back
+                                                router.back();
+                                                await context?.deleteHymnal?.(book.name.short);
+                                            },
+                                            style: 'destructive'
+                                        },
+                                    ]);
+                                },
+                            }
+                        ],
+                    },
+                },
+            ],
         });
     }, [book, id, navigation]);
 

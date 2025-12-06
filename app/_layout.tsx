@@ -1,11 +1,11 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, useRoute, RouteProp } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider, useRoute, RouteProp, NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'react-native-reanimated';
-
+import {setBackgroundColorAsync} from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
@@ -51,6 +51,7 @@ SplashScreen.setOptions({
 export default function RootLayout() {
     const colorScheme = useColorScheme();
     const theme = colorScheme ?? 'light';
+    setBackgroundColorAsync(Colors[theme].background);
     const [appIsReady, setAppIsReady] = useState(false);
     const [loaded] = useFonts({
         Regular: require('@/assets/fonts/Lato-Regular.ttf'),
@@ -61,6 +62,12 @@ export default function RootLayout() {
         Black: require('@/assets/fonts/Lato-Black.ttf'),
         BlackItalic: require('@/assets/fonts/Lato-BlackItalic.ttf'),
     });
+
+    Appearance.addChangeListener(async (e) => {
+        await setBackgroundColorAsync(Colors[e.colorScheme ?? 'light'].background);
+        console.log('root color is now: ' + Colors[e.colorScheme ?? 'light'].background);
+    })
+
 
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
 
@@ -258,13 +265,13 @@ export default function RootLayout() {
     return (
         <PostHogProvider apiKey={POSTHOG_API_KEY} options={{
             host: "https://us.i.posthog.com",
-        }}>
+        }} autocapture={{captureScreens: false}}>
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                     <HymnalContext.Provider value={context}>
                         <QueryClientProvider client={new QueryClient()}>
                             <BottomSheetModalProvider>
-                                <Stack screenOptions={{ headerTitleAlign: 'center', headerShown: false }}>
+                                <Stack screenOptions={{ headerTitleAlign: 'center', headerShown: false}}>
                                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                     <Stack.Screen
                                         name="hymnal_importer"

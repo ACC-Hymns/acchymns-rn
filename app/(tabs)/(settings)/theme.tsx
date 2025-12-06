@@ -73,7 +73,6 @@ export default function ThemeScreen() {
                                     <View style={styles.settingsItem}>
                                         <StyledText style={styles.settingsText}>{i18n.t('invertSheetMusic')}</StyledText>
                                         <Switch
-                                            style={{ marginVertical: -8 }}
                                             trackColor={{ true: Colors[theme].primary }}
                                             value={context?.invertSheetMusic ?? false}
                                             onValueChange={(value) => {

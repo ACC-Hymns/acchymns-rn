@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars if image is larger than viewport */
+            background-color: #000; /* Optional: background color if image doesn't cover everything */
+        }
+
+        .fullscreen-image {
+            width: 100vw;   /* 100% of the viewport width */
+            height: 100vh;  /* 100% of the viewport height */
+            object-fit: contain; /* Scale image down to fit, maintaining aspect ratio */
+            /* object-fit: cover; /* Uncomment this if you want to cover the entire screen, potentially cropping */
+            display: block; /* Remove extra space below image */
+        }
+    </style>
+</head>
+<body>
+    <img id="myImage" class="fullscreen-image" src="" alt="Full Screen Image">
+
+    <script>
+        // REPLACE THIS WITH YOUR ACTUAL BASE64 IMAGE STRING
+       
+        const base64ImageString = 'HERE';
+
+        document.getElementById('myImage').src = base64ImageString;
+
+        // You can also dynamically load a Base64 string, for example, from a user input or an API
+        // For demonstration purposes, it's hardcoded here.
+    </script>
+</body>
+</html>

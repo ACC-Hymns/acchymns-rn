@@ -4,7 +4,7 @@
     "slug": "acchymns",
     "version": "5.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/ios-light.png",
+    "icon": "./assets/icons/ios-light.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -86,7 +86,10 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "forceStaticLinking": ["RNFBApp", "RNFBAuth"]
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBAuth"
+            ]
           },
           "android": {
             "ndkVersion": "29.0.14206865"

@@ -25,9 +25,7 @@ export default function DisplayLayout() {
                 options={{
                     title: 'number',
                     headerShown: true,
-                    headerStyle: {
-                        backgroundColor: Colors[theme].headerBackground,
-                    },
+                    headerTransparent: true,
                     headerTitleAlign: 'center',
                     headerBackVisible: false,
                     headerLeft: () => (

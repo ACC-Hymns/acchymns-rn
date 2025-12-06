@@ -189,7 +189,6 @@ export default function HomeScreen() {
         runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
     }
     return (
-        <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }} onLayout={() => context?.onLayoutHomeView()}>
                 <ReorderableList
                     autoscrollSpeedScale={0}
@@ -218,15 +217,6 @@ export default function HomeScreen() {
                     ListHeaderComponent={
                         <View style={styles.titleContainer}>
                             <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
-                            <TouchableOpacity
-                                onPress={() => router.push('/auth')}
-                            >
-                                <Ionicons 
-                                    name='person-circle-outline'
-                                    size={36}
-                                    color={Colors[theme]['text']}
-                                />
-                            </TouchableOpacity>
                         </View>
                     }
                     ListFooterComponent={
@@ -252,7 +242,6 @@ export default function HomeScreen() {
                     }
                 />
             </View>
-        </>
     );
 }
 

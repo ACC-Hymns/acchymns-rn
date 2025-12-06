@@ -39,7 +39,6 @@ export default function PreferencesScreen() {
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</StyledText>
                                 <Switch
-                                    style={{ marginVertical: -8 }}
                                     trackColor={{ true: Colors[theme].primary }}
                                     value={context?.legacyNumberGrouping ?? false}
                                     onValueChange={(value) => {

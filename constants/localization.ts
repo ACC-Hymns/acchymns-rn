@@ -115,6 +115,7 @@ const translations = {
         removeBookmark: 'Remove Bookmark',
         saveBookmark: 'Save as Bookmark',
         share: 'Share',
+        reportIssueMessage: 'Report an issue for this song?',
         reportIssue: 'Report Issue',
         reportIssueSuccess: 'Issue reported successfully',
         reportIssueFailure: 'Failed to report issue',

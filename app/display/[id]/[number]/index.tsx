@@ -1,14 +1,15 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView } from 'react-native';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Dimensions, Alert } from 'react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { BookSummary, Song, SongList } from '@/constants/types';
+import { Bookmark, BookSummary, Song, SongList } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/Colors';
+import { Share } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import {
     BottomSheetModal,
@@ -20,7 +21,7 @@ import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import { getImageData } from '@/scripts/image_handler';
+import { getHTMLStringFromSong, getImageData } from '@/scripts/image_handler';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,18 +36,115 @@ import TrackPlayer, { State, usePlaybackState, useProgress } from 'react-native-
 import { useBookData } from '@/hooks/useBookData';
 import { useSongData } from '@/hooks/useSongData';
 import { useSongListData } from '@/hooks/useSongListData';
+import WebView from 'react-native-webview';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useReportAPI } from '@/scripts/report';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';
+    const headerHeight = useHeaderHeight();
+    const { height } = Dimensions.get('window');
+    const headerHeightRatio = headerHeight / height;
 
     const context = useContext(HymnalContext);
+    const BOOKMARKS_KEY = 'bookmarks';
+    const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const reportAPI = useReportAPI();
+    const addBookmark = async (bookmark: Bookmark) => {
+        try {
+            const bookmarks: Bookmark[] = existingBookmarks ?? [];
+            console.log(existingBookmarks);
+            // Check if the bookmark already exists
+            const exists = bookmarks.some(b => b.book === bookmark.book && b.number === bookmark.number);
+            if (exists) {
+                removeBookmark(bookmark);
+                return;
+            }
+            console.log('Adding bookmark for', params.id, params.number);
+            bookmarks.push(bookmark);
+            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+            setExistingBookmarks(bookmarks); // Update the current bookmarks
+            setIsBookmarked(true); // Set the bookmark state to true
+
+            console.log("set header options")
+            setHeaderOptions();
+        } catch (error) {
+            console.error("Error saving bookmarks:", error);
+        }
+    };
+
+    const removeBookmark = async (bookmark: Bookmark) => {
+        console.log('Removing bookmark for', bookmark);
+        try {
+            const bookmarks: Bookmark[] = existingBookmarks ?? [];
+            // Filter out the bookmark to be removed
+            const updatedBookmarks = bookmarks.filter(b => !(b.book === bookmark.book && b.number === bookmark.number));
+            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
+            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
+            setIsBookmarked(false); // Set the bookmark state to false
+            console.log(bookmark, updatedBookmarks);
+            setHeaderOptions();
+        } catch (error) {
+            console.error("Error removing bookmark:", error);
+        }
+    };
+
+
+
+    const reportIssue = async () => {
+        Alert.alert(i18n.t('reportIssue'), i18n.t('reportIssueMessage'), [
+            {
+                text: i18n.t('cancel'),
+                onPress: () => {
+
+                },
+                style: 'cancel',
+                isPreferred: true
+            },
+            {
+                text: i18n.t('reportIssue'),
+                onPress: async () => {
+                    let result = await reportAPI.report({
+                        book: params.id,
+                        number: params.number ?? '',
+                    });
+                    if (result) {
+                        Alert.alert(i18n.t('reportIssueSuccess'));
+                    } else {
+                        Alert.alert(i18n.t('reportIssueFailure'));
+                    }
+                },
+                style: 'destructive'
+            },
+        ]);
+    }
+    const [songData, setSongData] = useState<Song | null>(null);
+    useLayoutEffect(() => {
+        if (params.number) {
+            getSongData(params.id).then((data) => {
+                setSongData(data[params.number]);
+            });
+
+            AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
+                setExistingBookmarks(JSON.parse(data || '[]'));
+            });
+        }
+    }, [params.id, params.number]);
+    useEffect(() => {
+        if (songData && existingBookmarks) {
+            const isBookmarked = existingBookmarks.some(b => b.book === params.id && b.number === params.number);
+            setIsBookmarked(isBookmarked);
+        }
+    }, [songData, existingBookmarks, params.id, params.number]);
 
     const book = useBookData(params.id, context);
     const { loading, songs, error } = useSongListData(book);
 
     const [songNotes, setSongNotes] = useState<string[]>([]);
-    const [imageData, setImageData] = useState<{ uri: string, aspectRatio: number } | null>(null);
+    const [imageData, setImageData] = useState<string>();
     const [imageLoading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
     const navigation = useNavigation();
@@ -84,23 +182,78 @@ export default function DisplayScreen() {
         context.openDetailsBottomSheet = openDetailsPage;
     }, [context]);
 
+    const menu = useCallback(() => {
+        return [
+        {
+            type: 'button',
+            label: 'Music',
+            icon: {
+                type: 'sfSymbol',
+                name: 'music.quarternote.3',
+            },
+            onPress: () => {
+                handlePress();
+            },
+        },
+        {
+            type: 'menu',
+            label: '',
+            icon: {
+                type: 'sfSymbol',
+                name: 'ellipsis',
+            },
+            menu: {
+                title: 'Options',
+                items: [
+                    {
+                        type: 'action',
+                        label: isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark'),
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'bookmark',
+                        },
+                        onPress: async () => {
+                            await addBookmark({
+                                book: params.id,
+                                number: params.number ?? '',
+                            })
+                        },
+                    }, {
+                        type: 'action',
+                        label: 'Share',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'square.and.arrow.up',
+                        },
+                        onPress: async () => {
+                            await Share.share({
+                                message: ``,
+                                url: `https://acchymns.app/display/${params.id}/${params.number}`
+                            })
+                        },
+                    }, {
+                        type: 'action',
+                        label: 'Report',
+                        destructive: true,
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'exclamationmark.bubble',
+                        },
+                        onPress: () => {
+                            reportIssue();
+                        },
+                    }
+                ],
+            },
+        },
+    ]
+    }, [existingBookmarks]);
+
     function setHeaderOptions() {
+        console.log('running');
         navigation.setOptions({
-            title: params.number,
-            headerRight: () => (
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                    {(
-                        <TouchableOpacity onPress={handlePress}>
-                            <Ionicons
-                                name="musical-notes"
-                                size={24}
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
-                        </TouchableOpacity>
-                    )}
-                    <DisplayMoreMenu bookId={params.id} songId={params.number} />
-                </View>
-            ),
+            title: "",
+            unstable_headerRightItems: menu,
         });
     }
 
@@ -121,8 +274,9 @@ export default function DisplayScreen() {
     useFocusEffect(
         useCallback(() => {
 
-            if(loading)
+            if (loading)
                 return;
+
 
             // Unlock orientation on page load
             ScreenOrientation.unlockAsync();
@@ -151,6 +305,10 @@ export default function DisplayScreen() {
                 }
 
                 const nextRoute = (e.data?.action?.payload as { name?: string, params: { [key: string]: string }, singular: any });
+
+                if (!nextRoute)
+                    return;
+
                 console.log('Navigating to:', nextRoute.name);
                 if (!nextRoute.name?.startsWith('index')) {
                     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
@@ -171,6 +329,15 @@ export default function DisplayScreen() {
 
 
             (async () => {
+
+                // if invertSheetMusic is true AND theme is dark, invert the image
+                const inverted = context?.invertSheetMusic ?? false;
+                const shouldInvert = inverted && theme === 'dark';
+
+                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme, headerHeightRatio);
+                if (!imageData) return;
+                setImageData(imageData);
+
                 // try and load piano sound
                 const URL = `https://acchymnsmedia.s3.us-east-2.amazonaws.com/${params.id}/${params.number}.mp3`;
                 // Check if the mp3 exists before creating the player
@@ -207,6 +374,13 @@ export default function DisplayScreen() {
                     return;
 
                 setLoading(true);
+                const inverted = context?.invertSheetMusic ?? false;
+                const shouldInvert = inverted && theme === 'dark';
+
+                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme, headerHeightRatio);
+                if (!imageData) return;
+                setImageData(imageData);
+
                 // set song notes
                 const songNotes = songs[params.number].notes;
                 // reverse notes
@@ -223,14 +397,6 @@ export default function DisplayScreen() {
                     interruptionMode: 'mixWithOthers',
                     interruptionModeAndroid: 'duckOthers'
                 })
-
-                // if invertSheetMusic is true AND theme is dark, invert the image
-                const inverted = context?.invertSheetMusic ?? false;
-                const shouldInvert = inverted && theme === 'dark';
-
-                const imageData = await getImageData(book, params.number, shouldInvert);
-                if (!imageData) return;
-                setImageData(imageData);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -488,24 +654,12 @@ export default function DisplayScreen() {
                             );
                         })()}
                         {/* Main ScrollView takes full width */}
-                        <ScrollView
-                            ref={scrollRef}
-                            key={isHorizontal ? 'horizontal' : 'vertical'} // Force re-render on orientation change
-                            minimumZoomScale={1}
-                            maximumZoomScale={5}
-                            contentContainerStyle={{ flexGrow: 1 }}
-                            style={{ flex: 1, width: '100%' }}
-                        >
-                            <Image
-                                source={{ uri: imageData.uri }}
-                                resizeMode="contain"
-                                style={{
-                                    width: '100%',
-                                    height: undefined,
-                                    aspectRatio: imageData.aspectRatio,
-                                }}
-                            />
-                        </ScrollView>
+                        <WebView
+                            style={styles.container}
+                            originWhitelist={['*']}
+                            source={{ html: imageData }}>
+
+                        </WebView>
                         {(() => {
                             const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
                             const currentIndex = songNumbers.indexOf(params.number);
