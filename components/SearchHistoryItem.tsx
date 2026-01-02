@@ -5,6 +5,7 @@ import { IconSymbol } from './ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
 import StyledText from './StyledText';
+import { Ionicons } from '@expo/vector-icons';
 
 
 interface SearchHistoryItemProps {
@@ -23,7 +24,7 @@ type HapticEvent = {
 
 export function SearchHistoryItem({ item, onPress, onGestureStart, onGestureEnd, onDelete, isLastItem }: SearchHistoryItemProps) {
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const translateX = useRef(new Animated.Value(0)).current;
     const isInDeleteRange = useRef(false);
     const hapticTriggered = useRef(false);
@@ -115,8 +116,8 @@ export function SearchHistoryItem({ item, onPress, onGestureStart, onGestureEnd,
                             onDelete();
                         }}
                     >
-                        <IconSymbol
-                            name="trash"
+                        <Ionicons
+                            name="trash-outline"
                             size={24}
                             color="white"
                         />

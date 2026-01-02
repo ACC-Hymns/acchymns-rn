@@ -20,7 +20,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 export default function BroadcastScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const router = useRouter();
     const context = useContext(HymnalContext);
 

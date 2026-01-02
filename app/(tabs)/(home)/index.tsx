@@ -38,7 +38,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 export default function HomeScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const context = useContext(HymnalContext);
     const router = useRouter();
 

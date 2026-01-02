@@ -97,7 +97,10 @@
         }
       ],
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      "./plugins/withAndroidSvgFix",
+      "./plugins/withGlideFix",
+      "./plugins/withMetaspaceFix"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Dimensions, Alert } from 'react-native';
+import { View, Image, Text, ActivityIndicator, useColorScheme, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Dimensions, Alert, Platform } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
@@ -10,7 +10,6 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/Colors';
 import { Share } from 'react-native';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import {
     BottomSheetModal,
     BottomSheetView,
@@ -21,7 +20,7 @@ import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import { getHTMLStringFromSong, getImageData } from '@/scripts/image_handler';
+import { getHTMLStringFromSong } from '@/scripts/image_handler';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { Ionicons } from '@expo/vector-icons';
@@ -145,7 +144,7 @@ export default function DisplayScreen() {
     const [imageLoading, setLoading] = useState(false);
     const audioPlayers = useRef<AudioPlayer[]>([]);
     const navigation = useNavigation();
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const scrollRef = useRef<ScrollView | null>(null);
     const [isSwiping, setIsSwiping] = useState(false);
 
@@ -170,16 +169,38 @@ export default function DisplayScreen() {
         isModalOpenRef.current = index === 0;
     }, []);
 
-    function openDetailsPage() {
-        router.navigate({ pathname: '/display/[id]/[number]/details', params: { id: params.id, number: params.number } });
-    }
-
-    useLayoutEffect(() => {
-        if (!context) return;
-        context.openDetailsBottomSheet = openDetailsPage;
-    }, [context]);
-
     function setHeaderOptions() {
+        if(Platform.OS === 'android') {
+            navigation.setOptions({
+                title: "",
+                headerLeft: () => (
+                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
+                            <Ionicons
+                                name="chevron-back"
+                                size={24}
+                                weight="medium"
+                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                            />
+                        </TouchableOpacity>
+                    ),
+                headerRight: () => (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
+                        {(
+                            <TouchableOpacity onPress={handlePress}>
+                                <Ionicons
+                                    name="musical-notes"
+                                    size={24}
+                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                                />
+                            </TouchableOpacity>
+                        )}
+                        <DisplayMoreMenu bookId={params.id} songId={params.number} />
+                    </View>
+                ),
+            });
+            return;
+        }
+
         let initial = [{
             type: 'button',
             label: 'Music',
@@ -333,7 +354,7 @@ export default function DisplayScreen() {
                 const inverted = context?.invertSheetMusic ?? false;
                 const shouldInvert = inverted && theme === 'dark';
 
-                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme, headerHeightRatio);
+                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme as any, headerHeightRatio);
                 if (!imageData) return;
                 setImageData(imageData);
 
@@ -376,7 +397,7 @@ export default function DisplayScreen() {
                 const inverted = context?.invertSheetMusic ?? false;
                 const shouldInvert = inverted && theme === 'dark';
 
-                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme, headerHeightRatio);
+                const imageData = await getHTMLStringFromSong(book, params.number, shouldInvert, theme as any, headerHeightRatio);
                 if (!imageData) return;
                 setImageData(imageData);
 
@@ -447,6 +468,8 @@ export default function DisplayScreen() {
         const player = audioPlayers.current[id];
         if (player) {
             try {
+                if(!player.isLoaded)
+                    return;
                 player.seekTo(0);
                 player.play();
             } catch (error) {
@@ -470,7 +493,7 @@ export default function DisplayScreen() {
                     gap: 8,
                     flexWrap: 'wrap',
                     marginVertical: 16,
-                    minHeight: 100, // Ensures consistent height
+                    minHeight: 110, // Ensures consistent height
                 }}
             >
                 {songs && (
@@ -506,7 +529,7 @@ export default function DisplayScreen() {
                     gap: 8,
                     flexWrap: 'wrap',
                     marginVertical: 16,
-                    minHeight: 100, // Ensures consistent height
+                    minHeight: 110, // Ensures consistent height
                 }}
             >
                 <TouchableOpacity
@@ -521,8 +544,8 @@ export default function DisplayScreen() {
                             await TrackPlayer.play();
                     }}
                 >
-                    <IconSymbol
-                        name={isPianoPlaying ? 'pause.fill' : 'play.fill'}
+                    <Ionicons
+                        name={isPianoPlaying ? 'pause' : 'play'}
                         size={48}
                         color={theme === 'light' ? Colors.light.text : Colors.dark.text}
                     />
@@ -542,6 +565,7 @@ export default function DisplayScreen() {
                         tapToSeek={true}
                         minimumTrackTintColor={Colors[theme].tint}
                         maximumTrackTintColor={Colors[theme].border}
+                        thumbTintColor={Colors[theme].tint}
                         style={{ flex: 1 }}
                     />
                     <StyledText style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>

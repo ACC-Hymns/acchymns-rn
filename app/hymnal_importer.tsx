@@ -21,7 +21,7 @@ import StyledText from '@/components/StyledText';
 export default function HymnalImporter() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const isPresented = router.canGoBack();
     const context = useContext(HymnalContext);
     const posthog = usePostHog()

@@ -22,7 +22,7 @@ import { SearchBar } from '@rneui/themed';
 export default function SearchScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
 
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
@@ -68,6 +68,9 @@ export default function SearchScreen() {
                 let songList: SongSearchInfo[] = [];
                 for (const id in context.BOOK_DATA) {
                     const songData = await getSongData(id);
+                    if(!songData)
+                        continue;
+
                     Object.keys(songData).forEach((key: string) => {
                         const song: Song = songData[key];
                         const book: BookSummary = context.BOOK_DATA[id];

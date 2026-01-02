@@ -148,7 +148,8 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
         await Promise.all(
             chunk.map(async (songNumber) => {
                 const songImageUrl = `${folderUrl}songs/${songNumber}.${summary.fileExtension}`;
-                await File.downloadFileAsync(songImageUrl, songsFolder).then(({ uri }) => {
+                const songFile = new File(songsFolder, `${songNumber}.${summary.fileExtension}`);
+                await File.downloadFileAsync(songImageUrl, songFile).then(({ uri }) => {
                     downloadedSongs++;
                     if (onProgress) {
                         onProgress((downloadedSongs / totalSongs) * 100);

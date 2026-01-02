@@ -3,11 +3,11 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import { I18n } from "i18n-js";
+
 
 const tintColorLight = '#000';
 const tintColorDark = '#fff';
-export const Colors = {
+export const Colors: any  = {
   light: {
     text: '#000000',
     fadedText: '#8A9199', // More faded text color

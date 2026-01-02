@@ -2581,7 +2581,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNScreens (4.18.0):
+  - RNScreens (4.19.0-nightly-20251207-910978b9a):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2603,9 +2603,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNScreens/common (= 4.18.0)
+    - RNScreens/common (= 4.19.0-nightly-20251207-910978b9a)
     - Yoga
-  - RNScreens/common (4.18.0):
+  - RNScreens/common (4.19.0-nightly-20251207-910978b9a):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2695,7 +2695,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.5.1):
+  - RNWorklets (0.6.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2717,9 +2717,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/worklets (= 0.5.1)
+    - RNWorklets/worklets (= 0.6.1)
     - Yoga
-  - RNWorklets/worklets (0.5.1):
+  - RNWorklets/worklets (0.6.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2741,9 +2741,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/worklets/apple (= 0.5.1)
+    - RNWorklets/worklets/apple (= 0.6.1)
     - Yoga
-  - RNWorklets/worklets/apple (0.5.1):
+  - RNWorklets/worklets/apple (0.6.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3370,10 +3370,10 @@ SPEC CHECKSUMS:
   RNGestureHandler: c971f0a10fdffe00dfb4c142e87f34cdcd704376
   RNGoogleSignin: 62b03ff6453c9f59b18ad25aa6f1829ac2bbe20c
   RNReanimated: f6923d4159aab5c12a6fa54e468aee947c70750d
-  RNScreens: e3ad77a0b586f4910e4f4c30ec05d91a2c506075
+  RNScreens: 1ef7413fb306ecd71d73ad353f3d9acc7048791b
   RNSVG: 88b3b3e9e675fa4a2e14405c4c7f886ea8c82e06
   RNVectorIcons: 63e011d60ff13ccece9646df93ba53f753954987
-  RNWorklets: 28ee7370ca8da356fcc914e3e68b97e9752196d2
+  RNWorklets: 83609071441ac7d623f1e0e63b9043f4f345e2a2
   SDWebImage: f84b0feeb08d2d11e6a9b843cb06d75ebf5b8868
   SDWebImageAVIFCoder: 00310d246aab3232ce77f1d8f0076f8c4b021d90
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c

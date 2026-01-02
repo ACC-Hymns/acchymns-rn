@@ -24,7 +24,7 @@ export default function BroadcastPanel() {
 
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const router = useRouter();
     const context = useContext(HymnalContext);
     const book = useBookData(params.id, context);

@@ -26,7 +26,7 @@ export default function ScripturePicker({send}: ScripturePickerProps) {
     const context = useContext(HymnalContext);
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const i18n = new I18n(translations);
     i18n.enableFallback = true;
     i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';

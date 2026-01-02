@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2577E6F332D14FCF9B9065F7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 583538F1A8A64F81A99A9E6A /* GoogleService-Info.plist */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		7AF8A6CD421848E12276128F /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96181A6895B972BBE484D90 /* ExpoModulesProvider.swift */; };
-		AD7067F356E82EACA5F9E76A /* Pods_Hymnal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C05633F42D70B4CE554CB2DA /* Pods_Hymnal.framework */; };
+		701C89FDF7F64C809EB089B4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AE76EEF1046B44B3A24F03AA /* GoogleService-Info.plist */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C4C3ABE6FABB8B53D8CD238A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8EDB3ACFC0BE9479D3A2D366 /* PrivacyInfo.xcprivacy */; };
+		C8C59DA3619DD7F6AB2FCE22 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD25E6F13919356491744A9D /* ExpoModulesProvider.swift */; };
+		CA202F3194C6C2047E83BDF9 /* Pods_Hymnal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBBD455CF71C88CA78535F6E /* Pods_Hymnal.framework */; };
+		E97550869FCC2FA7A2A924D4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1D025651318E55E6339C05E /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -21,14 +21,14 @@
 		13B07F961A680F5B00A75B9A /* Hymnal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hymnal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Hymnal/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Hymnal/Info.plist; sourceTree = "<group>"; };
-		35ACC119E0016CC1D659AE57 /* Pods-Hymnal.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.release.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.release.xcconfig"; sourceTree = "<group>"; };
-		583538F1A8A64F81A99A9E6A /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Hymnal/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		8EDB3ACFC0BE9479D3A2D366 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Hymnal/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2C2D07490C565D2A96E91390 /* Pods-Hymnal.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.release.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.release.xcconfig"; sourceTree = "<group>"; };
+		4F981FFFD7D088F2EA691BCC /* Pods-Hymnal.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.debug.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.debug.xcconfig"; sourceTree = "<group>"; };
+		A1D025651318E55E6339C05E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Hymnal/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Hymnal/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AB35E107072E8E75D9497781 /* Pods-Hymnal.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.debug.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.debug.xcconfig"; sourceTree = "<group>"; };
-		B96181A6895B972BBE484D90 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Hymnal/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		AE76EEF1046B44B3A24F03AA /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Hymnal/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C05633F42D70B4CE554CB2DA /* Pods_Hymnal.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Hymnal.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BBBD455CF71C88CA78535F6E /* Pods_Hymnal.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Hymnal.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD25E6F13919356491744A9D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Hymnal/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Hymnal/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Hymnal-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Hymnal-Bridging-Header.h"; path = "Hymnal/Hymnal-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -39,21 +39,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AD7067F356E82EACA5F9E76A /* Pods_Hymnal.framework in Frameworks */,
+				CA202F3194C6C2047E83BDF9 /* Pods_Hymnal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		122E0B58E62234BC45E4EB48 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				59AA604809FE385D53633119 /* Hymnal */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* Hymnal */ = {
 			isa = PBXGroup;
 			children = (
@@ -63,8 +55,8 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				583538F1A8A64F81A99A9E6A /* GoogleService-Info.plist */,
-				8EDB3ACFC0BE9479D3A2D366 /* PrivacyInfo.xcprivacy */,
+				AE76EEF1046B44B3A24F03AA /* GoogleService-Info.plist */,
+				A1D025651318E55E6339C05E /* PrivacyInfo.xcprivacy */,
 			);
 			name = Hymnal;
 			sourceTree = "<group>";
@@ -73,27 +65,19 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				C05633F42D70B4CE554CB2DA /* Pods_Hymnal.framework */,
+				BBBD455CF71C88CA78535F6E /* Pods_Hymnal.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		349BA4CF87497AD6DBDF1DC0 /* Pods */ = {
+		6C6BF3DCAFBAD165CA24F046 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				AB35E107072E8E75D9497781 /* Pods-Hymnal.debug.xcconfig */,
-				35ACC119E0016CC1D659AE57 /* Pods-Hymnal.release.xcconfig */,
+				4F981FFFD7D088F2EA691BCC /* Pods-Hymnal.debug.xcconfig */,
+				2C2D07490C565D2A96E91390 /* Pods-Hymnal.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		59AA604809FE385D53633119 /* Hymnal */ = {
-			isa = PBXGroup;
-			children = (
-				B96181A6895B972BBE484D90 /* ExpoModulesProvider.swift */,
-			);
-			name = Hymnal;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -110,8 +94,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				349BA4CF87497AD6DBDF1DC0 /* Pods */,
-				122E0B58E62234BC45E4EB48 /* ExpoModulesProviders */,
+				6C6BF3DCAFBAD165CA24F046 /* Pods */,
+				F53F8BDC979E6D502919AC83 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -135,6 +119,22 @@
 			path = Hymnal/Supporting;
 			sourceTree = "<group>";
 		};
+		CAAA5262ADD872BB33375505 /* Hymnal */ = {
+			isa = PBXGroup;
+			children = (
+				DD25E6F13919356491744A9D /* ExpoModulesProvider.swift */,
+			);
+			name = Hymnal;
+			sourceTree = "<group>";
+		};
+		F53F8BDC979E6D502919AC83 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				CAAA5262ADD872BB33375505 /* Hymnal */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -143,14 +143,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Hymnal" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				43D45C1B4E74E654104C1355 /* [Expo] Configure project */,
+				37E3C47E878F04201EF379AC /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				A237E540769D927293EF4151 /* [CP] Embed Pods Frameworks */,
-				5371688AFFBCADCD134EC773 /* [CP-User] [RNFB] Core Configuration */,
+				E2A94BA748BA7B534CF58F5A /* [CP] Embed Pods Frameworks */,
+				6989D1BDBF71A3214BAB7489 /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
 			);
@@ -200,8 +200,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				2577E6F332D14FCF9B9065F7 /* GoogleService-Info.plist in Resources */,
-				C4C3ABE6FABB8B53D8CD238A /* PrivacyInfo.xcprivacy in Resources */,
+				701C89FDF7F64C809EB089B4 /* GoogleService-Info.plist in Resources */,
+				E97550869FCC2FA7A2A924D4 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,7 +247,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		43D45C1B4E74E654104C1355 /* [Expo] Configure project */ = {
+		37E3C47E878F04201EF379AC /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -271,7 +271,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Hymnal/expo-configure-project.sh\"\n";
 		};
-		5371688AFFBCADCD134EC773 /* [CP-User] [RNFB] Core Configuration */ = {
+		6989D1BDBF71A3214BAB7489 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -390,7 +390,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Hymnal/Pods-Hymnal-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A237E540769D927293EF4151 /* [CP] Embed Pods Frameworks */ = {
+		E2A94BA748BA7B534CF58F5A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -420,7 +420,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				7AF8A6CD421848E12276128F /* ExpoModulesProvider.swift in Sources */,
+				C8C59DA3619DD7F6AB2FCE22 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,7 +429,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AB35E107072E8E75D9497781 /* Pods-Hymnal.debug.xcconfig */;
+			baseConfigurationReference = 4F981FFFD7D088F2EA691BCC /* Pods-Hymnal.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -466,7 +466,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 35ACC119E0016CC1D659AE57 /* Pods-Hymnal.release.xcconfig */;
+			baseConfigurationReference = 2C2D07490C565D2A96E91390 /* Pods-Hymnal.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

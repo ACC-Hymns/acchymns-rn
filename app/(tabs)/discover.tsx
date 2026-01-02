@@ -29,7 +29,7 @@ import { useFocusEffect } from '@react-navigation/native';
 export default function DiscoverScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
 
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
@@ -58,6 +58,8 @@ export default function DiscoverScreen() {
                 let songList: SongSearchInfo[] = [];
                 for (const id in context.BOOK_DATA) {
                     const songData = await getSongData(id);
+                    if(!songData)
+                        return;
                     Object.keys(songData).forEach((key: string) => {
                         const song: Song = songData[key];
                         const book: BookSummary = context.BOOK_DATA[id];
@@ -200,7 +202,6 @@ export default function DiscoverScreen() {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: Colors[theme].background }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={{ flex: 1 }}>

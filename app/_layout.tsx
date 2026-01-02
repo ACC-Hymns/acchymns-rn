@@ -89,7 +89,7 @@ export default function RootLayout() {
                 ? null // system default
                 : themeOverride;
 
-        Appearance.setColorScheme(appliedTheme as 'light' | 'dark' | null);
+        Appearance.setColorScheme(appliedTheme as any);
     }, [themeOverride]);
 
     // save preferences to async storage
@@ -295,25 +295,6 @@ export default function RootLayout() {
                                                     }
                                                 }
                                             ],
-                                            headerShadowVisible: false,
-                                            presentation: 'modal',
-                                        }}
-                                    />
-                                    <Stack.Screen
-                                        name="auth"
-                                        options={{
-                                            headerShown: true,
-                                            headerTitle: "",
-                                            headerBackTitle: i18n.t('back'),
-                                            headerStyle: {
-                                                backgroundColor: Colors[theme].background,
-                                            },
-                                            headerLeft: () => (
-                                                <TouchableOpacity onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
-                                                    <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                                                    <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
-                                                </TouchableOpacity>
-                                            ),
                                             headerShadowVisible: false,
                                             presentation: 'modal',
                                         }}

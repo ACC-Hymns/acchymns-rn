@@ -16,7 +16,7 @@ import StyledText from '@/components/StyledText';
 export default function HelpScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
     const router = useRouter();
     const context = useContext(HymnalContext);
     const navigation = useNavigation();

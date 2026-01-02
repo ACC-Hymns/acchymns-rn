@@ -25,7 +25,7 @@ import { Icon, SearchBar } from '@rneui/themed';
 export default function BookmarkScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme);
+    const styles = makeStyles(theme as any);
 
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);

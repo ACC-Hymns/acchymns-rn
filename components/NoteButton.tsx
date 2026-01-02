@@ -3,7 +3,7 @@ import { TouchableOpacity, useColorScheme, Image, View } from "react-native";
 import { Asset } from "expo-asset";
 import { Clef, getNotePng, Note } from "@/constants/assets";
 import { Colors } from "@/constants/Colors";
-import { IconSymbol } from "./ui/IconSymbol";
+import { Ionicons } from "@expo/vector-icons";
 
 const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: () => void }) => {
 	const [imageUri, setImageUri] = useState<string | null>(null);
@@ -38,8 +38,8 @@ const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: 
 				justifyContent: 'center',
 				alignItems: 'center',
 			}}>
-			<IconSymbol
-				name={'music.quarternote.3'}
+			<Ionicons
+				name={'musical-notes'}
 				size={32}
 				color={theme === 'dark' ? Colors.dark.text : Colors.light.text}
 			/>
