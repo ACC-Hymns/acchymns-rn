@@ -11,20 +11,26 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		701C89FDF7F64C809EB089B4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AE76EEF1046B44B3A24F03AA /* GoogleService-Info.plist */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		BEF5A241F1CC4471A9003461 /* latoregular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0ADC3E6F61E7476C8214C396 /* latoregular.ttf */; };
 		C8C59DA3619DD7F6AB2FCE22 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD25E6F13919356491744A9D /* ExpoModulesProvider.swift */; };
 		CA202F3194C6C2047E83BDF9 /* Pods_Hymnal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBBD455CF71C88CA78535F6E /* Pods_Hymnal.framework */; };
+		E92C9D12679C450590B3B17F /* latoblack.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ACB120595F0246828B0C60C9 /* latoblack.ttf */; };
 		E97550869FCC2FA7A2A924D4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1D025651318E55E6339C05E /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F7D8AA1381A0408DB48DA85E /* latobold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 36C2A39A36B74DEF94EEE47A /* latobold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0ADC3E6F61E7476C8214C396 /* latoregular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = latoregular.ttf; path = ../assets/fonts/latoregular.ttf; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Hymnal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Hymnal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Hymnal/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Hymnal/Info.plist; sourceTree = "<group>"; };
 		2C2D07490C565D2A96E91390 /* Pods-Hymnal.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.release.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.release.xcconfig"; sourceTree = "<group>"; };
+		36C2A39A36B74DEF94EEE47A /* latobold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = latobold.ttf; path = ../assets/fonts/latobold.ttf; sourceTree = "<group>"; };
 		4F981FFFD7D088F2EA691BCC /* Pods-Hymnal.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Hymnal.debug.xcconfig"; path = "Target Support Files/Pods-Hymnal/Pods-Hymnal.debug.xcconfig"; sourceTree = "<group>"; };
 		A1D025651318E55E6339C05E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Hymnal/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Hymnal/SplashScreen.storyboard; sourceTree = "<group>"; };
+		ACB120595F0246828B0C60C9 /* latoblack.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = latoblack.ttf; path = ../assets/fonts/latoblack.ttf; sourceTree = "<group>"; };
 		AE76EEF1046B44B3A24F03AA /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Hymnal/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BBBD455CF71C88CA78535F6E /* Pods_Hymnal.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Hymnal.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -96,6 +102,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				6C6BF3DCAFBAD165CA24F046 /* Pods */,
 				F53F8BDC979E6D502919AC83 /* ExpoModulesProviders */,
+				91DEC2B2DB6C45F890E82230 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -108,6 +115,17 @@
 				13B07F961A680F5B00A75B9A /* Hymnal.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		91DEC2B2DB6C45F890E82230 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				0ADC3E6F61E7476C8214C396 /* latoregular.ttf */,
+				ACB120595F0246828B0C60C9 /* latoblack.ttf */,
+				36C2A39A36B74DEF94EEE47A /* latobold.ttf */,
+			);
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -202,6 +220,9 @@
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				701C89FDF7F64C809EB089B4 /* GoogleService-Info.plist in Resources */,
 				E97550869FCC2FA7A2A924D4 /* PrivacyInfo.xcprivacy in Resources */,
+				BEF5A241F1CC4471A9003461 /* latoregular.ttf in Resources */,
+				E92C9D12679C450590B3B17F /* latoblack.ttf in Resources */,
+				F7D8AA1381A0408DB48DA85E /* latobold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

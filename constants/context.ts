@@ -6,17 +6,17 @@ interface HymnalContextType {
     SET_BOOK_DATA: (bookData: Record<string, BookSummary>) => void;
 
     discoverPageVisited: boolean | null;
-    setDiscoverPageVisited: (discoverPageVisited: boolean) => void;
+    setDiscoverPageVisited: (discoverPageVisited: boolean | null) => void;
     legacyNumberGrouping: boolean | null;
-    setLegacyNumberGrouping: (legacyNumberGrouping: boolean) => void;
+    setLegacyNumberGrouping: (legacyNumberGrouping: boolean | null) => void;
     languageOverride: string | null;
-    setLanguageOverride: (languageOverride: string) => void;
+    setLanguageOverride: (languageOverride: string | null) => void;
     themeOverride: string | null;
-    setThemeOverride: (themeOverride: string) => void;
+    setThemeOverride: (themeOverride: string | null) => void;
     invertSheetMusic: boolean | null;
-    setInvertSheetMusic: (invertSheetMusic: boolean) => void;
+    setInvertSheetMusic: (invertSheetMusic: boolean | null) => void;
     postHogOptedIn: boolean | null;
-    setPostHogOptedIn: (postHogOptedIn: boolean) => void;
+    setPostHogOptedIn: (postHogOptedIn: boolean | null) => void;
     broadcastingToken: string | null;
     setBroadcastingToken: (token: string | null) => void;
     broadcastingChurch: string | null;
@@ -26,6 +26,7 @@ interface HymnalContextType {
     openDetailsBottomSheet?: () => void;
     setSortMode?: (mode: SortMode) => void;
     deleteHymnal?: (book: string) => Promise<void>;
+    resetPreferences: () => Promise<void>;
 
     downloadProgressValues: Record<string, number>;
     setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>

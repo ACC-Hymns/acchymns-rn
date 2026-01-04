@@ -64,7 +64,40 @@
           }
         }
       ],
-      "expo-font",
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/latoregular.ttf", "./assets/fonts/latoblack.ttf", "./assets/fonts/latobold.ttf"],
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Lato",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/latoregular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/latoblack.ttf",
+                    "weight": 900
+                  },
+                  {
+                    "path": "./assets/fonts/latobold.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/latobold.ttf",
+                    "weight": 500
+                  }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": ["./assets/fonts/latoregular.ttf", "./assets/fonts/latoblack.ttf", "./assets/fonts/latobold.ttf"]
+          }
+        }
+      ],
       [
         "expo-image-picker",
         {

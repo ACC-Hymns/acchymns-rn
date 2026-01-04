@@ -88,6 +88,12 @@ android {
         }
     }
       
+    configurations {
+        all {
+            exclude group: "com.caverock", module: "androidsvg"
+        }
+    }
+      
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -159,6 +165,13 @@ android {
 }
 
 dependencies {
+        // FIX: Duplicate classes from Glide (added by custom config plugin)
+        configurations.all {
+            exclude group: 'com.github.bumptech.glide', module: 'glide'
+            exclude group: 'com.github.bumptech.glide', module: 'compiler'
+            exclude group: 'com.github.bumptech.glide', module: 'okhttp3-integration'
+        }
+      
         // FIX: Duplicate classes from Glide (added by custom config plugin)
         configurations.all {
             exclude group: 'com.github.bumptech.glide', module: 'glide'

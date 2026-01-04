@@ -181,8 +181,12 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
 async function removeHymnal(book: string) {
     const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
     if (hymnalFolder.exists) {
-        hymnalFolder.delete();
-        console.log(`Deleted ${book} hymnal folder.`);
+        try {
+            hymnalFolder.delete();
+            console.log(`Deleted ${book} hymnal folder.`);
+        } catch(e) {
+            console.log(e);
+        }
     } else {
         console.log(`Hymnal folder for ${book} does not exist.`);
     }

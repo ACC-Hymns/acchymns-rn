@@ -26,7 +26,8 @@ export default function HomeLayout() {
                     headerShadowVisible: false,
                     headerStyle: {
                         backgroundColor: Colors[theme].background,
-                    }
+                    },
+                    headerTintColor: Colors[theme].tint,
                 }}
             />
         </Stack>

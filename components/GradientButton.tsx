@@ -22,17 +22,14 @@ const GradientButton: React.FC<GradientButtonProps> = ({
     const [pressStart, setPressStart] = React.useState<number | null>(null);
 
     return (
-            <Pressable
+            <TouchableOpacity
                 onPress={() => {
                     // check press duration
                     onPress?.();
+                    console.log("ORESS")
                 }}
 
-                style={({ pressed }) => [
-                    styles.buttonContainer,
-                    pressed && { opacity: 0.7 },
-                ]}
-                    
+                style={styles.buttonContainer}
                 >
                 <LinearGradient
                     colors={[primaryColor, secondaryColor]}
@@ -42,7 +39,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
                 >
                     <StyledText style={styles.buttonText}>{title}</StyledText>
                 </LinearGradient>
-        </Pressable>
+        </TouchableOpacity>
     );
 };
 
@@ -63,7 +60,8 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#fff',
         fontSize: 23,
-        fontWeight: 'bold',
+        fontFamily: 'Lato',
+        fontWeight: 700,
     },
 });
 

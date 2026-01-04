@@ -94,7 +94,6 @@ export function SearchHistoryItem({ item, onPress, onGestureStart, onGestureEnd,
                         flex: 1,
                         transform: [{ translateX: translateX }],
                     }}
-                    {...panResponder.panHandlers}
                 >
                     <Pressable
                         style={styles.searchHistoryItem}

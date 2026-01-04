@@ -243,7 +243,7 @@ PODS:
     - ExpoModulesCore
   - ExpoHaptics (15.0.8):
     - ExpoModulesCore
-  - ExpoHead (6.0.17):
+  - ExpoHead (6.0.21):
     - ExpoModulesCore
     - RNScreens
   - ExpoImage (3.0.11):
@@ -432,6 +432,28 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
+  - LiquidGlass (0.7.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - PromisesObjC (2.4.0)
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
@@ -1796,6 +1818,51 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-keyboard-controller (1.18.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - react-native-keyboard-controller/common (= 1.18.5)
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - react-native-keyboard-controller/common (1.18.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-menu (2.0.0):
     - hermes-engine
     - RCTRequired
@@ -2025,7 +2092,7 @@ PODS:
     - ReactNativeDependencies
     - SwiftAudioEx (= 1.1.0)
     - Yoga
-  - react-native-webview (13.15.0):
+  - react-native-webview (13.16.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2426,34 +2493,6 @@ PODS:
     - Yoga
   - RNDefaultPreference (1.4.4):
     - React-Core
-  - RNFastImage (8.13.0):
-    - hermes-engine
-    - libavif/core (~> 0.11.1)
-    - libavif/libdav1d (~> 0.11.1)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - SDWebImage (>= 5.19.1)
-    - SDWebImageAVIFCoder (~> 0.11.0)
-    - SDWebImageSVGCoder (~> 1.7.0)
-    - SDWebImageWebPCoder (~> 0.14)
-    - Yoga
   - RNFBApp (22.4.0):
     - Firebase/CoreOnly (= 11.15.0)
     - React-Core
@@ -2581,7 +2620,7 @@ PODS:
     - ReactNativeDependencies
     - RNWorklets
     - Yoga
-  - RNScreens (4.19.0-nightly-20251207-910978b9a):
+  - RNScreens (4.19.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2603,9 +2642,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNScreens/common (= 4.19.0-nightly-20251207-910978b9a)
+    - RNScreens/common (= 4.19.0)
     - Yoga
-  - RNScreens/common (4.19.0-nightly-20251207-910978b9a):
+  - RNScreens/common (4.19.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2822,6 +2861,7 @@ DEPENDENCIES:
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - "LiquidGlass (from `../node_modules/@callstack/liquid-glass`)"
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2861,6 +2901,7 @@ DEPENDENCIES:
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-ios-context-menu (from `../node_modules/react-native-ios-context-menu`)
   - react-native-ios-utilities (from `../node_modules/react-native-ios-utilities`)
+  - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
   - "react-native-menu (from `../node_modules/@react-native-menu/menu`)"
   - react-native-pdf (from `../node_modules/react-native-pdf`)
   - react-native-pdf-to-image (from `../node_modules/react-native-pdf-to-image`)
@@ -2905,7 +2946,6 @@ DEPENDENCIES:
   - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNDefaultPreference (from `../node_modules/react-native-default-preference`)
-  - "RNFastImage (from `../node_modules/@d11/react-native-fast-image`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -3031,6 +3071,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  LiquidGlass:
+    :path: "../node_modules/@callstack/liquid-glass"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -3107,6 +3149,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-ios-context-menu"
   react-native-ios-utilities:
     :path: "../node_modules/react-native-ios-utilities"
+  react-native-keyboard-controller:
+    :path: "../node_modules/react-native-keyboard-controller"
   react-native-menu:
     :path: "../node_modules/@react-native-menu/menu"
   react-native-pdf:
@@ -3195,8 +3239,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNDefaultPreference:
     :path: "../node_modules/react-native-default-preference"
-  RNFastImage:
-    :path: "../node_modules/@d11/react-native-fast-image"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBAuth:
@@ -3244,7 +3286,7 @@ SPEC CHECKSUMS:
   ExpoFileSystem: 8551b04526dab27aba9ee54f3393ea7d6f369d9f
   ExpoFont: 26bbea90749b8dd0b69effc9fab54248e684f290
   ExpoHaptics: 7240781406f4563c3f4eb1e72864302a8c643fd0
-  ExpoHead: d0f3333dd99b08a905fbe504ad4beea2f39c510f
+  ExpoHead: ae2be3269d8f55b0a8df5324b429d9fb552927dc
   ExpoImage: f6bcd30bb98d4c484869668fbc32834bb3ee5bfb
   ExpoImagePicker: 04328b6b72a995ee74679558a6aa2e7f3a304f6f
   ExpoKeepAwake: 44bf6715bc1d2ddb17afe19d927cd039cda123f0
@@ -3279,6 +3321,7 @@ SPEC CHECKSUMS:
   libavif: 84bbb62fb232c3018d6f1bab79beea87e35de7b7
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
+  LiquidGlass: 9cbfb5fd457e428b21338cfb71bab1e87ccb4999
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
@@ -3319,6 +3362,7 @@ SPEC CHECKSUMS:
   react-native-get-random-values: 21325b2244dfa6b58878f51f9aa42821e7ba3d06
   react-native-ios-context-menu: bcab178088df0e352a7f5d3da7eff7969c4758ba
   react-native-ios-utilities: 3d24e438e3fcb9146a3c8fe073aaf85f5bc4f182
+  react-native-keyboard-controller: 50c058df298f1b5e2516461f28f8179be7181f13
   react-native-menu: e3c39be6f65dc5cd126787a8406083530c29c362
   react-native-pdf: aa9b784515413fe09033b34d43018cfef0c98f7a
   react-native-pdf-to-image: 66ff95ee8559a4d545799f00f7a780013cf23947
@@ -3327,7 +3371,7 @@ SPEC CHECKSUMS:
   react-native-skia: e01348eda1ec40a446169f41872a5af0d860c446
   react-native-slider: 2a1b5af6825e0c861dede0cb214ca3bc168b2940
   react-native-track-player: 431b59e7d0e1cca91d3232af96c2703c12efd804
-  react-native-webview: 3ee6a5ae7a88511f8b4e9d62dcf91a2fc586afc3
+  react-native-webview: e90afced564d2c18c2d814f9e8d3d922fe11cfd7
   React-NativeModulesApple: 1664340b8750d64e0ef3907c5e53d9481f74bcbd
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
   React-perflogger: b1af3cfb3f095f819b2814910000392a8e17ba9f
@@ -3364,13 +3408,12 @@ SPEC CHECKSUMS:
   RNAppleAuthentication: c088adfc7b371d44eb3da20c38d450d5543e5a0a
   RNCAsyncStorage: 0574155b95b96b89a51717c4dd42fb6057926bbc
   RNDefaultPreference: 08bdb06cfa9188d5da97d4642dac745218d7fb31
-  RNFastImage: fa037b847a06a7119ea5c7af2a742dcec69fbc8e
   RNFBApp: d15dab17b5639fb7f95712d07c204912a534b8c6
   RNFBAuth: d671a6c27eac871a90c7fbc000e5236b070af055
   RNGestureHandler: c971f0a10fdffe00dfb4c142e87f34cdcd704376
   RNGoogleSignin: 62b03ff6453c9f59b18ad25aa6f1829ac2bbe20c
   RNReanimated: f6923d4159aab5c12a6fa54e468aee947c70750d
-  RNScreens: 1ef7413fb306ecd71d73ad353f3d9acc7048791b
+  RNScreens: cb48db0cd3e4590e68620ee24c99c097213ef4ee
   RNSVG: 88b3b3e9e675fa4a2e14405c4c7f886ea8c82e06
   RNVectorIcons: 63e011d60ff13ccece9646df93ba53f753954987
   RNWorklets: 83609071441ac7d623f1e0e63b9043f4f345e2a2

@@ -77,6 +77,12 @@
     </array>
     <key>RCTNewArchEnabled</key>
     <true/>
+    <key>UIAppFonts</key>
+    <array>
+      <string>latoregular.ttf</string>
+      <string>latoblack.ttf</string>
+      <string>latobold.ttf</string>
+    </array>
     <key>UIBackgroundModes</key>
     <array>
       <string>audio</string>

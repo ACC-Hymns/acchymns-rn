@@ -33,6 +33,7 @@ const GenericGradientButton: React.FC<GenericGradientButtonProps> = ({
                 }}
                 onLongPress={onLongPress}
                 style={[style, styles.buttonContainer]}
+                activeOpacity={0.7}
             >
                 <LinearGradient
                     colors={[primaryColor, secondaryColor]}
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#fff',
         fontSize: 23,
-        fontWeight: 'bold',
+        fontWeight: '700',
     },
 });
 

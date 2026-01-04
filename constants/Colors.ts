@@ -7,7 +7,7 @@
 
 const tintColorLight = '#000';
 const tintColorDark = '#fff';
-export const Colors: any  = {
+export const Colors  = {
   light: {
     text: '#000000',
     fadedText: '#8A9199', // More faded text color
@@ -18,6 +18,7 @@ export const Colors: any  = {
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
     primary: '#007AFF',
+    primaryFaded: '#adc6ff',
     headerBackground: '#f8f8f8',
     headerTransparent: 'rgba(255, 255, 255, 0.0)',
     searchBarBackground: '#E3E3E9',
@@ -41,6 +42,7 @@ export const Colors: any  = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     primary: '#007AFF',
+    primaryFaded: '#2b4678',
     headerTransparent: 'rgba(255, 255, 255, 0.0)',
     headerBackground: '#1c1e1d',
     searchBarBackground: '#1C1C1E',

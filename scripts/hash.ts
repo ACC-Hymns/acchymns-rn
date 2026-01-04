@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system/next';
 import { sha1 } from 'js-sha1';
 import * as Crypto from 'expo-crypto';
+import { Platform } from 'react-native';
 
 /**
  * Recursively get all file URIs in a folder.
@@ -52,8 +53,8 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
     const fileUris = await getAllFiles(folderUri);
     
     // load .signature file
-    const signatureFileUri = folderUri + '/signature_v2.txt';
-    const signatureFile = new File(signatureFileUri);
+    const signatureFile = new File(folderUri, Platform.OS === 'ios' ? 'signature_v2.txt' : '.signature_v2');
+    console.log(signatureFile.contentUri);
 
     if(!signatureFile.exists) {
         console.log('Signature file not found');
