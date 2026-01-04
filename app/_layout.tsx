@@ -1,11 +1,12 @@
 import { DarkTheme, DefaultTheme, ThemeProvider, useRoute, RouteProp, NavigationContainer } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import { getLoadedFonts, isLoaded, useFonts } from 'expo-font';
 import { Link, router, Stack, useNavigation } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'react-native-reanimated';
-import {setBackgroundColorAsync} from 'expo-system-ui';
+import { KeyboardProvider } from 'react-native-keyboard-controller'
+import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
@@ -16,10 +17,8 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
 import { PostHogProvider } from 'posthog-react-native'
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { Buffer } from 'buffer';
@@ -33,6 +32,7 @@ import { ensurePlayerSetup } from '@/scripts/track_player_setup';
 import { validate_token } from '@/scripts/broadcast';
 import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { HeaderButton } from '@react-navigation/elements';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -48,25 +48,51 @@ SplashScreen.setOptions({
     fade: true,
 });
 
+// Create QueryClient singleton to avoid recreating on every render
+// Configure with iOS-friendly settings
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: 3,
+            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            refetchOnWindowFocus: false,
+            refetchOnMount: true,
+            refetchOnReconnect: true,
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+        },
+    },
+});
+
 export default function RootLayout() {
     const colorScheme = useColorScheme();
     const theme = colorScheme ?? 'light';
-    setBackgroundColorAsync(Colors[theme].background);
     const [appIsReady, setAppIsReady] = useState(false);
-    const [loaded] = useFonts({
-        Regular: require('@/assets/fonts/Lato-Regular.ttf'),
-        Bold: require('@/assets/fonts/Lato-Bold.ttf'),
-        Italic: require('@/assets/fonts/Lato-Italic.ttf'),
-        Light: require('@/assets/fonts/Lato-Light.ttf'),
-        LightItalic: require('@/assets/fonts/Lato-LightItalic.ttf'),
-        Black: require('@/assets/fonts/Lato-Black.ttf'),
-        BlackItalic: require('@/assets/fonts/Lato-BlackItalic.ttf'),
+    const [loaded, error] = useFonts({
+        LatoRegular: require('@/assets/fonts/latoregular.ttf'),
+        LatoBold: require('@/assets/fonts/latobold.ttf'),
+        LatoItalic: require('@/assets/fonts/latoitalic.ttf'),
+        LatoLight: require('@/assets/fonts/latolight.ttf'),
+        LatoLightItalic: require('@/assets/fonts/latolightitalic.ttf'),
+        LatoBlack: require('@/assets/fonts/latoblack.ttf'),
+        LatoBlackItalic: require('@/assets/fonts/latoblackitalic.ttf'),
     });
 
-    Appearance.addChangeListener(async (e) => {
-        await setBackgroundColorAsync(Colors[e.colorScheme ?? 'light'].background);
-        console.log('root color is now: ' + Colors[e.colorScheme ?? 'light'].background);
-    })
+    // Set background color on mount and theme change
+    useEffect(() => {
+        setBackgroundColorAsync(Colors[theme].background);
+    }, [theme]);
+
+    // Add Appearance listener with proper cleanup
+    useEffect(() => {
+        const subscription = Appearance.addChangeListener(async (e) => {
+            await setBackgroundColorAsync(Colors[e.colorScheme ?? 'light'].background);
+        });
+        
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
 
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
@@ -83,6 +109,64 @@ export default function RootLayout() {
     const [broadcastingToken, setBroadcastingToken] = useState<string | null>(null);
     const [broadcastingChurch, setBroadcastingChurch] = useState<string | null>(null);
 
+    const savePreferences = async () => {
+        try {
+            if (discoverPageVisited !== null)
+                await AsyncStorage.setItem('discoverPageVisited', discoverPageVisited.toString());
+
+            if (legacyNumberGrouping !== null)
+                await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
+
+            if (languageOverride !== null)
+                await AsyncStorage.setItem('languageOverride', languageOverride);
+
+            if (postHogOptedIn !== null)
+                await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
+
+            if (themeOverride !== null)
+                await AsyncStorage.setItem('themeOverride', themeOverride);
+
+            if (invertSheetMusic !== null)
+                await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
+
+            if (broadcastingToken !== null)
+                await AsyncStorage.setItem('broadcastingToken', broadcastingToken);
+
+            if (broadcastingChurch !== null)
+                await AsyncStorage.setItem('broadcastingChurch', broadcastingChurch);
+
+            console.log('Saved preferences.');
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        }
+    }
+
+    const resetPreferences = async () => {
+        try {
+            await AsyncStorage.setItem('discoverPageVisited', "");
+            await AsyncStorage.setItem('legacyNumberGrouping', "");
+            await AsyncStorage.setItem('languageOverride', "");
+            await AsyncStorage.setItem('postHogOptedIn', "");
+            await AsyncStorage.setItem('themeOverride', "");
+            await AsyncStorage.setItem('invertSheetMusic', "");
+            await AsyncStorage.setItem('broadcastingToken', "");
+            await AsyncStorage.setItem('broadcastingChurch', "");
+
+            setDiscoverPageVisited(null);
+            setLegacyNumberGrouping(null);
+            setLanguageOverride(null);
+            setPostHogOptedIn(null);
+            setThemeOverride(null);
+            setInvertSheetMusic(null);
+            setBroadcastingToken(null);
+            setBroadcastingChurch(null);
+
+            console.log('Saved preferences.');
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+        }
+    }
+
     useEffect(() => {
         const appliedTheme =
             themeOverride === 'system' || themeOverride === null
@@ -97,37 +181,7 @@ export default function RootLayout() {
 
 
         console.log('Saving preferences...');
-        const savePreferences = async () => {
-            try {
-                if (discoverPageVisited !== null)
-                    await AsyncStorage.setItem('discoverPageVisited', discoverPageVisited.toString());
 
-                if (legacyNumberGrouping !== null)
-                    await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
-
-                if (languageOverride !== null)
-                    await AsyncStorage.setItem('languageOverride', languageOverride);
-
-                if (postHogOptedIn !== null)
-                    await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
-
-                if (themeOverride !== null)
-                    await AsyncStorage.setItem('themeOverride', themeOverride);
-
-                if (invertSheetMusic !== null)
-                    await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
-
-                if (broadcastingToken !== null)
-                    await AsyncStorage.setItem('broadcastingToken', broadcastingToken);
-
-                if (broadcastingChurch !== null)
-                    await AsyncStorage.setItem('broadcastingChurch', broadcastingChurch);
-
-                console.log('Saved preferences.');
-            } catch (error) {
-                console.error('Error saving preferences:', error);
-            }
-        }
         savePreferences();
     }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic, discoverPageVisited, broadcastingToken, broadcastingChurch]);
 
@@ -159,14 +213,13 @@ export default function RootLayout() {
             broadcastingToken,
             setBroadcastingToken,
             broadcastingChurch,
-            setBroadcastingChurch
+            setBroadcastingChurch,
+            resetPreferences
         };
     }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited, broadcastingToken, setBroadcastingToken, broadcastingChurch, setBroadcastingChurch]);
-    // Load hymnal data
-
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    
+    // Use shared I18n hook
+    const i18n = useI18n();
 
     function handleAuthStateChanged(user: FirebaseAuthTypes.User | null) {
         setUser(user);
@@ -174,47 +227,66 @@ export default function RootLayout() {
 
 
     useEffect(() => {
-        onAuthStateChanged(getAuth(), handleAuthStateChanged);
+        const unsubscribe = onAuthStateChanged(getAuth(), handleAuthStateChanged);
 
-        // load preferences from async storage
-        AsyncStorage.getItem('discoverPageVisited').then(async (value) => {
-            if (value !== null)
-                setDiscoverPageVisited(value === 'true');
-        });
-        AsyncStorage.getItem('legacyNumberGrouping').then(async (value) => {
-            if (value !== null)
-                setLegacyNumberGrouping(value === 'true');
-        });
-        AsyncStorage.getItem('languageOverride').then((value) => {
-            if (value !== null)
-                setLanguageOverride(value);
-        });
-        AsyncStorage.getItem('postHogOptedIn').then((value) => {
-            if (value !== null)
-                setPostHogOptedIn(value === 'true');
-        });
-        AsyncStorage.getItem('themeOverride').then((value) => {
-            if (value !== null)
-                setThemeOverride(value);
-        });
-        AsyncStorage.getItem('invertSheetMusic').then(async (value) => {
-            if (value !== null)
-                setInvertSheetMusic(value === 'true');
-        });
-        AsyncStorage.getItem('broadcastingToken').then(async (value) => {
-            if (value !== null) {
-                let response = await validate_token(value);
-                if (response.status == 200) {
-                    setBroadcastingToken(value);
-                } else {
-                    setBroadcastingToken(null);
+        // Load preferences from async storage - batch operations
+        const loadPreferences = async () => {
+            try {
+                const [
+                    discoverPageVisited,
+                    legacyNumberGrouping,
+                    languageOverride,
+                    postHogOptedIn,
+                    themeOverride,
+                    invertSheetMusic,
+                    broadcastingToken,
+                    broadcastingChurch
+                ] = await Promise.all([
+                    AsyncStorage.getItem('discoverPageVisited'),
+                    AsyncStorage.getItem('legacyNumberGrouping'),
+                    AsyncStorage.getItem('languageOverride'),
+                    AsyncStorage.getItem('postHogOptedIn'),
+                    AsyncStorage.getItem('themeOverride'),
+                    AsyncStorage.getItem('invertSheetMusic'),
+                    AsyncStorage.getItem('broadcastingToken'),
+                    AsyncStorage.getItem('broadcastingChurch')
+                ]);
+
+                if (discoverPageVisited !== null)
+                    setDiscoverPageVisited(discoverPageVisited === 'true');
+                if (legacyNumberGrouping !== null)
+                    setLegacyNumberGrouping(legacyNumberGrouping === 'true');
+                if (languageOverride !== null)
+                    setLanguageOverride(languageOverride);
+                if (postHogOptedIn !== null)
+                    setPostHogOptedIn(postHogOptedIn === 'true');
+                if (themeOverride !== null)
+                    setThemeOverride(themeOverride);
+                if (invertSheetMusic !== null)
+                    setInvertSheetMusic(invertSheetMusic === 'true');
+                if (broadcastingChurch !== null)
+                    setBroadcastingChurch(broadcastingChurch);
+                
+                // Validate broadcasting token
+                if (broadcastingToken !== null) {
+                    try {
+                        const response = await validate_token(broadcastingToken);
+                        if (response.status == 200) {
+                            setBroadcastingToken(broadcastingToken);
+                        } else {
+                            setBroadcastingToken(null);
+                        }
+                    } catch (error) {
+                        console.error('Error validating token:', error);
+                        setBroadcastingToken(null);
+                    }
                 }
+            } catch (error) {
+                console.error('Error loading preferences:', error);
             }
-        });
-        AsyncStorage.getItem('broadcastingChurch').then(async (value) => {
-            if (value !== null)
-                setBroadcastingChurch(value);
-        });
+        };
+
+        loadPreferences();
 
         // register TrackPlayer
         TrackPlayer.registerPlaybackService(() => PlaybackService);
@@ -245,12 +317,22 @@ export default function RootLayout() {
         data.then((data) => {
             SET_BOOK_DATA(data);
             if (loaded) {
+                console.log("attmpted to load fonts...");
+                if (error)
+                    console.log(error);
+
+                console.log(getLoadedFonts())
                 setAppIsReady(true);
             }
         }).catch((error) => {
             console.error("Error loading hymnals:", error);
         });
-    }, [loaded]);
+
+        return () => {
+            unsubscribe();
+        };
+    }, [loaded, SET_BOOK_DATA]);
+
 
 
     if (!appIsReady) {
@@ -265,44 +347,47 @@ export default function RootLayout() {
     return (
         <PostHogProvider apiKey={POSTHOG_API_KEY} options={{
             host: "https://us.i.posthog.com",
-        }} autocapture={{captureScreens: false}}>
+        }} autocapture={{ captureScreens: false }}>
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                     <HymnalContext.Provider value={context}>
-                        <QueryClientProvider client={new QueryClient()}>
-                            <BottomSheetModalProvider>
-                                <Stack screenOptions={{ headerTitleAlign: 'center', headerShown: false}}>
-                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                    <Stack.Screen
-                                        name="hymnal_importer"
-                                        options={{
-                                            headerShown: true,
-                                            headerTitle: i18n.t('addHymnal'),
-                                            headerStyle: {
-                                                backgroundColor: Colors[theme].background,
-                                            },
-                                            unstable_headerLeftItems: () => [
-                                                {
-                                                    type: 'button',
-                                                    label: 'Back',
-                                                    icon: {
-                                                        type: 'sfSymbol',
-                                                        name: 'chevron.left'
-                                                    },
-                                                    tintColor: Colors[theme].icon,
-                                                    onPress: () => {
-                                                        router.back();
+                        <QueryClientProvider client={queryClient}>
+                            <KeyboardProvider>
+                                <BottomSheetModalProvider>
+                                    <Stack screenOptions={{ headerTitleAlign: 'center', headerShown: false }}>
+                                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                        <Stack.Screen
+                                            name="hymnal_importer"
+                                            options={{
+                                                headerShown: true,
+                                                headerTitle: i18n.t('addHymnal'),
+                                                headerTintColor: Colors[theme].tint,
+                                                headerStyle: {
+                                                    backgroundColor: Colors[theme].background,
+                                                },
+                                                unstable_headerLeftItems: () => [
+                                                    {
+                                                        type: 'button',
+                                                        label: 'Back',
+                                                        icon: {
+                                                            type: 'sfSymbol',
+                                                            name: 'chevron.left'
+                                                        },
+                                                        tintColor: Colors[theme].icon,
+                                                        onPress: () => {
+                                                            router.back();
+                                                        }
                                                     }
-                                                }
-                                            ],
-                                            headerShadowVisible: false,
-                                            presentation: 'modal',
-                                        }}
-                                    />
-                                    <Stack.Screen name="+not-found" />
-                                </Stack>
-                                <StatusBar style="auto" />
-                            </BottomSheetModalProvider>
+                                                ],
+                                                headerShadowVisible: false,
+                                                presentation: 'modal',
+                                            }}
+                                        />
+                                        <Stack.Screen name="+not-found" />
+                                    </Stack>
+                                    <StatusBar style="auto" />
+                                </BottomSheetModalProvider>
+                            </KeyboardProvider>
                         </QueryClientProvider>
                     </HymnalContext.Provider>
                 </ThemeProvider>

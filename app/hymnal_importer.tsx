@@ -8,14 +8,12 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import { downloadHymnal, loadHymnals } from '@/scripts/hymnals';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import React from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useEffect, useCallback } from 'react';
 import { useContext, useRef, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert } from 'react-native';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
+import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert, AppState } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function HymnalImporter() {
@@ -26,9 +24,7 @@ export default function HymnalImporter() {
     const context = useContext(HymnalContext);
     const posthog = usePostHog()
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const desired_sort = [
         'ZH',
@@ -69,45 +65,113 @@ export default function HymnalImporter() {
             if (bIndex === -1) return -1; // b not found, move to end
             return aIndex - bIndex; // both found, sort by index
         });
+        console.log("data fetched: ");
+        console.log(data);
     }
 
     // fetch github folder structure from api and return the data
     async function fetchHymnals() {
-        const res = await fetch('https://api.acchymns.app/available_hymnals', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        });
+        try {
+            // Add cache control headers for iOS
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
+            const res = await fetch('https://api.acchymns.app/available_hymnals', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                },
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            console.log("WE GOT A RESPONSE", res.status);
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data: BookSummary[] = await res.json();
+            // sort the data based on the desired_sort array
+            sortHymnals(data);
+            return data;
+        } catch (error: any) {
+            console.error('Fetch error:', error);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout');
+            }
+            throw error;
         }
-
-        const data: BookSummary[] = await res.json();
-        // sort the data based on the desired_sort array
-        sortHymnals(data);
-        return data;
     }
 
-    const { data, status, refetch } = useQuery({
+    const [isReady, setIsReady] = useState(false);
+
+    // iOS workaround: Wait for app to be fully active before making network requests
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            // Check if app is already active
+            if (AppState.currentState === 'active') {
+                // Small delay to ensure networking stack is ready
+                const timer = setTimeout(() => {
+                    setIsReady(true);
+                }, 200);
+                return () => clearTimeout(timer);
+            } else {
+                // Wait for app to become active
+                const subscription = AppState.addEventListener('change', (nextAppState) => {
+                    if (nextAppState === 'active') {
+                        setTimeout(() => {
+                            setIsReady(true);
+                        }, 200);
+                    }
+                });
+                return () => subscription.remove();
+            }
+        } else {
+            setIsReady(true);
+        }
+    }, []);
+
+    const { data, status, refetch, isFetching } = useQuery({
         queryKey: ['hymnals'],
         queryFn: fetchHymnals,
-    })
+        enabled: isReady, // Only run when ready (iOS workaround)
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        refetchOnMount: true,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Ensure query runs when screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            if (isReady && status === 'pending' && !isFetching) {
+                // Small delay to ensure iOS networking is ready
+                const timer = setTimeout(() => {
+                    refetch();
+                }, 100);
+                return () => clearTimeout(timer);
+            }
+        }, [isReady, status, isFetching, refetch])
+    );
 
     if (status === 'pending') {
         return (
-            <SafeAreaView style={styles.screenContainer}>
+            <View style={styles.screenContainer}>
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <ActivityIndicator size="large" color={Colors[theme]['text']} />
                 </View>
-            </SafeAreaView>
+            </View>
         )
     }
     if (status === 'error') {
         return (
-            <SafeAreaView style={styles.screenContainer}>
+            <View style={styles.screenContainer}>
 
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <IconSymbol name="network.slash" size={64} color={Colors[theme]['fadedText']} />
@@ -130,13 +194,13 @@ export default function HymnalImporter() {
                         <StyledText style={{ color: 'white', fontSize: 16, fontWeight: '500' }}>{i18n.t('retry')}</StyledText>
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
         )
     }
 
     return (
         <>
-            <SafeAreaView style={styles.screenContainer}>
+            <View style={styles.screenContainer}>
                 {isPresented && (
                     <>
 
@@ -231,7 +295,7 @@ export default function HymnalImporter() {
                         />
                     </>
                 )}
-            </SafeAreaView>
+            </View>
         </>
     );
 }
@@ -284,7 +348,8 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold'
+            fontFamily: 'Lato', 
+            fontWeight: 700
         },
         screenContainer: {
             flex: 1, // Ensures the container takes up the full screen
@@ -307,7 +372,8 @@ function makeStyles(theme: "light" | "dark") {
         },
         textStyle: {
             fontSize: 32,
-            fontWeight: '500',
+            fontFamily: 'Lato', 
+            fontWeight: 500,
             color: Colors[theme]['text'] // Dynamically set text color using useThemeColor
         },
     });

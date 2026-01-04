@@ -11,10 +11,8 @@ import {
 } from 'react-native';
 import StyledText from './StyledText';
 import { IconSymbol } from './ui/IconSymbol';
-import { I18n } from 'i18n-js';
-import { translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
-import { getLocales } from 'expo-localization';
+import { useI18n } from '@/hooks/useI18n';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -27,9 +25,7 @@ export default function ScripturePicker({send}: ScripturePickerProps) {
 
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -334,7 +330,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         tileTextSelected: {
             color: '#fff',
-            fontWeight: 'bold',
+            fontWeight: '700',
         },
         confirmButton: {
             marginVertical: 40,

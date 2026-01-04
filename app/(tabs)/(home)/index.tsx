@@ -10,7 +10,7 @@ import { hashFile, hashFolder } from '@/scripts/hash';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
 import { useNavigation, useRouter } from 'expo-router';
 import { memo, use, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, InteractionManager, Alert, Dimensions, ListRenderItemInfo, Platform } from 'react-native';
+import { Text, View, StyleSheet, FlatList, TouchableOpacity, InteractionManager, Alert, Dimensions, ListRenderItemInfo, Platform, ScrollView } from 'react-native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
 import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
@@ -19,10 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from 'react-native-elements';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { getLocales } from 'expo-localization';
-import { I18n } from 'i18n-js'
 import React from 'react';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 import ReorderableList, {
     ReorderableListReorderEvent,
@@ -32,50 +30,59 @@ import ReorderableList, {
     useReorderableDragEnd,
     useReorderableDragStart,
 } from 'react-native-reorderable-list';
+import type { SortableGridRenderItem } from 'react-native-sortables';
+import Sortable from 'react-native-sortables';
 import { Ionicons } from '@expo/vector-icons';
 import { scheduleOnRN } from 'react-native-worklets';
 
 export default function HomeScreen() {
 
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme as any);
+    const styles = makeStyles(theme);
     const context = useContext(HymnalContext);
     const router = useRouter();
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     // before rendering, check if the user has any books
     // if not, push the user to the hymnal importer
 
+    // 1. Wrap in useCallback to prevent unnecessary re-attachments
+    const deleteHymnal = useCallback(async (bookKey: string) => {
+        console.log(`Deleting ${bookKey}...`);
+
+        try {
+            // Run deletions
+            await removeHymnal(bookKey);
+
+            // Batch state updates:
+            // Update progress and book data simultaneously
+            context?.setDownloadProgressValues((prev) => {
+                const { [bookKey]: _, ...rest } = prev; // Clean way to delete key
+                return rest;
+            });
+
+            // Reload the master list
+            const updatedBooks = await loadHymnals();
+            context?.SET_BOOK_DATA(updatedBooks);
+
+            console.log("Hymnal deleted and state reloaded.");
+        } catch (error) {
+            console.error("Failed to delete hymnal:", error);
+        }
+    }, [context?.setDownloadProgressValues, context?.SET_BOOK_DATA, context?.BOOK_DATA]);
+    // Use specific context functions as deps, not the whole data object
+
     useEffect(() => {
-        if (!context)
-            return;
+        if (!context) return;
 
-        context.deleteHymnal = deleteHymnal;
+        // Only assign if it's actually different
+        if (context.deleteHymnal !== deleteHymnal) {
+            context.deleteHymnal = deleteHymnal;
+        }
 
-        const loadInitialData = async () => {
-            await loadOrder();
-        };
-        loadInitialData();
-
-    }, [context?.BOOK_DATA]);
-
-    async function deleteHymnal(bookKey: string) {
-        // remove hymnal from context
-        await removeHymnal(bookKey);
-
-        // remove progress values
-        context?.setDownloadProgressValues((prev) => {
-            const newValues = { ...prev };
-            delete newValues[bookKey];
-            return newValues;
-        });
-
-        const books = await loadHymnals();
-        context?.SET_BOOK_DATA(books);
-    }
+        loadOrder();
+    }, [deleteHymnal]); // Runs when the function reference changes
 
     const [sortOrder, setSortOrder] = useState<string[]>([]);
     const HYMNAL_SORT_KEY = 'hymnal_sort_order';
@@ -94,17 +101,17 @@ export default function HomeScreen() {
                 let order_data: string[] = JSON.parse(order);
                 order_data = [...new Set(order_data)]
                 console.log("Book order: " + order);
-                if(order_data.some(el => el == null)) {
+                if (order_data.some(el => el == null)) {
                     order_data = Object.keys(context.BOOK_DATA).map((b) => context.BOOK_DATA[b].name.short);
                     await saveOrder(order_data);
                 }
                 let data = [
-                                // First, keys in sortOrder that exist in bookData
-                                ...order_data.filter((key) => context?.BOOK_DATA[key]),
-                                // Then, any keys in bookData not in sortOrder
-                                ...Object.keys(context?.BOOK_DATA).filter((key) => !order_data.includes(key))
-                            ]
-                            console.log(data)
+                    // First, keys in sortOrder that exist in bookData
+                    ...order_data.filter((key) => context?.BOOK_DATA[key]),
+                    // Then, any keys in bookData not in sortOrder
+                    ...Object.keys(context?.BOOK_DATA).filter((key) => !order_data.includes(key))
+                ]
+                console.log(data)
                 setSortOrder(data);
             } else {
                 console.log("bookData is null");
@@ -118,7 +125,7 @@ export default function HomeScreen() {
             await loadOrder();
         };
         loadInitialData();
-    },[]);
+    }, []);
 
     useEffect(() => {
         const save = async () => {
@@ -130,46 +137,70 @@ export default function HomeScreen() {
 
     const HymnalItem: React.FC<{ item: string }> = memo(({ item }) => {
 
-        const drag = useReorderableDrag();
-        const isActive = useIsActive();
-        
         return (
             <View style={{ marginBottom: 15 }}>
-                <Pressable
-                    onPress={() => {
-                        router.push({ pathname: '/(tabs)/(home)/selection/[id]', params: { id: item } });
-                    }}
-                    onLongPress={drag}
-                    disabled={isActive}
-                    style={({ pressed }) => [
-                        {
-                            opacity: (pressed) ? 0.8 : 1,
-                        }
-                    ]}
-                    unstable_pressDelay={0}
-                >
-                    <GradientButton
-                        key={item}
-                        title={context?.BOOK_DATA?.[item].name.medium || ""}
-                        primaryColor={context?.BOOK_DATA?.[item].primaryColor || ""}
-                        secondaryColor={context?.BOOK_DATA?.[item].secondaryColor || ""}
-                    />
-                </Pressable>
+                <GradientButton
+                    key={item}
+                    title={context?.BOOK_DATA?.[item].name.medium || ""}
+                    primaryColor={context?.BOOK_DATA?.[item].primaryColor || ""}
+                    secondaryColor={context?.BOOK_DATA?.[item].secondaryColor || ""}
+                />
             </View>
         )
     });
 
-    const renderItem = ({ item }: ListRenderItemInfo<string>) => (
-        <HymnalItem item={item} />
-    )
+    const renderItem = useCallback<SortableGridRenderItem<string>>(
+        ({ item }) => (
+            <HymnalItem item={item} />
+        ),
+        []
+    );
 
     function haptic() {
         'worklet';
         scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
     }
     return (
-            <View style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
-                <ReorderableList
+        <View style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
+            <ScrollView
+                style={styles.scrollView}
+                contentInsetAdjustmentBehavior='always'
+            >
+                <View style={styles.titleContainer}>
+                    <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
+                </View>
+                <Sortable.Grid
+                    columns={1}
+                    data={context?.BOOK_DATA
+                        ? [
+                            // First, keys in sortOrder that exist in bookData
+                            ...sortOrder.filter((key) => context?.BOOK_DATA[key]),
+                            // Then, any keys in bookData not in sortOrder
+                            ...Object.keys(context?.BOOK_DATA).filter((key) => !sortOrder.includes(key))
+                        ]
+                        : []} // Pass your data here
+                    renderItem={renderItem}
+                    rowGap={5}
+                    columnGap={5}
+                    activeItemOpacity={1}
+                    inactiveItemOpacity={1}
+                    enableActiveItemSnap={false}
+                    onOrderChange={haptic}
+                />
+                <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 30 }}>
+                    <TouchableOpacity
+                        onPress={() => router.push('/hymnal_importer')}
+                    >
+                        <IconSymbol
+                            name="plus.circle"
+                            size={56}
+                            weight='light'
+                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                        />
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+            {/* <ReorderableList
                     autoscrollSpeedScale={0}
                     shouldUpdateActiveItem={true}
                     style={[styles.scrollView]}
@@ -189,7 +220,6 @@ export default function HomeScreen() {
                     onReorder={({ from, to }: ReorderableListReorderEvent) => {
                         setSortOrder(value => reorderItems(value, from, to));
                     }}
-                    
                     onIndexChange={haptic}
                     onDragStart={haptic}
                     renderItem={renderItem}
@@ -219,8 +249,9 @@ export default function HomeScreen() {
                             <StyledText style={styles.descriptionText}>{i18n.t('addHymnal')}</StyledText>
                         </View>
                     }
-                />
-            </View>
+                /> */}
+
+        </View>
     );
 }
 
@@ -252,14 +283,17 @@ function makeStyles(theme: "light" | "dark") {
         text: {
             color: "white",
             fontSize: 24,
-            fontWeight: "bold",
+            fontWeight: 700,
             textAlign: "center",
         },
         scrollView: {
+            flex: 1,
+            width: '100%',
             paddingTop: 15,
             paddingBottom: 15,
             paddingRight: 20,
             paddingLeft: 20,
+            backgroundColor: Colors[theme].background
         },
         button: {
             paddingVertical: 20,
@@ -271,7 +305,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: 700,
             fontFamily: 'Lato'
         },
         screenContainer: {
@@ -298,9 +332,9 @@ function makeStyles(theme: "light" | "dark") {
         },
         textStyle: {
             fontSize: 32,
-            fontWeight: '500',
+            fontWeight: '700',
             color: Colors[theme]['text'], // Dynamically set text color using useThemeColor
-            fontFamily: 'Bold'
+            fontFamily: 'Lato'
         },
         fadedText: {
             fontSize: 24,

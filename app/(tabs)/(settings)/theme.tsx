@@ -1,14 +1,12 @@
 import { Colors, supportedThemes } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import React, { useContext, useEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { getLocales } from 'expo-localization';
-import { translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
-import { I18n } from 'i18n-js';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function ThemeScreen() {
@@ -18,9 +16,7 @@ export default function ThemeScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const [selectedTheme, setSelectedTheme] = useState<string>(context?.themeOverride ?? 'system');
 
@@ -72,13 +68,16 @@ export default function ThemeScreen() {
                                 >
                                     <View style={styles.settingsItem}>
                                         <StyledText style={styles.settingsText}>{i18n.t('invertSheetMusic')}</StyledText>
-                                        <Switch
-                                            trackColor={{ true: Colors[theme].primary }}
-                                            value={context?.invertSheetMusic ?? false}
-                                            onValueChange={(value) => {
-                                                context?.setInvertSheetMusic(value);
-                                            }}
-                                        />
+                                        <View>
+                                            <Switch
+                                                trackColor={{ true: Platform.OS === 'ios' ? Colors[theme].primary : Colors[theme].primaryFaded }}
+                                                thumbColor={Platform.OS === 'ios' ? 'white' : context?.invertSheetMusic ? Colors[theme].primary : Colors[theme].fadedIcon}
+                                                value={context?.invertSheetMusic ?? false}
+                                                onValueChange={(value) => {
+                                                    context?.setInvertSheetMusic(value);
+                                                }}
+                                            />
+                                        </View>
                                     </View>
                                 </TouchableHighlight>
                             </View>
@@ -111,6 +110,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+
         },
         settingsText: {
             fontSize: 18,
@@ -137,7 +137,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },

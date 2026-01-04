@@ -7,9 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
-import { getLocales } from 'expo-localization';
-import { I18n } from 'i18n-js';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -29,9 +27,7 @@ export default function BroadcastPanel() {
     const context = useContext(HymnalContext);
     const book = useBookData(params.id, context);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
@@ -39,7 +35,7 @@ export default function BroadcastPanel() {
         if (!book)
             return book;
 
-        if(!context?.broadcastingChurch)
+        if (!context?.broadcastingChurch)
             return;
 
         await set(request_client(), context?.broadcastingChurch, params.number, book.name?.medium || "", selectedVerses, book.primaryColor || "#000000");
@@ -47,89 +43,83 @@ export default function BroadcastPanel() {
     };
 
     return (
-        <>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <KeyboardAvoidingView style={{
-                    backgroundColor: Colors[theme]['background'],
-                    width: '100%',
-                    paddingTop: 125,
-                    paddingBottom: 15,
-                }}>
 
-                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <Pressable
-                            key="all"
-                            style={{
-                                width: 56,
-                                height: 56,
-                                margin: 8,
-                                borderRadius: 28,
-                                backgroundColor: Colors[theme]['settingsButton'],
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderWidth: 2,
-                                borderColor: selectedVerses[0] === -2 ? Colors[theme]['primary'] : Colors[theme]['background'],
-                                marginTop: 24
-                            }}
-                            onPress={() => {
-                                if (selectedVerses[0] === -2) {
-                                    setSelectedVerses([]);
-                                } else {
-                                    setSelectedVerses([-2]);
-                                }
-                            }}
-                        >
-                            <Text style={{ color: Colors[theme]['text'], fontSize: 16 }}>
-                                All
-                            </Text>
-                        </Pressable>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <Pressable
-                                    key={i + 1}
-                                    style={{
-                                        width: 56,
-                                        height: 56,
-                                        margin: 8,
-                                        borderRadius: 28,
-                                        backgroundColor: Colors[theme]['settingsButton'],
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        borderWidth: 2,
-                                        borderColor: selectedVerses.includes(i + 1) ? Colors[theme]['primary'] : Colors[theme]['background'],
-                                    }}
-                                    onPress={() => {
-                                        let verses = selectedVerses;
-                                        if (verses[0] == -2)
-                                            verses = [];
+        <View style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            flex: 1,
+            backgroundColor: Colors[theme]['background'],
+        }}>
+            <Pressable
+                key="all"
+                style={{
+                    width: 56,
+                    height: 56,
+                    margin: 8,
+                    borderRadius: 28,
+                    backgroundColor: Colors[theme]['settingsButton'],
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 2,
+                    borderColor: selectedVerses[0] === -2 ? Colors[theme]['primary'] : Colors[theme]['background'],
+                    marginTop: 24
+                }}
+                onPress={() => {
+                    if (selectedVerses[0] === -2) {
+                        setSelectedVerses([]);
+                    } else {
+                        setSelectedVerses([-2]);
+                    }
+                }}
+            >
+                <Text style={{ color: Colors[theme]['text'], fontSize: 16 }}>
+                    All
+                </Text>
+            </Pressable>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {Array.from({ length: 15 }, (_, i) => (
+                    <Pressable
+                        key={i + 1}
+                        style={{
+                            width: 56,
+                            height: 56,
+                            margin: 8,
+                            borderRadius: 28,
+                            backgroundColor: Colors[theme]['settingsButton'],
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 2,
+                            borderColor: selectedVerses.includes(i + 1) ? Colors[theme]['primary'] : Colors[theme]['background'],
+                        }}
+                        onPress={() => {
+                            let verses = selectedVerses;
+                            if (verses[0] == -2)
+                                verses = [];
 
-                                        if (verses.includes(i + 1))
-                                            setSelectedVerses(verses.filter(x => x != i + 1));
-                                        else
-                                            setSelectedVerses([...verses, i + 1])
-                                    }}
-                                >
-                                    <Text style={{ color: Colors[theme]['text'], fontSize: 20 }}>{i + 1}</Text>
-                                </Pressable>
-                            ))}
-                        </View>
+                            if (verses.includes(i + 1))
+                                setSelectedVerses(verses.filter(x => x != i + 1));
+                            else
+                                setSelectedVerses([...verses, i + 1])
+                        }}
+                    >
+                        <Text style={{ color: Colors[theme]['text'], fontSize: 20 }}>{i + 1}</Text>
+                    </Pressable>
+                ))}
+            </View>
 
-                        <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={() => {
-                                broadcast_song_number();
-                            }}
-                        >
-                            <Ionicons
-                                name='send'
-                                size={18}
-                                color='white'
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </KeyboardAvoidingView >
-            </TouchableWithoutFeedback>
-        </>
+            <TouchableOpacity
+                style={styles.sendButton}
+                onPress={() => {
+                    broadcast_song_number();
+                }}
+            >
+                <Ionicons
+                    name='send'
+                    size={18}
+                    color='white'
+                />
+            </TouchableOpacity>
+        </View>
     );
 }
 
@@ -169,6 +159,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+
         },
         settingsText: {
             fontSize: 18,
@@ -193,7 +184,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },

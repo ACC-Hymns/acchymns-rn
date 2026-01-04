@@ -1,14 +1,13 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useContext, useCallback, useEffect } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
-import { getLanguageName, translations } from '@/constants/localization';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
+import { getLanguageName } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function PreferencesScreen() {
@@ -18,9 +17,7 @@ export default function PreferencesScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const themeName = (theme: string) => theme === 'system' ? i18n.t('systemDefault') : theme === 'light' ? i18n.t('lightMode') : i18n.t('darkMode');
     const languageName = (language: string) => getLanguageName(language);
@@ -38,13 +35,16 @@ export default function PreferencesScreen() {
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('legacyNumberSelection')}</StyledText>
-                                <Switch
-                                    trackColor={{ true: Colors[theme].primary }}
-                                    value={context?.legacyNumberGrouping ?? false}
-                                    onValueChange={(value) => {
-                                        context?.setLegacyNumberGrouping(value);
-                                    }}
-                                />
+                                <View>
+                                    <Switch
+                                        trackColor={{ true: Platform.OS === 'ios' ? Colors[theme].primary : Colors[theme].primaryFaded }}
+                                        thumbColor={Platform.OS === 'ios' ? 'white' : context?.legacyNumberGrouping ? Colors[theme].primary : Colors[theme].fadedIcon}
+                                        value={context?.legacyNumberGrouping ?? false}
+                                        onValueChange={(value) => {
+                                            context?.setLegacyNumberGrouping(value);
+                                        }}
+                                    />
+                                </View>
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
@@ -105,7 +105,7 @@ function makeStyles(theme: "light" | "dark") {
             justifyContent: 'space-between',
             alignItems: 'center',
             paddingHorizontal: '5%',
-            paddingVertical: 14,
+            height: 48
         },
         settingsText: {
             fontSize: 18,
@@ -132,7 +132,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },

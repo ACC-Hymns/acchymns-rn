@@ -5,7 +5,7 @@ import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constan
 import { getSongData } from '@/scripts/hymnals';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
@@ -15,12 +15,13 @@ import { store } from 'expo-router/build/global-state/router-store';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { padStart } from 'pdf-lib';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 import GenericGradientButton from '@/components/GenericGradientButton';
 import { Icon, SearchBar } from '@rneui/themed';
+import * as ContextMenu from 'zeego/context-menu'
+import { fontFamily } from '@/constants/assets';
+
 
 export default function BookmarkScreen() {
 
@@ -35,13 +36,11 @@ export default function BookmarkScreen() {
     const [isNavigating, setIsNavigating] = useState(false);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
 
     function stripSearchText(text: string) {
-        if(!text)
+        if (!text)
             return "";
         return text
             .replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
@@ -87,6 +86,7 @@ export default function BookmarkScreen() {
 
             return () => {
                 // Optional cleanup when screen loses focus
+                setIsNavigating(false);
             };
         }, [])
     );
@@ -115,7 +115,7 @@ export default function BookmarkScreen() {
                     const bookData = context.BOOK_DATA[bookmark.book];
                     const songData = await getSongData(bookmark.book);
                     if (songData && bookData) {
-                        
+
                         const song = songData[bookmark.number];
                         if (song) {
                             console.log(song);
@@ -165,23 +165,52 @@ export default function BookmarkScreen() {
             );
     }, [search, songList]);
 
-    const UnderlayRight = () => {
-        const { close, percentOpen, item } = useSwipeableItemParams<string>();
-        const animatedStyles = useAnimatedStyle(() => ({
-            transform: [{ translateX: (1 - (percentOpen.value)) * 100 }],
-            opacity: percentOpen.value,
-        }));
+    const renderItem = ({ item, index }: { item: SongSearchInfo, index: number }) => {
         return (
-            <Animated.View style={[styles.deleteButtonContainer, animatedStyles]}>
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={async () => {
+            <ContextMenu.Root>
+                <ContextMenu.Trigger>
+                    <GenericGradientButton
+                        primaryColor={item.book.primaryColor}
+                        secondaryColor={item.book.secondaryColor}
+                        onLongPress={() => {
+
+                        }}
+                        onPress={() => {
+                            if (item.book.name.short && item.number) {
+                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
+                            } else {
+                                console.error("Invalid item data: ", item);
+                            }
+                        }}
+                        style={{
+                            borderRadius: 12,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: 84 // Ensure a minimum height of 60
+                        }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                            <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                                <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 400, textAlign: 'left' }}>{item.title}</StyledText>
+                                <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'left' }}>{item.book.name.medium}</StyledText>
+                            </View>
+                            <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'right' }}>#{item.number}</StyledText>
+                            </View>
+                        </View>
+                    </GenericGradientButton>
+                </ContextMenu.Trigger>
+                <ContextMenu.Content>
+                    <ContextMenu.Item key="actions" destructive={true} onSelect={async () => {
                         // fetch song information
                         if (!item) {
                             console.error("No item to delete");
                             return;
                         }
-                        const [bookShort, number] = item.split(',');
+                        const bookShort = item.book.name.short;
+                        const number = item.number;
+                        if (!number)
+                            return;
                         const bookData = context?.BOOK_DATA[bookShort];
                         if (!bookData) {
                             console.error(`Book data for ${bookShort} not found`);
@@ -204,113 +233,73 @@ export default function BookmarkScreen() {
                                     onPress: () => {
                                         // Remove the item from the bookmarks
                                         setBookmarks((prev) => {
-                                            const newBookmarks = prev.filter(b => b.book + ',' + b.number !== item);
+                                            const newBookmarks = prev.filter(b => b.book + ',' + b.number !== bookShort + ',' + number);
                                             saveBookmarks(newBookmarks);
                                             return newBookmarks;
                                         });
-                                        close();
                                     }
                                 }
                             ]
                         )
-                    }}
-                    style={[styles.deleteButton]}
-                >
-                    <IconSymbol
-                        name="trash"
-                        size={24}
-                        weight='light'
-                        color='white' />
-                </TouchableOpacity>
-            </Animated.View>
-        );
-    };
-    const renderItem = ({ item, index }: { item: SongSearchInfo, index: number }) => {
-        return (
-            <SwipeableItem
-                item={item.book.name.short + ',' + item.number}
-                key={item.book.name.short + ',' + item.number}
-                renderUnderlayLeft={() => <UnderlayRight />}
-                snapPointsLeft={[80]}
-            >
-                <GenericGradientButton
-                    primaryColor={item.book.primaryColor}
-                    secondaryColor={item.book.secondaryColor}
-                    onPress={() => {
-                        if (isNavigating) return;
-                        if (item.book.name.short && item.number) {
-                            router.push({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                        } else {
-                            console.error("Invalid item data: ", item);
-                        }
-                        setIsNavigating(true);
-                        setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
-                    }}
-                    style={{
-                        borderRadius: 12,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 84 // Ensure a minimum height of 60
-                    }}
-                >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                        <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
-                            <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{item.title}</StyledText>
-                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'left' }}>{item.book.name.medium}</StyledText>
-                        </View>
-                        <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                            <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'right' }}>#{item.number}</StyledText>
-                        </View>
-                    </View>
-                </GenericGradientButton>
-            </SwipeableItem>
+                    }}>
+                        <ContextMenu.ItemTitle>Remove Bookmark</ContextMenu.ItemTitle>
+                        <ContextMenu.ItemIcon ios={{ name: 'trash' }}>
+                            <IconSymbol name='trash' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        </ContextMenu.ItemIcon>
+                    </ContextMenu.Item>
+                </ContextMenu.Content>
+            </ContextMenu.Root>
         );
     };
 
     return (
-        <>
-            {loading ? (
-                <ActivityIndicator size="large" color={Colors[theme]['text']} />
-            ) : (
-                <FlatList
-                    ref={scrollViewRef}
-                    scrollEnabled={scrollEnabled}
-                    data={filteredData}
-                    keyboardShouldPersistTaps='always'
-                    renderItem={renderItem}
-                    style={[styles.scrollView]}
-                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-                    ListHeaderComponent={
-                        <>
-                            <View style={styles.titleContainer}>
-                                <StyledText style={styles.textStyle}>{i18n.t('bookmarks')}</StyledText>
-                            </View>
-                            <SearchBar
-                                ref={searchInputRef}
-                                value={search}
-                                onChangeText={setSearch}
-                                onFocus={() => {
-                                    setSearchBarFocused(true);
-                                }}
-                                onCancel={() => {
-                                    setSearchBarFocused(false);
-                                }}
-                                inputStyle={styles.searchBarInput}
-                                containerStyle={styles.searchBarContainer}
-                                placeholder={i18n.t('search')}
-                                placeholderTextColor={Colors[theme].fadedText}
-                                inputContainerStyle={styles.searchBarInnerContainer}
-                                round={true}
-                                searchIcon={<Icon name="search" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
-                                cancelIcon={<Icon name="close" type="ionicon" color={Colors[theme].fadedText} size={18}/>} // Custom search icon
-                                showCancel={true}
-                            />
-                        </>
-                    }
-                    ListFooterComponent={() => <View style={{ height: 100 }} />}
-                />
-            )}
-        </>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+                {loading ? (
+                    <ActivityIndicator size="large" color={Colors[theme]['text']} />
+                ) : (
+                    <FlatList
+                        ref={scrollViewRef}
+                        scrollEnabled={scrollEnabled}
+                        data={filteredData}
+
+                        contentInsetAdjustmentBehavior='always'
+                        keyboardShouldPersistTaps='always'
+                        renderItem={renderItem}
+                        style={[styles.scrollView]}
+                        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                        ListHeaderComponent={
+                            <>
+                                <View style={styles.titleContainer}>
+                                    <StyledText style={styles.textStyle}>{i18n.t('bookmarks')}</StyledText>
+                                </View>
+                                <SearchBar
+                                    ref={searchInputRef}
+                                    value={search}
+                                    onChangeText={setSearch}
+                                    onFocus={() => {
+                                        setSearchBarFocused(true);
+                                    }}
+                                    onCancel={() => {
+                                        setSearchBarFocused(false);
+                                    }}
+                                    inputStyle={styles.searchBarInput}
+                                    containerStyle={styles.searchBarContainer}
+                                    placeholder={i18n.t('search')}
+                                    placeholderTextColor={Colors[theme].fadedText}
+                                    inputContainerStyle={styles.searchBarInnerContainer}
+                                    round={true}
+                                    searchIcon={<Icon name="search" type="ionicon" color={Colors[theme].fadedText} size={18} />} // Custom search icon
+                                    cancelIcon={<Icon name="close" type="ionicon" color={Colors[theme].fadedText} size={18} />} // Custom search icon
+                                    showCancel={true}
+                                />
+                            </>
+                        }
+                        ListFooterComponent={() => <View style={{ height: 100 }} />}
+                    />
+                )}
+            </View>
+        </TouchableWithoutFeedback>
     );
 }
 
@@ -350,19 +339,24 @@ function makeStyles(theme: "light" | "dark") {
         },
         searchBarContainer: {
             backgroundColor: Colors[theme].background,
-            marginBottom: 20,
             marginHorizontal: -8,
+            marginBottom: 20,
             borderBottomColor: 'transparent',
             borderTopColor: 'transparent'
         },
         searchBarInnerContainer: {
             backgroundColor: Colors[theme].searchBarBackground,
             height: 38,
-            padding: 2,
+            padding: Platform.OS === 'ios' ? 2 : 0,
         },
         searchBarInput: {
             color: Colors[theme].text,
+            fontFamily: fontFamily.regular,
             fontSize: 18,
+            minHeight: 38,
+            padding: 0,
+            margin: 0,
+            borderWidth: 0
         },
         rowItem: {
             height: 100,
@@ -393,7 +387,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato'
         },
         screenContainer: {

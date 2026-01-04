@@ -7,9 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
-import { getLocales } from 'expo-localization';
-import { I18n } from 'i18n-js';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -31,9 +29,7 @@ export default function BroadcastScreen() {
         return response;
     }
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const [loading, setLoading] = useState<boolean>(true);
     const [pin, setPin] = useState<string>("");
@@ -314,6 +310,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+            
         },
         settingsText: {
             fontSize: 18,
@@ -340,7 +337,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },

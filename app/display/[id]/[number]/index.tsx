@@ -25,10 +25,8 @@ import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { Ionicons } from '@expo/vector-icons';
 import { error } from 'pdf-lib';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
 import { usePostHog } from 'posthog-react-native';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix } from '@shopify/react-native-skia';
 import StyledText from '@/components/StyledText';
 import TrackPlayer, { State, usePlaybackState, useProgress } from 'react-native-track-player';
@@ -148,9 +146,7 @@ export default function DisplayScreen() {
     const scrollRef = useRef<ScrollView | null>(null);
     const [isSwiping, setIsSwiping] = useState(false);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
@@ -169,23 +165,36 @@ export default function DisplayScreen() {
         isModalOpenRef.current = index === 0;
     }, []);
 
+    function broadcastSong() {
+        router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: params.id, number: params.number || "" } });
+    }
+
     function setHeaderOptions() {
-        if(Platform.OS === 'android') {
+        if (Platform.OS === 'android') {
             navigation.setOptions({
                 title: "",
                 headerLeft: () => (
-                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                            <Ionicons
-                                name="chevron-back"
-                                size={24}
-                                weight="medium"
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
-                        </TouchableOpacity>
-                    ),
+                    <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
+                        <Ionicons
+                            name="chevron-back"
+                            size={24}
+                            weight="medium"
+                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                        />
+                    </TouchableOpacity>
+                ),
                 headerRight: () => (
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 16 }}>
-                        {(
+                        {context?.broadcastingToken ? (
+                            
+                            <TouchableOpacity onPress={broadcastSong}>
+                                <Ionicons 
+                                    name='radio-outline'
+                                    size={24}
+                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}/>
+                            </TouchableOpacity>
+                        ) : (<></>)}
+                        {songNotes.length > 0 ? (
                             <TouchableOpacity onPress={handlePress}>
                                 <Ionicons
                                     name="musical-notes"
@@ -193,13 +202,28 @@ export default function DisplayScreen() {
                                     color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                                 />
                             </TouchableOpacity>
-                        )}
+                        ) : (<></>)}
                         <DisplayMoreMenu bookId={params.id} songId={params.number} />
                     </View>
                 ),
+                headerStyle: {
+                    backgroundColor: Colors[theme].background,
+                },
             });
             return;
         }
+        let broadcast = [{
+            type: 'button',
+            label: 'Broadcast',
+            icon: {
+                type: 'sfSymbol',
+                name: 'dot.radiowaves.left.and.right',
+            },
+            tintColor: Colors[theme].icon,
+            onPress: () => {
+                broadcastSong();
+            },
+        }];
 
         let initial = [{
             type: 'button',
@@ -267,6 +291,12 @@ export default function DisplayScreen() {
             },
         };
 
+        let buttons = [];
+        if(songNotes.length > 0)
+            buttons.push(initial[0]);
+        if(context?.broadcastingToken)
+            buttons.push(broadcast[0]);
+        
         navigation.setOptions({
             title: "",
             unstable_headerLeftItems: () => [
@@ -283,7 +313,7 @@ export default function DisplayScreen() {
                     }
                 }
             ],
-            unstable_headerRightItems: () => songNotes.length > 0 ? [...initial, m] : [m],
+            unstable_headerRightItems: () => [...buttons, m],
         });
     }
 
@@ -468,7 +498,7 @@ export default function DisplayScreen() {
         const player = audioPlayers.current[id];
         if (player) {
             try {
-                if(!player.isLoaded)
+                if (!player.isLoaded)
                     return;
                 player.seekTo(0);
                 player.play();
@@ -590,12 +620,47 @@ export default function DisplayScreen() {
     const isSwipingRight = useSharedValue(false);
     const isSwipingLeft = useSharedValue(false);
 
+
+    const [isZoomedOut, setIsZoomedOut] = useState(true);
+
+    const onMessage = (event: any) => {
+        try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'zoomChange') {
+                setIsZoomedOut(data.isZoomedOut);
+            }
+        } catch (e) {
+            console.error("Failed to parse WebView message", e);
+        }
+    };
+
+    // The script to run inside the WebView
+    const zoomDetectionJS = `
+    (function() {
+        const handleScroll = () => {
+        const isZoomedOut = window.visualViewport.scale <= 1.01;
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'zoomChange',
+            isZoomedOut: isZoomedOut
+        }));
+        };
+        window.visualViewport.addEventListener('resize', handleScroll);
+        // Initial check
+        handleScroll();
+    })();
+    true;
+    `;
+
     function haptic() {
         'worklet';
         scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
     }
 
+
     const swipeGesture = Gesture.Pan()
+        .minPointers(1)
+        .maxPointers(1)
+        .enabled(isZoomedOut)
         .onStart(() => {
         })
         .onUpdate((event) => {
@@ -649,6 +714,7 @@ export default function DisplayScreen() {
         })
         .requireExternalGestureToFail();
 
+
     return (
         <View style={[styles.container]}>
             {imageData ? (
@@ -681,8 +747,14 @@ export default function DisplayScreen() {
                         <WebView
                             style={styles.container}
                             originWhitelist={['*']}
-                            source={{ html: imageData }}>
-
+                            source={{ html: imageData }}
+                            setBuiltInZoomControls={true}
+                            injectedJavaScript={zoomDetectionJS}
+                            onMessage={onMessage}
+                            onLoadEnd={() => {
+                                // Re-inject on load to ensure it's active
+                            }}
+                        >
                         </WebView>
                         {(() => {
                             const songNumbers = Object.keys(songs || {}).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));

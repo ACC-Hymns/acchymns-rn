@@ -6,11 +6,9 @@ import React, { useContext, useLayoutEffect } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
 import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
 import PostHog, { usePostHog } from 'posthog-react-native';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function HelpScreen() {
@@ -21,9 +19,7 @@ export default function HelpScreen() {
     const context = useContext(HymnalContext);
     const navigation = useNavigation();
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
     useLayoutEffect(() => {
         navigation.setOptions({
             title: i18n.t('help'),
@@ -34,143 +30,179 @@ export default function HelpScreen() {
     return (
         <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
-            <ScrollView style={styles.scrollView}>
-                <View style={{}}>
-                    <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
-                </View>
-                <View style={[styles.settingsContainer]}>
-                    <TouchableHighlight
-                        onPress={() => { 
-                            Linking.openURL('https://forms.gle/Ezh7d8LFsN5eKdo87');
-                        }}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.settingsText}>{i18n.t('reportBug')}</StyledText>
-                            <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
-                        </View>
-                    </TouchableHighlight>
-                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                    <TouchableHighlight
-                        onPress={() => { 
-                            Linking.openURL('https://forms.gle/1t7rtUkNaksEUtPEA');
-                        }}
+                <ScrollView style={styles.scrollView}>
+                    <View style={{}}>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        <TouchableHighlight
+                            onPress={() => {
+                                Linking.openURL('https://forms.gle/Ezh7d8LFsN5eKdo87');
+                            }}
                             underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.settingsText}>{i18n.t('requestBook')}</StyledText>
-                            <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
-                        </View>
-                    </TouchableHighlight>
-                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                    <TouchableHighlight
-                        onPress={() => { 
-                            Linking.openURL('https://docs.google.com/document/d/1zWztUrFOr_6ksqDDm4EbQ0jk7trwofaVeeSybcD5PcA');
-                        }}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.settingsText}>{i18n.t('privacyPolicy')}</StyledText>
-                            <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
-                        </View>
-                    </TouchableHighlight>
-                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                    <TouchableHighlight
-                        onPress={async () => {
-                            if(context?.postHogOptedIn) {
-                                context?.setPostHogOptedIn(false);
-                                await posthog.optIn();
-                            } else {
-                                Alert.alert(i18n.t('posthogOptOutConfirmation'), i18n.t('posthogOptOutConfirmationMessage'), [
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.settingsText}>{i18n.t('reportBug')}</StyledText>
+                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                            </View>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                        <TouchableHighlight
+                            onPress={() => {
+                                Linking.openURL('https://forms.gle/1t7rtUkNaksEUtPEA');
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.settingsText}>{i18n.t('requestBook')}</StyledText>
+                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                            </View>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                        <TouchableHighlight
+                            onPress={() => {
+                                Linking.openURL('https://docs.google.com/document/d/1zWztUrFOr_6ksqDDm4EbQ0jk7trwofaVeeSybcD5PcA');
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.settingsText}>{i18n.t('privacyPolicy')}</StyledText>
+                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                            </View>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                        <TouchableHighlight
+                            onPress={async () => {
+                                if (context?.postHogOptedIn) {
+                                    context?.setPostHogOptedIn(false);
+                                    await posthog.optIn();
+                                } else {
+                                    Alert.alert(i18n.t('posthogOptOutConfirmation'), i18n.t('posthogOptOutConfirmationMessage'), [
+                                        {
+                                            text: i18n.t('cancel'),
+                                            onPress: () => {
+                                                context?.setPostHogOptedIn(false);
+                                            },
+                                            style: 'cancel',
+                                            isPreferred: true
+                                        },
+                                        {
+                                            text: i18n.t('confirm'),
+                                            onPress: async () => {
+                                                // opt out of posthog
+                                                context?.setPostHogOptedIn(true);
+                                                await posthog.optOut();
+                                            },
+                                            style: 'default'
+                                        },
+                                    ]);
+                                }
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.settingsText}>{context?.postHogOptedIn ? i18n.t('posthogOptIn') : i18n.t('posthogOptOut')}</StyledText>
+                            </View>
+                        </TouchableHighlight>
+                    </View>
+                    <View style={{ marginTop: 24 }}>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('debug')}</StyledText>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        <TouchableHighlight
+                            onPress={() => {
+                                Alert.alert(i18n.t('clearCacheConfirmation'), i18n.t('clearCacheConfirmationMessage'), [
                                     {
                                         text: i18n.t('cancel'),
                                         onPress: () => {
-                                            context?.setPostHogOptedIn(false);
+
                                         },
                                         style: 'cancel',
                                         isPreferred: true
                                     },
                                     {
-                                        text: i18n.t('confirm'),
-                                        onPress: async () => {
-                                            // opt out of posthog
-                                            context?.setPostHogOptedIn(true);
-                                            await posthog.optOut();
+                                        text: i18n.t('clear'),
+                                        onPress: () => {
+                                            clearCache();
                                         },
-                                        style: 'default'
+                                        style: 'destructive'
                                     },
                                 ]);
-                            }
-                        }}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.settingsText}>{context?.postHogOptedIn ? i18n.t('posthogOptIn') : i18n.t('posthogOptOut')}</StyledText>
-                        </View>
-                    </TouchableHighlight>
-                </View>
-                <View style={{marginTop: 24}}>
-                    <StyledText style={styles.settingsLabel}>{i18n.t('debug')}</StyledText>
-                </View>
-                <View style={[styles.settingsContainer]}>
-                    <TouchableHighlight
-                        onPress={() => { 
-                            Alert.alert(i18n.t('clearCacheConfirmation'), i18n.t('clearCacheConfirmationMessage'), [
-                                {
-                                    text: i18n.t('cancel'),
-                                    onPress: () => {
-                                        
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.destructiveSettingsText}>{i18n.t('clearCache')}</StyledText>
+                            </View>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                        <TouchableHighlight
+                            onPress={() => {
+                                Alert.alert(i18n.t('deleteHymnalsConfirmation'), i18n.t('deleteHymnalsConfirmationMessage'), [
+                                    {
+                                        text: i18n.t('cancel'),
+                                        onPress: () => {
+
+                                        },
+                                        style: 'cancel',
+                                        isPreferred: true
                                     },
-                                    style: 'cancel',
-                                    isPreferred: true
-                                },
-                                {
-                                    text: i18n.t('clear'),
-                                    onPress: () => {
-                                        clearCache();
+                                    {
+                                        text: i18n.t('delete'),
+                                        onPress: async () => {
+                                            // remove progress values
+                                            context?.setDownloadProgressValues({});
+                                            await deleteAllHymnals();
+                                            const books = await loadHymnals();
+                                            context?.SET_BOOK_DATA(books);
+                                        },
+                                        style: 'destructive'
                                     },
-                                    style: 'destructive'
-                                },
-                            ]);
-                        }}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.destructiveSettingsText}>{i18n.t('clearCache')}</StyledText>
-                        </View>
-                    </TouchableHighlight>
-                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                    <TouchableHighlight
-                        onPress={() => {
-                            Alert.alert(i18n.t('deleteHymnalsConfirmation'), i18n.t('deleteHymnalsConfirmationMessage'), [
-                                {
-                                    text: i18n.t('cancel'),
-                                    onPress: () => {
-                                        
+                                ]);
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</StyledText>
+                            </View>
+                        </TouchableHighlight>
+                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                        <TouchableHighlight
+                            onPress={() => {
+                                Alert.alert(i18n.t('resetDataConfirmation'), i18n.t('resetDataConfirmationMessage'), [
+                                    {
+                                        text: i18n.t('cancel'),
+                                        onPress: () => {
+
+                                        },
+                                        style: 'cancel',
+                                        isPreferred: true
                                     },
-                                    style: 'cancel',
-                                    isPreferred: true
-                                },
-                                {
-                                    text: i18n.t('delete'),
-                                    onPress: async () => {
-                                        // remove progress values
-                                        context?.setDownloadProgressValues({});
-                                        await deleteAllHymnals();
-                                        const books = await loadHymnals();
-                                        context?.SET_BOOK_DATA(books);
+                                    {
+                                        text: i18n.t('reset'),
+                                        onPress: async () => {
+
+                                            clearCache();
+
+                                            await context?.resetPreferences();
+                                            // remove progress values
+                                            context?.setDownloadProgressValues({});
+                                            await deleteAllHymnals();
+                                            const books = await loadHymnals();
+                                            context?.SET_BOOK_DATA(books);
+                                        },
+                                        style: 'destructive'
                                     },
-                                    style: 'destructive'
-                                },
-                            ]);
-                        }}
-                        underlayColor={Colors[theme].divider}
-                    >
-                        <View style={styles.settingsItem}>
-                            <StyledText style={styles.destructiveSettingsText}>{i18n.t('deleteHymnals')}</StyledText>
-                        </View>
+                                ]);
+                            }}
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.destructiveSettingsText}>{i18n.t('resetData')}</StyledText>
+                            </View>
                         </TouchableHighlight>
                     </View>
+
                 </ScrollView>
             </View>
         </>
@@ -198,6 +230,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+            
         },
         settingsText: {
             fontSize: 18,
@@ -230,7 +263,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },

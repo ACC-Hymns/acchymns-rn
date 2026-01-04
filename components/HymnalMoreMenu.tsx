@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { HeaderButton } from './HeaderButton';
+import { useMemo } from 'react';
 
 interface HymnalMoreMenuProps {
     bookSummary: BookSummary;
@@ -26,11 +27,11 @@ export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
             numerical: 'Numerical',
             alphabetical: 'Alphabetical',
             topical: 'Topical',
-            deleteHymnal: 'Delete Hymnal',
-            deleteAlertTitle: 'Delete ',
+            deleteHymnal: 'Remove Hymnal',
+            deleteAlertTitle: 'Remove ',
             deleteAlertMessage: 'You can always download the hymnal again later.',
             cancel: 'Cancel',
-            delete: 'Delete',
+            delete: 'Remove',
         },
         es: {
             sortingLabel: 'Opciones de Ordenamiento',
@@ -100,9 +101,12 @@ export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
         }
     }
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useMemo(() => {
+        const instance = new I18n(translations);
+        instance.enableFallback = true;
+        instance.locale = context?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en';
+        return instance;
+    }, [context?.languageOverride]);
 
     return (
         <DropdownMenu.Root>

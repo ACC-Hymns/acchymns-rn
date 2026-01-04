@@ -9,10 +9,8 @@ import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
 import { useReportAPI } from "@/scripts/report";
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -27,9 +25,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const [isBookmarked, setIsBookmarked] = useState(false);
     const reportAPI = useReportAPI();
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const addBookmark = async (bookmark: Bookmark) => {
         try {
@@ -86,6 +82,8 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     useLayoutEffect(() => {
         if (songId) {
             getSongData(bookId).then((data) => {
+                if(!data)
+                    return;
                 setSongData(data[songId]);
             });
 
@@ -115,16 +113,6 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
             </DropdownMenu.Trigger>
             <DropdownMenu.Content>
                 <DropdownMenu.Group>
-                    <DropdownMenu.Item key="details" onSelect={async () => {
-                        context?.openDetailsBottomSheet?.();
-                    }}>
-                        <DropdownMenu.ItemTitle>
-                            {i18n.t('details')}
-                        </DropdownMenu.ItemTitle>
-                        <DropdownMenu.ItemIcon ios={{ name: 'info.circle' }}>
-                            <IconSymbol name='info.circle' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                        </DropdownMenu.ItemIcon>
-                    </DropdownMenu.Item>
                     <DropdownMenu.Item key="bookmark" onSelect={async () => {
                         await addBookmark({
                             book: bookId,
@@ -155,18 +143,6 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                         </DropdownMenu.ItemIcon>
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
-                {context?.broadcastingToken && (
-                    <DropdownMenu.Group>
-                        <DropdownMenu.Item key="broadcast" onSelect={() => {
-                            router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: bookId, number: songId || "" } });
-                        }} destructive={false} >
-                            <DropdownMenu.ItemTitle>{i18n.t('broadcast')}</DropdownMenu.ItemTitle>
-                            <DropdownMenu.ItemIcon ios={{ name: 'dot.radiowaves.left.and.right' }}>
-                                <IconSymbol name='dot.radiowaves.left.and.right' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                            </DropdownMenu.ItemIcon>
-                        </DropdownMenu.Item>
-                    </DropdownMenu.Group>
-                )}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     )

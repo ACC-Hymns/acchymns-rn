@@ -12,8 +12,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import StyledText from '@/components/StyledText';
 import { useSongListData } from '@/hooks/useSongListData';
 import { useBookData } from '@/hooks/useBookData';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
+import { useI18n } from '@/hooks/useI18n';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SelectionScreen() {
@@ -26,11 +25,11 @@ export default function SelectionScreen() {
             numerical: 'Numerical',
             alphabetical: 'Alphabetical',
             topical: 'Topical',
-            deleteHymnal: 'Delete Hymnal',
-            deleteAlertTitle: 'Delete ',
+            deleteHymnal: 'Remove Hymnal',
+            deleteAlertTitle: 'Remove ',
             deleteAlertMessage: 'You can always download the hymnal again later.',
             cancel: 'Cancel',
-            delete: 'Delete',
+            delete: 'Remove',
         },
         es: {
             sortingLabel: 'Opciones de Ordenamiento',
@@ -104,9 +103,7 @@ export default function SelectionScreen() {
 
     // get book data from context
     const context = useContext(HymnalContext);
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
 
     const book = useBookData(id as string, context);
@@ -125,6 +122,7 @@ export default function SelectionScreen() {
         if (Platform.OS === 'ios') {
             navigation.setOptions({
                 title: book.name.medium,
+                headerTintColor: Colors[theme].tint,
                 unstable_headerLeftItems: () => [
                     {
                         type: 'button',
@@ -225,19 +223,19 @@ export default function SelectionScreen() {
                     <HymnalMoreMenu bookSummary={book} />
                 ),
                 headerLeft: () => (
-                        <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                            <IconSymbol
-                                name="chevron.left"
-                                size={18}
-                                weight="medium"
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
-                        </TouchableOpacity>
-                    )
+                    <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
+                        <IconSymbol
+                            name="chevron.left"
+                            size={24}
+                            weight="medium"
+                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                        />
+                    </TouchableOpacity>
+                )
             });
         }
 
-    }, [book, id, navigation, context?.languageOverride]);
+    }, [book, id, navigation, context?.languageOverride, theme]);
 
     function handleSortModeChange(mode: SortMode) {
         setSortMode(mode);
@@ -256,7 +254,7 @@ export default function SelectionScreen() {
     };
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
             {book && songs && (
                 <View style={{ flex: 1 }}>
                     {sortMode === SortMode.NUMERICAL && (
@@ -292,7 +290,7 @@ export default function SelectionScreen() {
                                                 router.navigate({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
                                             }}
                                         >
-                                            <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>{item}</StyledText>
+                                            <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 700, fontFamily: 'Lato' }}>{item}</StyledText>
                                         </TouchableOpacity>
                                     )}
                                     onScroll={(event) => {
@@ -353,26 +351,25 @@ export default function SelectionScreen() {
 
                                         return (
                                             <View key={rangeStart} style={{ marginTop: index === 0 ? 12 : 0 }}>
-                                                <TouchableHighlight
-                                                    underlayColor={Colors[theme].divider}
-                                                    onPress={() => {
-                                                        toggleDropdown(index.toString())
-                                                    }}
-                                                    style={{
-                                                        backgroundColor: Colors[theme].headerBackground,
-                                                        borderRadius: 12,
-                                                        height: 60,
-                                                        marginVertical: 4,
-                                                        marginHorizontal: 15,
-                                                        shadowColor: '#000',
-                                                        shadowOffset: {
-                                                            width: 0,
-                                                            height: 2,
-                                                        },
-                                                        shadowOpacity: 0.05,
-                                                        shadowRadius: 5,
-                                                        elevation: 3,
-                                                    }}>
+                                                <TouchableOpacity
+                                                onPress={() => {
+                                                    toggleDropdown(index.toString())
+                                                }}
+                                                style={{
+                                                    backgroundColor: Colors[theme].headerBackground,
+                                                    shadowColor: '#000',
+                                                    shadowOffset: {
+                                                        width: 0,
+                                                        height: 2,
+                                                    },
+                                                    shadowOpacity: 0.05,
+                                                    shadowRadius: 5,
+                                                    elevation: 3,
+                                                    borderRadius: 12,
+                                                    height: 60,
+                                                    marginVertical: 4,
+                                                    marginHorizontal: 15,
+                                                }}>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
                                                         <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</StyledText>
                                                         <Ionicons
@@ -382,39 +379,37 @@ export default function SelectionScreen() {
                                                             color={Colors[theme].icon}
                                                         />
                                                     </View>
-                                                </TouchableHighlight>
+                                                </TouchableOpacity>
 
                                                 {openDropdowns[index.toString()] && (
-                                                    <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>
+                                                    <View style={{
+                                                        marginHorizontal: 15, marginTop: 5, marginBottom: 15, justifyContent: 'center',
+                                                        alignItems: 'center'
+                                                    }}>
                                                         <FlatList
                                                             data={songsInRange}
                                                             keyExtractor={(number) => number}
+                                                            numColumns={5}
                                                             renderItem={({ item: number }) => (
                                                                 <TouchableOpacity
-                                                                    key={number}
-                                                                    onPress={() => {
-                                                                        if (isNavigating) return;
-                                                                        router.push({
-                                                                            pathname: '/display/[id]/[number]',
-                                                                            params: { id: book.name.short, number }
-                                                                        });
-                                                                        setIsNavigating(true);
-                                                                        setTimeout(() => setIsNavigating(false), 400);
-                                                                    }}
                                                                     style={{
-                                                                        padding: 12,
-                                                                        borderRadius: 8,
-                                                                        backgroundColor: Colors[theme].background,
-                                                                        marginVertical: 2,
-                                                                    }}>
-                                                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                        <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
-                                                                            #{number}
-                                                                        </StyledText>
-                                                                        <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
-                                                                            {songs[number].title}
-                                                                        </StyledText>
-                                                                    </View>
+                                                                        margin: 6,
+                                                                        width: 60,
+                                                                        height: 60,
+                                                                        borderRadius: 30,
+                                                                        backgroundColor: book.primaryColor,
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                    }}
+                                                                    onPressIn={() => {
+                                                                        router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: number } });
+                                                                    }}
+                                                                    onPress={() => {
+                                                                        // check if im already navigating
+                                                                        router.navigate({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: number } });
+                                                                    }}
+                                                                >
+                                                                    <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 700, fontFamily: 'Lato' }}>{number}</StyledText>
                                                                 </TouchableOpacity>
                                                             )}
                                                         />
@@ -461,7 +456,7 @@ export default function SelectionScreen() {
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
                                                 paddingVertical: 10, // Add padding to allow content to grow
-                                                minHeight: 60, // Ensure a minimum height of 60
+                                                // Ensure a minimum height of 60
                                             }}
 
                                             onPress={() => {
@@ -475,10 +470,10 @@ export default function SelectionScreen() {
                                         >
                                             <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
                                                 <View style={{ width: '80%', alignSelf: 'flex-start' }}>
-                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'medium', textAlign: 'left' }}>{songs[item].title}</StyledText>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 500, fontFamily: 'Lato', textAlign: 'left' }}>{songs[item].title}</StyledText>
                                                 </View>
                                                 <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 'normal', textAlign: 'right' }}>#{item}</StyledText>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 400, fontFamily: 'Lato', textAlign: 'right' }}>#{item}</StyledText>
                                                 </View>
                                             </View>
 
@@ -513,7 +508,7 @@ export default function SelectionScreen() {
                                                 marginHorizontal: 15
                                             }}>
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 'bold' }}>
+                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 700, fontFamily: 'Lato' }}>
                                                     #{number}
                                                 </StyledText>
                                                 <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
@@ -570,8 +565,8 @@ export default function SelectionScreen() {
                                                 }}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
                                                     <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{key}</StyledText>
-                                                    <IconSymbol
-                                                        name={openDropdowns[key] ? "chevron.up" : "chevron.down"}
+                                                    <Ionicons
+                                                        name={openDropdowns[key] ? "chevron-up" : "chevron-down"}
                                                         size={18}
                                                         weight="medium"
                                                         color={Colors[theme].icon}

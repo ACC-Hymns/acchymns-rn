@@ -5,17 +5,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
-import { I18n } from 'i18n-js';
-import { translations } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
-import { getLocales } from 'expo-localization';
+import { useI18n } from '@/hooks/useI18n';
 
 export default function NotFoundScreen() {
   const context = useContext(HymnalContext);
   const router = useRouter();
-  const i18n = new I18n(translations);
-  i18n.enableFallback = true;
-  i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+  const i18n = useI18n();
   return (
     <>
       <Stack.Screen options={{ title: i18n.t('oops') }} />

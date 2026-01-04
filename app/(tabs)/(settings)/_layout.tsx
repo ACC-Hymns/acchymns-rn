@@ -2,20 +2,16 @@ import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { HymnalContext } from "@/constants/context";
-import { translations } from "@/constants/localization";
 import { Ionicons } from "@expo/vector-icons";
-import { getLocales } from "expo-localization";
 import { router, Stack } from "expo-router";
-import { I18n } from "i18n-js";
+import { useI18n } from "@/hooks/useI18n";
 import { useContext } from "react";
 import { Pressable, TouchableOpacity, useColorScheme } from "react-native";
 
 export default function HomeLayout() {
     const theme = useColorScheme() ?? 'light';
     const context = useContext(HymnalContext);
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     return (
         <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}
@@ -30,9 +26,11 @@ export default function HomeLayout() {
                     title: 'Preferences',
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('settings'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -41,9 +39,11 @@ export default function HomeLayout() {
                     title: i18n.t('help'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('settings'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -52,9 +52,11 @@ export default function HomeLayout() {
                     title: i18n.t('setBibleReading'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('broadcast'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -63,9 +65,11 @@ export default function HomeLayout() {
                     title: i18n.t('setSongNumber'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('broadcast'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -74,9 +78,11 @@ export default function HomeLayout() {
                     title: i18n.t('broadcast'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('settings'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -86,8 +92,10 @@ export default function HomeLayout() {
                     headerShown: true, 
                     headerTitleAlign: 'center',
                     headerBackTitle: i18n.t('back'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -96,9 +104,11 @@ export default function HomeLayout() {
                     title: i18n.t('language'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('preferences'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
             <Stack.Screen
@@ -107,9 +117,11 @@ export default function HomeLayout() {
                     title: i18n.t('theme'),
                     headerShown: true, 
                     headerTitleAlign: 'center',
-                    headerBackTitle: i18n.t('back'),
+                    headerBackTitle: i18n.t('preferences'),
+                    headerBackButtonDisplayMode: 'minimal',
                     headerTransparent: true,
                     headerShadowVisible: false,
+                    headerTintColor: Colors[theme].tint
                 }}
             />
         </Stack>

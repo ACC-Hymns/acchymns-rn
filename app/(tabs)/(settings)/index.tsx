@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, TouchableWithoutFeedback } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
@@ -7,9 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
-import { getLocales } from 'expo-localization';
-import { I18n } from 'i18n-js';
-import { translations } from '@/constants/localization';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function SettingsScreen() {
@@ -19,73 +17,71 @@ export default function SettingsScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     return (
-        <>
-            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
-                <ScrollView style={styles.scrollView}>
-                    <View style={styles.titleContainer}>
-                        <StyledText style={styles.textStyle}>{i18n.t('settings')}</StyledText>
-                    </View>
-                    <View style={{ marginTop: 20 }}>
-                        <StyledText style={styles.settingsLabel}>{i18n.t('info')}</StyledText>
-                    </View>
-                    <View style={[styles.settingsContainer]}>
-                        <TouchableHighlight
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <View style={styles.settingsItem}>
-                                <StyledText style={styles.settingsText}>{i18n.t('appVersion')}</StyledText>
-                                <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</StyledText>
-                            </View>
-                        </TouchableHighlight>
-                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                        <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/help')}
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <View style={styles.settingsItem}>
-                                <StyledText style={styles.settingsText}>{i18n.t('help')}</StyledText>
-                                <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
-                            </View>
-                        </TouchableHighlight>
-                    </View>
-                    <View style={{ marginTop: 24 }}>
-                        <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
-                    </View>
-                    <View style={[styles.settingsContainer]}>
-                        <TouchableHighlight
-                            style={styles.settingsItem}
-                            onPress={() => router.push('/hymnal_importer')}
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <StyledText style={styles.settingsText}>{i18n.t('addHymnal')}</StyledText>
-                        </TouchableHighlight>
-                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                        <TouchableHighlight
-                            style={styles.settingsItem}
-                            onPress={() => router.push('/broadcast')}
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <StyledText style={styles.settingsText}>{i18n.t('broadcast')}</StyledText>
-                        </TouchableHighlight>
-                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                        <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/preferences')}
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <View style={styles.settingsItem}>
-                                <StyledText style={styles.settingsText}>{i18n.t('preferences')}</StyledText>
-                                <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
-                            </View>
-                        </TouchableHighlight>
-                    </View>
-                </ScrollView>
-            </View>
-        </>
+        <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
+            <ScrollView 
+            contentInsetAdjustmentBehavior='always'
+            style={styles.scrollView}>
+                <View style={styles.titleContainer}>
+                    <StyledText style={styles.textStyle}>{i18n.t('settings')}</StyledText>
+                </View>
+                <View>
+                    <StyledText style={styles.settingsLabel}>{i18n.t('info')}</StyledText>
+                </View>
+                <View style={[styles.settingsContainer]}>
+                    <TouchableHighlight
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <View style={styles.settingsItem}>
+                            <StyledText style={styles.settingsText}>{i18n.t('appVersion')}</StyledText>
+                            <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</StyledText>
+                        </View>
+                    </TouchableHighlight>
+                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                    <TouchableHighlight
+                        onPress={() => router.push('/(tabs)/(settings)/help')}
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <View style={styles.settingsItem}>
+                            <StyledText style={styles.settingsText}>{i18n.t('help')}</StyledText>
+                            <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                        </View>
+                    </TouchableHighlight>
+                </View>
+                <View style={{ marginTop: 24 }}>
+                    <StyledText style={styles.settingsLabel}>{i18n.t('general')}</StyledText>
+                </View>
+                <View style={[styles.settingsContainer]}>
+                    <TouchableHighlight
+                        style={styles.settingsItem}
+                        onPress={() => router.push('/hymnal_importer')}
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <StyledText style={styles.settingsText}>{i18n.t('addHymnal')}</StyledText>
+                    </TouchableHighlight>
+                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                    <TouchableHighlight
+                        style={styles.settingsItem}
+                        onPress={() => router.push('/broadcast')}
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <StyledText style={styles.settingsText}>{i18n.t('broadcast')}</StyledText>
+                    </TouchableHighlight>
+                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                    <TouchableHighlight
+                        onPress={() => router.push('/(tabs)/(settings)/preferences')}
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <View style={styles.settingsItem}>
+                            <StyledText style={styles.settingsText}>{i18n.t('preferences')}</StyledText>
+                            <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                        </View>
+                    </TouchableHighlight>
+                </View>
+            </ScrollView>
+        </View>
     );
 }
 
@@ -110,6 +106,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+
         },
         settingsText: {
             fontSize: 18,
@@ -136,12 +133,12 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },
         titleContainer: {
-            marginTop: 80,
+            marginTop: 18,
             marginBottom: 20,
             marginLeft: 10,
         },

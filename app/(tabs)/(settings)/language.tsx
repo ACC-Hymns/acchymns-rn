@@ -6,9 +6,9 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { getLocales } from 'expo-localization';
-import { supportedLanguages, getLanguageName, translations } from '@/constants/localization';
+import { supportedLanguages, getLanguageName } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';
-import { I18n } from 'i18n-js';
+import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
 
 export default function LanguageScreen() {
@@ -18,9 +18,7 @@ export default function LanguageScreen() {
     const router = useRouter();
     const context = useContext(HymnalContext);
 
-    const i18n = new I18n(translations);
-    i18n.enableFallback = true;
-    i18n.locale = context?.languageOverride ?? getLocales()[0].languageCode ?? 'en';
+    const i18n = useI18n();
 
     const [selectedLanguage, setSelectedLanguage] = useState<string>(context?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en');
 
@@ -84,6 +82,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
+            
         },
         settingsText: {
             fontSize: 18,
@@ -110,7 +109,7 @@ function makeStyles(theme: "light" | "dark") {
         buttonText: {
             color: 'white',
             fontSize: 24,
-            fontWeight: 'bold',
+            fontWeight: '700',
             fontFamily: 'Lato',
             textAlign: 'center'
         },
