@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Switch, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import React, { useContext, useCallback, useEffect } from 'react';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
+import React, { useContext, useCallback, useEffect, useLayoutEffect } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
@@ -21,6 +21,29 @@ export default function PreferencesScreen() {
 
     const themeName = (theme: string) => theme === 'system' ? i18n.t('systemDefault') : theme === 'light' ? i18n.t('lightMode') : i18n.t('darkMode');
     const languageName = (language: string) => getLanguageName(language);
+    const navigation = useNavigation();
+
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
 
     return (
         <>

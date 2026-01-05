@@ -92,9 +92,6 @@
                 ]
               }
             ]
-          },
-          "ios": {
-            "fonts": ["./assets/fonts/latoregular.ttf", "./assets/fonts/latoblack.ttf", "./assets/fonts/latobold.ttf"]
           }
         }
       ],

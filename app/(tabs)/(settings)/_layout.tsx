@@ -93,9 +93,11 @@ export default function HomeLayout() {
                     headerTitleAlign: 'center',
                     headerBackTitle: i18n.t('back'),
                     headerBackButtonDisplayMode: 'minimal',
-                    headerTransparent: true,
                     headerShadowVisible: false,
-                    headerTintColor: Colors[theme].tint
+                    headerStyle: {
+                        backgroundColor: Colors[theme].background,
+                    },
+                    headerTintColor: Colors[theme].tint,
                 }}
             />
             <Stack.Screen

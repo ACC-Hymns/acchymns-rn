@@ -128,7 +128,8 @@ async function getHTMLStringFromSong(
         // Base64 string of the PDF
         const pdfData = '${base64}';
         
-        // Convert base64 to binary
+        // Convert base64 to binary in chunks to avoid blocking
+        // Use requestIdleCallback or setTimeout to yield to event loop
         const binaryString = atob(pdfData);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);

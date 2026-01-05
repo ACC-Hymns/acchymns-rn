@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, ActivityIndicator } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, ActivityIndicator, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
@@ -21,6 +21,28 @@ export default function BroadcastScreen() {
     const styles = makeStyles(theme as any);
     const router = useRouter();
     const context = useContext(HymnalContext);
+    const navigation = useNavigation();
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
 
     async function check_code(code: string) {
         let response = await axios.post("https://iahifuumb7zasmzuv5xqpmi7fu0pwtkt.lambda-url.us-east-2.on.aws/", {
@@ -140,7 +162,7 @@ export default function BroadcastScreen() {
     return (
         <>
             <View style={{
-                flex: 1, backgroundColor: Colors[theme]['background'], justifyContent: 'center', alignItems: 'center',
+                flex: 1, backgroundColor: Colors[theme]['background'], alignItems: 'center',
             }}>
                 {loading ? (
                     <>
@@ -219,8 +241,8 @@ export default function BroadcastScreen() {
                                             underlayColor={Colors[theme]['buttonTap']}
                                             key={i}
                                             style={{
-                                                width: 100,
-                                                height: 100,
+                                                width: 80,
+                                                height: 80,
                                                 borderRadius: 75,
 
                                                 justifyContent: 'center',
@@ -257,8 +279,8 @@ export default function BroadcastScreen() {
                                             underlayColor={Colors[theme]['buttonTap']}
                                             key={i}
                                             style={{
-                                                width: 100,
-                                                height: 100,
+                                                width: 80,
+                                                height: 80,
                                                 borderRadius: 75,
 
                                                 justifyContent: 'center',
@@ -342,7 +364,7 @@ function makeStyles(theme: "light" | "dark") {
             textAlign: 'center'
         },
         titleContainer: {
-            marginBottom: 20,
+            marginVertical: 40,
             marginLeft: 10,
             justifyContent: 'center',
             alignItems: 'center'

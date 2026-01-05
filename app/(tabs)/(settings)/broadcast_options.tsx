@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
@@ -20,6 +20,28 @@ export default function BroadcastOptionsScreen() {
     const styles = makeStyles(theme as any);
     const router = useRouter();
     const context = useContext(HymnalContext);
+    const navigation = useNavigation();
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
 
     const i18n = useI18n();
 

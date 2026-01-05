@@ -39,5 +39,6 @@ yarn-error.*
 app-example
 credentials.json
 *.ipa
+*.apk
 
 .env

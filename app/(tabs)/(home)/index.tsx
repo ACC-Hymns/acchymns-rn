@@ -4,36 +4,20 @@ import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import * as FileSystem from 'expo-file-system';
-import { hashFile, hashFolder } from '@/scripts/hash';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
-import { useNavigation, useRouter } from 'expo-router';
-import { memo, use, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View, StyleSheet, FlatList, TouchableOpacity, InteractionManager, Alert, Dimensions, ListRenderItemInfo, Platform, ScrollView } from 'react-native';
-import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
-import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
-import { GestureHandlerRootView, Pressable } from 'react-native-gesture-handler';
-import * as ContextMenu from 'zeego/context-menu';
+import { useRouter } from 'expo-router';
+import { useCallback, useContext, useEffect, useState, useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Icon } from 'react-native-elements';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
-import ReorderableList, {
-    ReorderableListReorderEvent,
-    reorderItems,
-    useIsActive,
-    useReorderableDrag,
-    useReorderableDragEnd,
-    useReorderableDragStart,
-} from 'react-native-reorderable-list';
 import type { SortableGridRenderItem } from 'react-native-sortables';
 import Sortable from 'react-native-sortables';
-import { Ionicons } from '@expo/vector-icons';
 import { scheduleOnRN } from 'react-native-worklets';
+import Animated, { useAnimatedRef } from 'react-native-reanimated';
+import { Animated as RNAnimated } from 'react-native';
 
 export default function HomeScreen() {
 
@@ -85,6 +69,7 @@ export default function HomeScreen() {
     }, [deleteHymnal]); // Runs when the function reference changes
 
     const [sortOrder, setSortOrder] = useState<string[]>([]);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const HYMNAL_SORT_KEY = 'hymnal_sort_order';
     const saveOrder = async (order: string[]) => {
         try {
@@ -100,7 +85,6 @@ export default function HomeScreen() {
             if (order !== null && context?.BOOK_DATA) {
                 let order_data: string[] = JSON.parse(order);
                 order_data = [...new Set(order_data)]
-                console.log("Book order: " + order);
                 if (order_data.some(el => el == null)) {
                     order_data = Object.keys(context.BOOK_DATA).map((b) => context.BOOK_DATA[b].name.short);
                     await saveOrder(order_data);
@@ -111,13 +95,22 @@ export default function HomeScreen() {
                     // Then, any keys in bookData not in sortOrder
                     ...Object.keys(context?.BOOK_DATA).filter((key) => !order_data.includes(key))
                 ]
-                console.log(data)
                 setSortOrder(data);
+            } else if (context?.BOOK_DATA) {
+                // If no saved order, initialize with current book data keys
+                const initialOrder = Object.keys(context.BOOK_DATA);
+                setSortOrder(initialOrder);
             } else {
                 console.log("bookData is null");
             }
+            setIsInitialLoad(false);
         } catch (error) {
             console.error("Error loading sort order:", error);
+            if (context?.BOOK_DATA) {
+                const initialOrder = Object.keys(context.BOOK_DATA);
+                setSortOrder(initialOrder);
+            }
+            setIsInitialLoad(false);
         }
     };
     useEffect(() => {
@@ -125,7 +118,20 @@ export default function HomeScreen() {
             await loadOrder();
         };
         loadInitialData();
-    }, []);
+    }, [context?.BOOK_DATA]);
+
+    // Update sortOrder when BOOK_DATA changes to remove deleted items
+    useEffect(() => {
+        if (!context?.BOOK_DATA || sortOrder.length === 0 || isInitialLoad) return;
+        
+        // Filter out any items in sortOrder that no longer exist in BOOK_DATA
+        const validSortOrder = sortOrder.filter((key) => context?.BOOK_DATA[key]);
+        
+        // If the order changed, update it
+        if (validSortOrder.length !== sortOrder.length) {
+            setSortOrder(validSortOrder);
+        }
+    }, [context?.BOOK_DATA, isInitialLoad]);
 
     useEffect(() => {
         const save = async () => {
@@ -135,11 +141,16 @@ export default function HomeScreen() {
     }, [sortOrder])
 
 
-    const HymnalItem: React.FC<{ item: string }> = memo(({ item }) => {
+    const HymnalItem: React.FC<{ item: string }> = ({ item }) => {
+
+        if(!context?.BOOK_DATA?.[item]) {
+            return null;
+        }
 
         return (
             <View style={{ marginBottom: 15 }}>
                 <GradientButton
+                    onPress={() => router.push(`/selection/${item}`)}
                     key={item}
                     title={context?.BOOK_DATA?.[item].name.medium || ""}
                     primaryColor={context?.BOOK_DATA?.[item].primaryColor || ""}
@@ -147,46 +158,97 @@ export default function HomeScreen() {
                 />
             </View>
         )
-    });
+    };
 
     const renderItem = useCallback<SortableGridRenderItem<string>>(
         ({ item }) => (
             <HymnalItem item={item} />
         ),
-        []
+        [context?.BOOK_DATA, router]
     );
+
+    // Filter and memoize the data to only include items that exist in BOOK_DATA
+    const gridData = useMemo(() => {
+        if (!context?.BOOK_DATA || sortOrder.length === 0) {
+            return [];
+        }
+        return sortOrder.filter((key) => context?.BOOK_DATA[key]);
+    }, [sortOrder, context?.BOOK_DATA]);
 
     function haptic() {
         'worklet';
         scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
     }
+
+    const scrollableRef = useAnimatedRef<Animated.ScrollView>();
+
+    // Loading skeleton animation
+    const skeletonOpacity = React.useRef(new RNAnimated.Value(0.3)).current;
+    
+    React.useEffect(() => {
+        if (isInitialLoad) {
+            const pulseAnimation = RNAnimated.loop(
+                RNAnimated.sequence([
+                    RNAnimated.timing(skeletonOpacity, {
+                        toValue: 0.6,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                    RNAnimated.timing(skeletonOpacity, {
+                        toValue: 0.3,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                ])
+            );
+            pulseAnimation.start();
+            return () => pulseAnimation.stop();
+        }
+    }, [isInitialLoad]);
+
+
     return (
         <View style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
-            <ScrollView
+            <Animated.ScrollView
                 style={styles.scrollView}
                 contentInsetAdjustmentBehavior='always'
+                ref={scrollableRef}
             >
                 <View style={styles.titleContainer}>
                     <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
                 </View>
-                <Sortable.Grid
-                    columns={1}
-                    data={context?.BOOK_DATA
-                        ? [
-                            // First, keys in sortOrder that exist in bookData
-                            ...sortOrder.filter((key) => context?.BOOK_DATA[key]),
-                            // Then, any keys in bookData not in sortOrder
-                            ...Object.keys(context?.BOOK_DATA).filter((key) => !sortOrder.includes(key))
-                        ]
-                        : []} // Pass your data here
-                    renderItem={renderItem}
-                    rowGap={5}
-                    columnGap={5}
-                    activeItemOpacity={1}
-                    inactiveItemOpacity={1}
-                    enableActiveItemSnap={false}
-                    onOrderChange={haptic}
-                />
+                {isInitialLoad ? (
+                    <View>
+                        {[1, 2, 3, 4].map((index) => (
+                            <RNAnimated.View
+                                key={index}
+                                style={[
+                                    styles.skeletonItem,
+                                    {
+                                        opacity: skeletonOpacity,
+                                        backgroundColor: theme === 'light' ? '#E3E3E9' : '#1C1C1E',
+                                    }
+                                ]}
+                            />
+                        ))}
+                    </View>
+                ) : (
+                    <Sortable.Grid
+                        columns={1}
+                        data={gridData}
+                        keyExtractor={(item: string) => item}
+                        renderItem={renderItem}
+                        activeItemOpacity={1}
+                        inactiveItemOpacity={1}
+                        scrollableRef={scrollableRef}
+                        enableActiveItemSnap={false}
+                        onOrderChange={haptic}
+                        onDragStart={haptic}
+                        onDragEnd={({data}) => {
+                            setSortOrder(data);
+                        }}
+                    />
+                )}
                 <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 30 }}>
                     <TouchableOpacity
                         onPress={() => router.push('/hymnal_importer')}
@@ -199,57 +261,8 @@ export default function HomeScreen() {
                         />
                     </TouchableOpacity>
                 </View>
-            </ScrollView>
-            {/* <ReorderableList
-                    autoscrollSpeedScale={0}
-                    shouldUpdateActiveItem={true}
-                    style={[styles.scrollView]}
-                    cellAnimations={{opacity: 1}}
-                    contentContainerStyle={{ paddingBottom: 90 }}
-                    data={
-                        context?.BOOK_DATA
-                            ? [
-                                // First, keys in sortOrder that exist in bookData
-                                ...sortOrder.filter((key) => context?.BOOK_DATA[key]),
-                                // Then, any keys in bookData not in sortOrder
-                                ...Object.keys(context?.BOOK_DATA).filter((key) => !sortOrder.includes(key))
-                            ]
-                            : []
-                    }
-                    keyExtractor={(item: string) => item}
-                    onReorder={({ from, to }: ReorderableListReorderEvent) => {
-                        setSortOrder(value => reorderItems(value, from, to));
-                    }}
-                    onIndexChange={haptic}
-                    onDragStart={haptic}
-                    renderItem={renderItem}
-                    ListHeaderComponent={
-                        <View style={styles.titleContainer}>
-                            <StyledText style={styles.textStyle}>{i18n.t('home')}</StyledText>
-                        </View>
-                    }
-                    ListFooterComponent={
-                        <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 30 }}>
-                            <TouchableOpacity
-                                onPress={() => router.push('/hymnal_importer')}
-                            >
-                                <IconSymbol
-                                    name="plus.circle"
-                                    size={56}
-                                    weight='light'
-                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    }
-                    ListEmptyComponent={
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
-                            <StyledText style={styles.fadedText}>{i18n.t('noHymnals')}</StyledText>
-                            <View style={{ height: 5 }} />
-                            <StyledText style={styles.descriptionText}>{i18n.t('addHymnal')}</StyledText>
-                        </View>
-                    }
-                /> */}
+            </Animated.ScrollView>
+            
 
         </View>
     );
@@ -348,6 +361,11 @@ function makeStyles(theme: "light" | "dark") {
             color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
             fontFamily: 'Lato',
             textAlign: 'center'
+        },
+        skeletonItem: {
+            height: 110,
+            borderRadius: 16,
+            marginBottom: 15,
         }
     });
 

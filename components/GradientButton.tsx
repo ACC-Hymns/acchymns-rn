@@ -26,7 +26,6 @@ const GradientButton: React.FC<GradientButtonProps> = ({
                 onPress={() => {
                     // check press duration
                     onPress?.();
-                    console.log("ORESS")
                 }}
 
                 style={styles.buttonContainer}

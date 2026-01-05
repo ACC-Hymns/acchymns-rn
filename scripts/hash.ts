@@ -1,24 +1,26 @@
 import { Directory, File, Paths } from 'expo-file-system/next';
 import { sha1 } from 'js-sha1';
-import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
 /**
  * Recursively get all file URIs in a folder.
+ * Optimized with Set for O(1) extension lookup.
  */
 async function getAllFiles(folderUri: string): Promise<string[]> {
     const folder = new Directory(folderUri);
     const files: string[] = [];
-    const allowedExtensions = ['.png', '.pdf', '.jpg', '.json', '.js'];
+    // Use Set for O(1) lookup instead of O(n) array.some()
+    const allowedExtensions = new Set(['.png', '.pdf', '.jpg', '.json', '.js']);
 
     for (const entry of folder.list()) {
         const path = Paths.join(folderUri, entry.name);
-        console.log("entry: " + entry.name);
         if (entry instanceof Directory) {
             const subFiles = await getAllFiles(path);
             files.push(...subFiles);
         } else {
-            if (allowedExtensions.some(ext => path.endsWith(ext))) {
+            // Check extension using Set for O(1) lookup
+            const ext = path.substring(path.lastIndexOf('.'));
+            if (allowedExtensions.has(ext)) {
                 files.push(path);
             }
         }
@@ -27,15 +29,14 @@ async function getAllFiles(folderUri: string): Promise<string[]> {
     return files;
 }
 
-// hash indvidiual file
+// hash individual file - optimized for speed
 export async function hashFile(fileUri: string): Promise<string> {
     const file = new File(fileUri);
     const bytes = await file.bytes();
 
-    // Compute true SHA-1 hash of binary data
-    const hash = sha1(bytes);
-
-    return hash;
+    // js-sha1 is already optimized and fast for binary data
+    // Native crypto would require string conversion which adds overhead
+    return sha1(bytes);
 }
 
 type BookSignature = {
@@ -49,12 +50,10 @@ type BookSignature = {
  * Calculate the hash of a folder's content.
  */
 export async function hashFolder(folderUri: string): Promise<boolean> {
-    console.log('Hashing folder:', folderUri);
     const fileUris = await getAllFiles(folderUri);
     
     // load .signature file
     const signatureFile = new File(folderUri, Platform.OS === 'ios' ? 'signature_v2.txt' : '.signature_v2');
-    console.log(signatureFile.contentUri);
 
     if(!signatureFile.exists) {
         console.log('Signature file not found');
@@ -64,41 +63,64 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
     const signatureContent = await signatureFile.text();
     const signature = JSON.parse(signatureContent) as BookSignature;
 
-    // for all BookSignatures
-    for (const fileUri of fileUris) {
-        const fileName = fileUri.split('/').pop()!;
-        const fileHash = await hashFile(fileUri);
+    // Build a map of file signatures for O(1) lookup instead of recursive search
+    const signatureMap = new Map<string, BookSignature>();
+    const buildSignatureMap = (children: BookSignature[] | undefined, map: Map<string, BookSignature>) => {
+        if (!children) return;
+        for (const child of children) {
+            map.set(child.name, child);
+            if (child.children) {
+                buildSignatureMap(child.children, map);
+            }
+        }
+    };
+    buildSignatureMap(signature.children, signatureMap);
 
-        // check if the file is in the signature
-        const findFileSignature = (children: BookSignature[] | undefined, fileName: string): BookSignature | undefined => {
-            if (!children) return undefined;
-            for (const child of children) {
-            if (child.name === fileName) {
-                return child;
-            }
-            const foundInChildren = findFileSignature(child.children, fileName);
-            if (foundInChildren) {
-                return foundInChildren;
-            }
-            }
-            return undefined;
-        };
+    // Pre-filter JSON files that will be ignored anyway to skip hashing them
+    const filesToHash = fileUris.filter(uri => {
+        const fileName = uri.split('/').pop()!;
+        // Skip JSON files since they're ignored in validation anyway
+        return !fileName.endsWith('.json');
+    });
 
-        const fileSignature = findFileSignature(signature.children, fileName);
-        if (!fileSignature) {
-            console.log(`File ${fileName} not found in signature.`);
+    // Use smaller chunk size to avoid blocking JS thread
+    // Process in smaller batches with delays to allow UI updates
+    const chunkSize = 10;
+    for (let i = 0; i < filesToHash.length; i += chunkSize) {
+        const chunk = filesToHash.slice(i, i + chunkSize);
+        
+        // Process chunk in parallel
+        const results = await Promise.all(
+            chunk.map(async (fileUri) => {
+                const fileName = fileUri.split('/').pop()!;
+                const fileHash = await hashFile(fileUri);
+                
+                // O(1) lookup instead of recursive search
+                const fileSignature = signatureMap.get(fileName);
+                if (!fileSignature) {
+                    return { valid: false, fileName };
+                }
+
+                // check if the hash matches
+                if (fileSignature.hash !== fileHash) {
+                    return { valid: false, fileName };
+                }
+                
+                return { valid: true, fileName };
+            })
+        );
+        
+        // Check if any file failed validation
+        const failed = results.find(r => !r.valid);
+        if (failed) {
+            console.log(`File ${failed.fileName} failed validation`);
             return false;
         }
-
-        // check if the hash matches
-        if (fileSignature.hash !== fileHash) {
-            console.log(`File ${fileName} hash does not match. Expected ${fileSignature.hash}, got ${fileHash}.`);
-            // if type is a json, ignore
-            if (fileName.endsWith('.json')) {
-                console.log(`Ignoring ${fileName} as it is a JSON file.`);
-                continue;
-            }
-            return false;
+        
+        // Yield to event loop between chunks to prevent blocking
+        // This allows UI updates and animations to continue
+        if (i + chunkSize < filesToHash.length) {
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
 

@@ -1,6 +1,6 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, useRoute, RouteProp, NavigationContainer } from '@react-navigation/native';
-import { getLoadedFonts, isLoaded, useFonts } from 'expo-font';
-import { Link, router, Stack, useNavigation } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { getLoadedFonts, useFonts } from 'expo-font';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,8 +10,8 @@ import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
-import { Bookmark, BookSummary } from '@/constants/types';
-import { Button, Pressable, TouchableOpacity, View, Text, Appearance } from 'react-native';
+import { BookSummary } from '@/constants/types';
+import { View, Appearance } from 'react-native';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
@@ -23,7 +23,6 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
-import DefaultPreference from 'react-native-default-preference';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import StyledText from '@/components/StyledText';
 import TrackPlayer, { Capability } from 'react-native-track-player';
@@ -31,8 +30,6 @@ import { PlaybackService } from '@/scripts/track_player';
 import { ensurePlayerSetup } from '@/scripts/track_player_setup';
 import { validate_token } from '@/scripts/broadcast';
 import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
-import { HeaderButton } from '@react-navigation/elements';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 global.Buffer = Buffer;
 global.process = require('process');
@@ -321,7 +318,6 @@ export default function RootLayout() {
                 if (error)
                     console.log(error);
 
-                console.log(getLoadedFonts())
                 setAppIsReady(true);
             }
         }).catch((error) => {

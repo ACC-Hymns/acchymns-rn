@@ -433,13 +433,19 @@ export default function DisplayScreen() {
 
                 // set song notes
                 const songNotes = songs[params.number].notes;
-                // reverse notes
-                const reversedNotes = songNotes?.slice().reverse();
-                setSongNotes(reversedNotes || []);
-                for (const note of reversedNotes || []) {
+                // reverse notes - use spread instead of slice().reverse() for better performance
+                const reversedNotes = songNotes ? [...songNotes].reverse() : [];
+                setSongNotes(reversedNotes);
+                
+                // Create audio players asynchronously to avoid blocking
+                for (const note of reversedNotes) {
                     const assetId = getNoteMp3(note);
                     const player = createAudioPlayer(assetId);
                     audioPlayers.current.push(player);
+                    // Yield to JS thread periodically
+                    if (audioPlayers.current.length % 5 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
                 }
                 setHeaderOptions();
 

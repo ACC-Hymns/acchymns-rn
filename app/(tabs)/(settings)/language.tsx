@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { getLocales } from 'expo-localization';
@@ -21,6 +21,29 @@ export default function LanguageScreen() {
     const i18n = useI18n();
 
     const [selectedLanguage, setSelectedLanguage] = useState<string>(context?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en');
+
+    const navigation = useNavigation();
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
 
     useEffect(() => {
         context?.setLanguageOverride(selectedLanguage);

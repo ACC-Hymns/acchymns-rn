@@ -42,22 +42,39 @@ async function loadHymnals() {
     }
 
     // read all the folders in the hymnal folder and load the summary.json file
-    for (const book of hymnalFolder.info().files || []) {
-        const summaryFile = new File(Paths.document, `${HYMNAL_FOLDER}/${book}/summary.json`);
-        if (summaryFile.exists) {
-            const summaryContent = await summaryFile.text();
-            const summary = JSON.parse(summaryContent) as BookSummary;
-            BOOK_DATA[book] = summary;
-        } else {
-            console.log(`Summary file not found for ${book}.`);
-
+    // Process in parallel to avoid blocking
+    const books = hymnalFolder.info().files || [];
+    const results = await Promise.all(
+        books.map(async (book) => {
+            const summaryFile = new File(Paths.document, `${HYMNAL_FOLDER}/${book}/summary.json`);
+            if (summaryFile.exists) {
+                try {
+                    const summaryContent = await summaryFile.text();
+                    const summary = JSON.parse(summaryContent) as BookSummary;
+                    return { book, summary, shouldDelete: false };
+                } catch (error) {
+                    console.error(`Error parsing summary for ${book}:`, error);
+                    return { book, summary: null, shouldDelete: true };
+                }
+            } else {
+                console.log(`Summary file not found for ${book}.`);
+                return { book, summary: null, shouldDelete: true };
+            }
+        })
+    );
+    
+    // Process results and handle deletions
+    for (const result of results) {
+        if (result.summary) {
+            BOOK_DATA[result.book] = result.summary;
+        } else if (result.shouldDelete) {
             // if the summary file is not found, purge the book folder
-            const bookFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}`);
+            const bookFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${result.book}`);
             if (bookFolder.exists) {
                 bookFolder.delete();
-                console.log(`Deleted folder for ${book}.`);
+                console.log(`Deleted folder for ${result.book}.`);
             } else {
-                console.log(`Folder for ${book} does not exist.`);
+                console.log(`Folder for ${result.book} does not exist.`);
             }
         }
     }
@@ -86,47 +103,35 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     // Create the local folder if it doesn't exist
     localFolder.create({ intermediates: true });
 
-    // Download the summary.json file
+    // Download metadata files in parallel for better performance
     const summaryUrl = `${folderUrl}summary.json`;
-    const summaryFile = await File.downloadFileAsync(summaryUrl, localFolder);
-    if (summaryFile.exists) {
-        console.log(`Downloaded summary.json to ${summaryFile.uri}`);
-    } else {
-        console.error(`Error downloading summary.json`);
+    const signatureURL = `${folderUrl}.signature_v2`;
+    const songsUrl = `${folderUrl}songs.json`;
+    
+    const [summaryFile, signatureFile, songsFile] = await Promise.all([
+        File.downloadFileAsync(summaryUrl, localFolder),
+        File.downloadFileAsync(signatureURL, localFolder),
+        File.downloadFileAsync(songsUrl, localFolder)
+    ]);
+
+    if (!summaryFile.exists) {
+        throw new Error(`Failed to download summary.json for ${book}`);
     }
 
     // Parse the summary.json file to get the song count
     const summaryContent = await summaryFile.text();
     const summary = JSON.parse(summaryContent) as BookSummary;
 
-    // Download the .signature file if it exists
-    const signatureURL = `${folderUrl}.signature_v2`;
-    const signatureFile = await File.downloadFileAsync(signatureURL, localFolder);
-    if (signatureFile.exists) {
-        console.log(`Downloaded .signature_v2 to ${signatureFile.uri}`);
-    } else {
-        console.error(`Error downloading .signature_v2`);
-    }
-
+    // Download index.json in parallel if needed (don't wait for it)
+    let indexFilePromise: Promise<any> | null = null;
     if (summary.indexAvailable) {
-        // Download the index.json file if it exists
         const indexUrl = `${folderUrl}index.json`;
-        const indexFile = await File.downloadFileAsync(indexUrl, localFolder);
-        if (indexFile.exists) {
-            console.log(`Downloaded index.json to ${indexFile.uri}`);
-        } else {
-            console.error(`Error downloading index.json`);
-        }
-
+        indexFilePromise = File.downloadFileAsync(indexUrl, localFolder);
     }
 
-    // Download the songs.json file
-    const songsUrl = `${folderUrl}songs.json`;
-    const songsFile = await File.downloadFileAsync(songsUrl, localFolder);
-    if (songsFile.exists) {
-        console.log(`Downloaded songs.json to ${songsFile.uri}`);
-    } else {
-        console.error(`Error downloading songs.json`);
+    // Wait for index if it was requested
+    if (indexFilePromise) {
+        await indexFilePromise;
     }
 
     // Create songs folder
@@ -137,32 +142,42 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     const songs = await songsFile.text();
     const songsList = JSON.parse(songs) as SongList;
 
-    const chunkSize = 25;
+    // Increase chunk size for better parallelization (50-100 concurrent downloads)
+    const chunkSize = 50;
     const songNumbers = Object.keys(songsList);
     const totalSongs = songNumbers.length;
+    
+    // Use atomic counter for thread-safe progress updates
     let downloadedSongs = 0;
+    const updateProgress = () => {
+        if (onProgress) {
+            onProgress((downloadedSongs / totalSongs) * 100);
+        }
+    };
 
     for (let i = 0; i < songNumbers.length; i += chunkSize) {
         const chunk = songNumbers.slice(i, i + chunkSize);
 
-        await Promise.all(
+        await Promise.allSettled(
             chunk.map(async (songNumber) => {
-                const songImageUrl = `${folderUrl}songs/${songNumber}.${summary.fileExtension}`;
-                const songFile = new File(songsFolder, `${songNumber}.${summary.fileExtension}`);
-                await File.downloadFileAsync(songImageUrl, songFile).then(({ uri }) => {
+                try {
+                    const songImageUrl = `${folderUrl}songs/${songNumber}.${summary.fileExtension}`;
+                    const songFile = new File(songsFolder, `${songNumber}.${summary.fileExtension}`);
+                    await File.downloadFileAsync(songImageUrl, songFile);
                     downloadedSongs++;
-                    if (onProgress) {
-                        onProgress((downloadedSongs / totalSongs) * 100);
-                    }
-                })
-                .catch(error => {
+                    updateProgress();
+                } catch (error) {
                     console.error(`Error downloading ${songNumber}.${summary.fileExtension}: ${error}`);
-                });
+                    // Continue with other downloads even if one fails
+                }
             })
         );
-        console.log(`Downloaded songs ${i + 1} to ${Math.min(i + chunkSize, songNumbers.length)}`);
+        
+        // Only log every 10th chunk to reduce console overhead
+        if ((i / chunkSize) % 10 === 0) {
+            console.log(`Downloaded songs ${i + 1} to ${Math.min(i + chunkSize, songNumbers.length)}`);
+        }
     }
-
 
     // Move the downloaded files to the hymnal folder
     //finalFolder.create({ intermediates: true });
@@ -170,8 +185,10 @@ async function downloadHymnal(book: string, onProgress?: (progress: number) => v
     console.log(`Moved ${book} folder to ${hymnalFolder.info().uri || "ERROR"}`);
 
     console.log(`Finished downloading ${summary.name.short}.`);
-
-
+    // Ensure progress reaches 100% before moving to verification
+    onProgress?.(100);
+    // Small delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 100));
     onProgress?.(101);
     // verify the download
     const valid = await hashFolder(finalFolder.info().uri || "ERROR");

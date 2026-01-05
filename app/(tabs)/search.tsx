@@ -3,7 +3,7 @@ import { HymnalContext } from '@/constants/context';
 import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, TouchableWithoutFeedback, Keyboard, Pressable } from 'react-native';
 import { FlatList, TextInput } from 'react-native-gesture-handler';
 import { Divider, Icon } from 'react-native-elements'
@@ -18,7 +18,63 @@ import { fontFamily } from '@/constants/assets';
 import * as ContextMenu from 'zeego/context-menu'
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
+interface SongItemWithMenuProps {
+    item: SongSearchInfo;
+    isBookmarked: boolean;
+    onBookmarkToggle: () => void;
+    theme: 'light' | 'dark';
+}
 
+const SongItemWithMenu = ({ item, isBookmarked, onBookmarkToggle, theme }: SongItemWithMenuProps) => {
+    return (
+        <ContextMenu.Root>
+            <ContextMenu.Trigger>
+                <GenericGradientButton
+                    primaryColor={item.book.primaryColor}
+                    secondaryColor={item.book.secondaryColor}
+                    onLongPress={() => {
+
+                    }}
+                    onPress={() => {
+                        if (item.book.name.short && item.number) {
+                            router.navigate({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
+                        } else {
+                            console.error("Invalid item data: ", item);
+                        }
+                    }}
+                    style={{
+                        borderRadius: 12,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 84 // Ensure a minimum height of 60
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                        <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
+                            <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 400, textAlign: 'left' }}>{item.title}</StyledText>
+                            <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'left' }}>{item.book.name.medium}</StyledText>
+                        </View>
+                        <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'right' }}>#{item.number}</StyledText>
+                        </View>
+                    </View>
+                </GenericGradientButton>
+            </ContextMenu.Trigger>
+            <ContextMenu.Content>
+                <ContextMenu.Item
+                    key={`bookmark-${item.book.name.short}-${item.number}-${isBookmarked}`}
+                    destructive={isBookmarked}
+                    onSelect={onBookmarkToggle}
+                >
+                    <ContextMenu.ItemTitle>{isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}</ContextMenu.ItemTitle>
+                    <ContextMenu.ItemIcon ios={{ name: 'bookmark' }}>
+                        <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                    </ContextMenu.ItemIcon>
+                </ContextMenu.Item>
+            </ContextMenu.Content>
+        </ContextMenu.Root>
+    );
+};
 
 export default function SearchScreen() {
 
@@ -80,19 +136,29 @@ export default function SearchScreen() {
                     if (!songData)
                         continue;
 
-                    Object.keys(songData).forEach((key: string) => {
-                        const song: Song = songData[key];
-                        const book: BookSummary = context.BOOK_DATA[id];
-                        const searchInfo: SongSearchInfo = {
-                            stripped_title: stripSearchText(song.title ?? ""),
-                            stripped_first_line: stripSearchText(song.first_line ?? ""),
-                            title: song.title,
-                            first_line: song.first_line,
-                            number: key,
-                            book: book,
-                        };
-                        songList.push(searchInfo);
-                    });
+                    // Process songs in batches to avoid blocking JS thread
+                    const songKeys = Object.keys(songData);
+                    const batchSize = 100;
+                    for (let i = 0; i < songKeys.length; i += batchSize) {
+                        const batch = songKeys.slice(i, i + batchSize);
+                        for (const key of batch) {
+                            const song: Song = songData[key];
+                            const book: BookSummary = context.BOOK_DATA[id];
+                            const searchInfo: SongSearchInfo = {
+                                stripped_title: stripSearchText(song.title ?? ""),
+                                stripped_first_line: stripSearchText(song.first_line ?? ""),
+                                title: song.title,
+                                first_line: song.first_line,
+                                number: key,
+                                book: book,
+                            };
+                            songList.push(searchInfo);
+                        }
+                        // Yield to JS thread after each batch
+                        if (i + batchSize < songKeys.length) {
+                            await new Promise(resolve => setTimeout(resolve, 0));
+                        }
+                    }
                 }
                 setSongList(songList);
 
@@ -135,33 +201,52 @@ export default function SearchScreen() {
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
-    useEffect(() => {
+    // Memoize filtered and sorted data to avoid blocking on every render
+    const filteredData = useMemo(() => {
+        if (!search.trim()) return [];
+
         const stripped_search = stripSearchText(search);
-        setDataSource([...(search.trim().length > 0 ? songList : [])]
-            .filter((s) =>
-                s.stripped_title?.includes(stripped_search) ||
-                s?.stripped_first_line?.includes(stripped_search) ||
-                s?.number == stripped_search
-            )
-            .sort((a, b) =>
-                a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
-                    b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-                )
-            ));
+        const filtered = songList.filter((s) =>
+            s.stripped_title?.includes(stripped_search) ||
+            s?.stripped_first_line?.includes(stripped_search) ||
+            s?.number == stripped_search
+        );
+
+        // Pre-compute cleaned titles to avoid repeated .replace() calls in sort
+        const cleaned = filtered.map(s => ({
+            ...s,
+            cleanedTitle: s.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
+        }));
+
+        return cleaned.sort((a, b) =>
+            a.cleanedTitle.localeCompare(b.cleanedTitle)
+        ).map(({ cleanedTitle, ...rest }) => rest);
     }, [search, songList]);
-    // Select 10 random songs from songList as featured songs
-    const featuredList = songList
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 10);
+
+    useEffect(() => {
+        setDataSource(filteredData);
+    }, [filteredData]);
+
+    // Memoize featuredList to avoid random sort on every render
+    const featuredList = useMemo(() => {
+        if (songList.length === 0) return [];
+        // Use Fisher-Yates shuffle for better performance than sort with random
+        const shuffled = [...songList];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.slice(0, 10);
+    }, [songList.length]); // Only recalculate when songList length changes
 
     const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     useLayoutEffect(() => {
-
+        // Remove existingBookmarks from deps to avoid infinite loop
         AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
             setExistingBookmarks(JSON.parse(data || '[]'));
         });
-    }, [existingBookmarks]);
+    }, []); // Only run once on mount
     const addBookmark = async (bookmark: Bookmark) => {
         try {
             const bookmarks: Bookmark[] = existingBookmarks ?? [];
@@ -172,9 +257,9 @@ export default function SearchScreen() {
                 return;
             }
             console.log('Adding bookmark for', bookmark.book, bookmark.number);
-            bookmarks.push(bookmark);
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-            setExistingBookmarks(bookmarks); // Update the current bookmarks
+            const updatedBookmarks = [...bookmarks, bookmark]; // Create a new array instead of mutating
+            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
+            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
         } catch (error) {
             console.error("Error saving bookmarks:", error);
         }
@@ -193,6 +278,31 @@ export default function SearchScreen() {
     };
 
     const [clearPressed, setClearPressed] = useState<boolean>(false);
+
+    const handleBookmarkToggle = useCallback(async (item: SongSearchInfo) => {
+        await addBookmark({
+            book: item.book.name.short,
+            number: item.number ?? '',
+        });
+    }, [addBookmark, existingBookmarks]);
+
+    const keyExtractor = useCallback((item: SongSearchInfo) => {
+        return `${item.book.name.short}-${item.number}`;
+    }, []);
+
+    const renderItem = useCallback(({ item, index }: { item: SongSearchInfo; index: number }) => {
+        const isBookmarked = existingBookmarks.some(b => b.book === item.book.name.short && b.number === item.number);
+
+        return (
+            <SongItemWithMenu
+                item={item}
+                isBookmarked={isBookmarked}
+                onBookmarkToggle={() => handleBookmarkToggle(item)}
+                theme={theme}
+            />
+        );
+    }, [existingBookmarks, handleBookmarkToggle, theme]);
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             {loading ? (
@@ -203,59 +313,11 @@ export default function SearchScreen() {
                         ref={scrollViewRef}
                         scrollEnabled={scrollEnabled}
                         data={dataSource}
+                        extraData={existingBookmarks}
+                        keyExtractor={keyExtractor}
                         keyboardShouldPersistTaps='always'
                         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-                        renderItem={({ item, index }) => (
-                            <ContextMenu.Root>
-                                <ContextMenu.Trigger>
-                                    <GenericGradientButton
-                                        primaryColor={item.book.primaryColor}
-                                        secondaryColor={item.book.secondaryColor}
-                                        onLongPress={() => {
-
-                                        }}
-                                        onPress={() => {
-                                            if (item.book.name.short && item.number) {
-                                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: item.book.name.short, number: item.number } });
-                                            } else {
-                                                console.error("Invalid item data: ", item);
-                                            }
-                                        }}
-                                        style={{
-                                            borderRadius: 12,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            minHeight: 84 // Ensure a minimum height of 60
-                                        }}
-                                    >
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
-                                            <View style={{ width: '80%', alignSelf: 'flex-start', gap: 4 }}>
-                                                <StyledText numberOfLines={1} style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 400, textAlign: 'left' }}>{item.title}</StyledText>
-                                                <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'left' }}>{item.book.name.medium}</StyledText>
-                                            </View>
-                                            <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                                <StyledText style={{ color: '#fff', fontSize: 20, fontFamily: 'Lato', fontWeight: 700, textAlign: 'right' }}>#{item.number}</StyledText>
-                                            </View>
-                                        </View>
-                                    </GenericGradientButton>
-                                </ContextMenu.Trigger>
-                                <ContextMenu.Content>
-                                    <ContextMenu.Item key="actions" destructive={existingBookmarks.some(b => b.book === item.book.name.short && b.number === item.number)} onSelect={async () => {
-                                        // fetch song information
-                                        await addBookmark({
-                                            book: item.book.name.short,
-                                            number: item.number ?? '',
-                                        })
-                                    }}>
-                                        <ContextMenu.ItemTitle>{existingBookmarks.some(b => b.book === item.book.name.short && b.number === item.number) ? 'Remove Bookmark' : 'Add Bookmark'} </ContextMenu.ItemTitle>
-                                        <ContextMenu.ItemIcon ios={{ name: 'bookmark' }}>
-                                            <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
-                                        </ContextMenu.ItemIcon>
-                                    </ContextMenu.Item>
-                                </ContextMenu.Content>
-                            </ContextMenu.Root>
-                        )
-                        }
+                        renderItem={renderItem}
                         style={[styles.scrollView]}
                         ListFooterComponent={() => <View style={{ height: 100 }} />}
                         ListHeaderComponent={

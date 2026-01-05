@@ -4,17 +4,123 @@ import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { downloadHymnal, loadHymnals } from '@/scripts/hymnals';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useCallback } from 'react';
 import { useContext, useRef, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert, AppState } from 'react-native';
+import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert, AppState, Animated } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
+
+// Bottom progress line component
+const ProgressLine = ({ progress, isIntermediate }: { progress: number; isIntermediate: boolean }) => {
+    const animatedWidth = React.useRef(new Animated.Value(0)).current;
+    const slideAnimation = React.useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+        // Animate progress width smoothly
+        const targetProgress = Math.min(Math.max(progress, 0), 100);
+        Animated.spring(animatedWidth, {
+            toValue: targetProgress,
+            tension: 50,
+            friction: 7,
+            useNativeDriver: false,
+        }).start();
+    }, [progress]);
+
+    React.useEffect(() => {
+        if (isIntermediate) {
+            // Reset animation value to ensure it starts from the beginning
+            slideAnimation.setValue(0);
+            // Continuous sliding line segment animation
+            const slide = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(slideAnimation, {
+                        toValue: 1,
+                        duration: 1500,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(slideAnimation, {
+                        toValue: 0,
+                        duration: 0,
+                        useNativeDriver: true,
+                    }),
+                ])
+            );
+            slide.start();
+            return () => slide.stop();
+        } else {
+            slideAnimation.setValue(0);
+        }
+    }, [isIntermediate]);
+
+    const widthInterpolate = animatedWidth.interpolate({
+        inputRange: [0, 100],
+        outputRange: ['0%', '100%'],
+    });
+
+    const slideTranslateX = slideAnimation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-100, 500],
+    });
+
+    return (
+        <View
+            style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 5,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: 2.5,
+                overflow: 'hidden',
+            }}
+        >
+            {!isIntermediate && (
+                <Animated.View
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        height: '100%',
+                        width: widthInterpolate,
+                        backgroundColor: 'white',
+                        borderRadius: 2.5,
+                    }}
+                />
+            )}
+            {isIntermediate && (
+                <View
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '100%',
+                        overflow: 'hidden',
+                    }}
+                >
+                    <Animated.View
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            width: 100,
+                            height: '100%',
+                            backgroundColor: 'white',
+                            borderRadius: 2.5,
+                            transform: [{ translateX: slideTranslateX }],
+                        }}
+                    />
+                </View>
+            )}
+        </View>
+    );
+};
 
 export default function HymnalImporter() {
 
@@ -65,8 +171,6 @@ export default function HymnalImporter() {
             if (bIndex === -1) return -1; // b not found, move to end
             return aIndex - bIndex; // both found, sort by index
         });
-        console.log("data fetched: ");
-        console.log(data);
     }
 
     // fetch github folder structure from api and return the data
@@ -88,7 +192,6 @@ export default function HymnalImporter() {
 
             clearTimeout(timeoutId);
 
-            console.log("WE GOT A RESPONSE", res.status);
 
             if (!res.ok) {
                 throw new Error(`HTTP error! status: ${res.status}`);
@@ -224,7 +327,7 @@ export default function HymnalImporter() {
                                         if ((context?.downloadProgressValues?.[item.name.short] ?? 0) === -1 || (context?.downloadProgressValues?.[item.name.short] ?? 0) > 0) return;
 
 
-                                        context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: -1 }));
+                                        context?.setDownloadProgressValues((prev) => ({ ...prev, [item.name.short]: 0 }));
                                         posthog.capture('hymnal_download_started', {
                                             hymnal_id: item.name.short,
                                         });
@@ -268,28 +371,42 @@ export default function HymnalImporter() {
                                     style={styles.buttonContainer}
                                     activeOpacity={0.7} // Adjust this value to control the darkness
                                 >
-                                    <LinearGradient
-                                        colors={[item.primaryColor, item.secondaryColor]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
-                                        style={[styles.gradient]}
-                                    >
-                                        <StyledText style={styles.buttonText}>{item.name.medium}</StyledText>
-                                        {context?.downloadProgressValues[item.name.short] === -1 ? (
-                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</StyledText>
-                                        ) : ((context?.downloadProgressValues[item.name.short] ?? 0) > 100) ? (
-                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</StyledText>
-                                        ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
-                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${(context?.downloadProgressValues[item.name.short] ?? 0).toFixed(2)}%`}</StyledText>
-                                        ) : (
-                                            <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</StyledText>
+                                    <View style={[styles.gradient, { position: 'relative', overflow: 'hidden' }]}>
+                                        <LinearGradient
+                                            colors={[item.primaryColor, item.secondaryColor]}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 0 }}
+                                            style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+                                        />
+                                        {/* Progress line at the bottom */}
+                                        {((context?.downloadProgressValues[item.name.short] ?? 0) > 0 || (context?.downloadProgressValues[item.name.short] ?? 0) === -1 || (context?.downloadProgressValues[item.name.short] ?? 0) > 100) && (
+                                            <ProgressLine 
+                                                progress={
+                                                    (context?.downloadProgressValues[item.name.short] ?? 0) === -1 ? 0 : 
+                                                    (context?.downloadProgressValues[item.name.short] ?? 0) > 100 ? 100 : 
+                                                    Math.min(Math.max((context?.downloadProgressValues[item.name.short] ?? 0), 0), 100)
+                                                }
+                                                isIntermediate={(context?.downloadProgressValues[item.name.short] ?? 0) === -1 || (context?.downloadProgressValues[item.name.short] ?? 0) > 100}
+                                            />
                                         )}
+                                        <View style={{ zIndex: 1 }}>
+                                            <StyledText style={styles.buttonText}>{item.name.medium}</StyledText>
+                                            {context?.downloadProgressValues[item.name.short] === -1 ? (
+                                                <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</StyledText>
+                                            ) : ((context?.downloadProgressValues[item.name.short] ?? 0) > 100) ? (
+                                                <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</StyledText>
+                                            ) : (context?.downloadProgressValues[item.name.short] ?? 0) > 0 ? (
+                                                <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${Math.min((context?.downloadProgressValues[item.name.short] ?? 0), 100).toFixed(1)}%`}</StyledText>
+                                            ) : (
+                                                <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</StyledText>
+                                            )}
+                                        </View>
                                         {(context?.downloadProgressValues[item.name.short] ?? 0) === 0 && (
-                                            <View style={{ position: 'absolute', right: 20 }}>
+                                            <View style={{ position: 'absolute', right: 20, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
                                                 <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
                                             </View>
                                         )}
-                                    </LinearGradient>
+                                    </View>
                                 </TouchableOpacity>
                             )}
                         />

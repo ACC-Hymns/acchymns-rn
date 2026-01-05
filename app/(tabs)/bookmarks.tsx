@@ -110,36 +110,47 @@ export default function BookmarkScreen() {
     useEffect(() => {
         if (!context) return;
         const fetch = async () => {
-            const allSongs = await Promise.all(
-                bookmarks.map(async (bookmark) => {
-                    const bookData = context.BOOK_DATA[bookmark.book];
-                    const songData = await getSongData(bookmark.book);
-                    if (songData && bookData) {
-
-                        const song = songData[bookmark.number];
-                        if (song) {
-                            console.log(song);
-                            console.log("title: " + song.title);
-                            return {
-                                ...song,
-                                book: bookData,
-                                number: bookmark.number,
-                                stripped_title: stripSearchText(song.title),
-                                stripped_first_line: stripSearchText(song.first_line || "")
-                            } as SongSearchInfo;
+            // Process bookmarks in chunks to avoid blocking JS thread
+            const chunkSize = 10;
+            const allSongs: (SongSearchInfo | null)[] = [];
+            
+            for (let i = 0; i < bookmarks.length; i += chunkSize) {
+                const chunk = bookmarks.slice(i, i + chunkSize);
+                
+                const chunkResults = await Promise.all(
+                    chunk.map(async (bookmark) => {
+                        const bookData = context.BOOK_DATA[bookmark.book];
+                        const songData = await getSongData(bookmark.book);
+                        if (songData && bookData) {
+                            const song = songData[bookmark.number];
+                            if (song) {
+                                return {
+                                    ...song,
+                                    book: bookData,
+                                    number: bookmark.number,
+                                    stripped_title: stripSearchText(song.title),
+                                    stripped_first_line: stripSearchText(song.first_line || "")
+                                } as SongSearchInfo;
+                            } else {
+                                console.warn(`Song number ${bookmark.number} not found in book ${bookmark.book}`);
+                            }
                         } else {
-                            console.warn(`Song number ${bookmark.number} not found in book ${bookmark.book}`);
+                            console.warn(`Book data for ${bookmark.book} not found`);
                         }
-                    } else {
-                        console.warn(`Book data for ${bookmark.book} not found`);
-                    }
-                    return null;
-                })
-            );
+                        return null;
+                    })
+                );
+                
+                allSongs.push(...chunkResults);
+                
+                // Yield to JS thread after each chunk
+                if (i + chunkSize < bookmarks.length) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
 
             const validSongs = allSongs.filter((s): s is SongSearchInfo => s !== null);
             setSongList(validSongs);
-
 
             console.log("Loaded song data.");
             setLoading(false);

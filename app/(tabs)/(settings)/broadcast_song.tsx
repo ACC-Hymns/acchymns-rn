@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, ListRenderItemInfo, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, ListRenderItemInfo, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useContext, useEffect, useState } from 'react';
+import { router, useNavigation, useRouter } from 'expo-router';
+import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
@@ -21,7 +21,28 @@ export default function BroadcastOptionsScreen() {
 
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
-    const router = useRouter();
+    const navigation = useNavigation();
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
     const context = useContext(HymnalContext);
 
     const i18n = useI18n();

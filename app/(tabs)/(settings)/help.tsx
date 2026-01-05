@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Linking, Alert } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, useColorScheme, TouchableHighlight, Linking, Alert, Platform } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useLayoutEffect } from 'react';
@@ -16,8 +16,28 @@ export default function HelpScreen() {
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
     const router = useRouter();
-    const context = useContext(HymnalContext);
-    const navigation = useNavigation();
+    const context = useContext(HymnalContext);const navigation = useNavigation();
+    useLayoutEffect(() => {
+        if(Platform.OS === 'ios' && parseInt(Platform.Version, 10) < 26) {
+
+            navigation.setOptions({
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ]
+            });
+        }
+    }, []);
 
     const i18n = useI18n();
     useLayoutEffect(() => {

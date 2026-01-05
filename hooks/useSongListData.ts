@@ -13,10 +13,13 @@ export function useSongListData(bookData: BookSummary | undefined): {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | undefined>();
 
-    if(!bookData)
-        return { songs: undefined, loading: false, error: "bookData is undefined" }
-
     useEffect(() => {
+        if (!bookData) {
+            setLoading(false);
+            setError("bookData is undefined");
+            return;
+        }
+
         const fetchData = async () => {
             try {
                 const data = await getSongData(bookData.name.short);
@@ -34,6 +37,10 @@ export function useSongListData(bookData: BookSummary | undefined): {
 
         fetchData();
     }, [bookData]);
+
+    if (!bookData) {
+        return { songs: undefined, loading: false, error: "bookData is undefined" };
+    }
 
     return { songs: data, topicalIndex: indexData, loading: loading, error: error }
 }
