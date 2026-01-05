@@ -29,6 +29,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
                 }}
 
                 style={styles.buttonContainer}
+                activeOpacity={0.7}
                 >
                 <LinearGradient
                     colors={[primaryColor, secondaryColor]}

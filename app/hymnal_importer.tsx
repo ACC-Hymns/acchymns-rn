@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useEffect, useCallback } from 'react';
 import { useContext, useRef, useState } from 'react';
-import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert, AppState, Animated } from 'react-native';
+import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, FlatList, Alert, AppState, Animated, Dimensions } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
@@ -19,6 +19,8 @@ import StyledText from '@/components/StyledText';
 const ProgressLine = ({ progress, isIntermediate }: { progress: number; isIntermediate: boolean }) => {
     const animatedWidth = React.useRef(new Animated.Value(0)).current;
     const slideAnimation = React.useRef(new Animated.Value(0)).current;
+    const [containerWidth, setContainerWidth] = React.useState(Dimensions.get('window').width);
+    const segmentWidth = 100;
 
     React.useEffect(() => {
         // Animate progress width smoothly
@@ -40,7 +42,7 @@ const ProgressLine = ({ progress, isIntermediate }: { progress: number; isInterm
                 Animated.sequence([
                     Animated.timing(slideAnimation, {
                         toValue: 1,
-                        duration: 1500,
+                        duration: 800,
                         useNativeDriver: true,
                     }),
                     Animated.timing(slideAnimation, {
@@ -62,13 +64,20 @@ const ProgressLine = ({ progress, isIntermediate }: { progress: number; isInterm
         outputRange: ['0%', '100%'],
     });
 
+    // Calculate slide distance based on container width to ensure it goes all the way across
     const slideTranslateX = slideAnimation.interpolate({
         inputRange: [0, 1],
-        outputRange: [-100, 500],
+        outputRange: [-segmentWidth, containerWidth + segmentWidth],
     });
 
     return (
         <View
+            onLayout={(event) => {
+                const { width } = event.nativeEvent.layout;
+                if (width > 0) {
+                    setContainerWidth(width);
+                }
+            }}
             style={{
                 position: 'absolute',
                 bottom: 0,
@@ -109,7 +118,7 @@ const ProgressLine = ({ progress, isIntermediate }: { progress: number; isInterm
                             position: 'absolute',
                             top: 0,
                             bottom: 0,
-                            width: 100,
+                            width: segmentWidth,
                             height: '100%',
                             backgroundColor: 'white',
                             borderRadius: 2.5,

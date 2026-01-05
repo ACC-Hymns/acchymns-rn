@@ -253,6 +253,34 @@ export default function SelectionScreen() {
         }));
     };
 
+    // Calculate number of columns based on screen width
+    // Each item is 60px wide + 12px margin (6px on each side) = 72px per item
+    // Using useState + useEffect to ensure stable value for FlatList
+    const calculateNumColumns = (screenWidth: number): number => {
+        const itemWidth = 60; // width of each button
+        const itemMargin = 12; // 6px margin on each side
+        const itemTotalWidth = itemWidth + itemMargin;
+        const horizontalPadding = 30; // approximate padding/margins on screen edges
+        
+        const availableWidth = screenWidth - horizontalPadding;
+        const calculatedColumns = Math.floor(availableWidth / itemTotalWidth);
+        
+        // Ensure at least 1 column, otherwise scale naturally
+        return Math.max(1, calculatedColumns);
+    };
+
+    const [numColumns, setNumColumns] = useState(() => 
+        calculateNumColumns(Dimensions.get('window').width)
+    );
+
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setNumColumns(calculateNumColumns(window.width));
+        });
+
+        return () => subscription?.remove();
+    }, []);
+
     return (
         <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
             {book && songs && (
@@ -263,8 +291,8 @@ export default function SelectionScreen() {
                                 <FlatList // NUMERICAL LIST
                                     data={Object.keys(songs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))}
                                     keyExtractor={(item) => item}
-                                    key='legacy'
-                                    numColumns={5}
+                                    key={`legacy-${numColumns}`}
+                                    numColumns={numColumns}
                                     contentContainerStyle={{
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -329,7 +357,7 @@ export default function SelectionScreen() {
                                         }
                                         return ranges;
                                     }, [] as number[])}
-                                    key='new'
+                                    key={`new-${numColumns}`}
                                     contentContainerStyle={{ paddingBottom: 120 }}
                                     keyExtractor={(rangeStart) => rangeStart.toString()}
                                     renderItem={({ item: rangeStart, index }) => {
@@ -389,7 +417,8 @@ export default function SelectionScreen() {
                                                         <FlatList
                                                             data={songsInRange}
                                                             keyExtractor={(number) => number}
-                                                            numColumns={5}
+                                                            key={`dropdown-${numColumns}`}
+                                                            numColumns={numColumns}
                                                             renderItem={({ item: number }) => (
                                                                 <TouchableOpacity
                                                                     style={{

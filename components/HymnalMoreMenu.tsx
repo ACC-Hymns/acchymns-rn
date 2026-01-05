@@ -1,4 +1,4 @@
-import { Alert, Button, Pressable, TouchableOpacity, useColorScheme } from 'react-native'
+import { Alert, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
@@ -6,10 +6,8 @@ import React, { useContext } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary, SortMode } from '@/constants/types';
 import { router } from 'expo-router';
-import { I18n } from 'i18n-js';
-import { getLocales } from 'expo-localization';
 import { HeaderButton } from './HeaderButton';
-import { useMemo } from 'react';
+import { useI18n } from '@/hooks/useI18n';
 
 interface HymnalMoreMenuProps {
     bookSummary: BookSummary;
@@ -18,95 +16,7 @@ interface HymnalMoreMenuProps {
 export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
     const theme = useColorScheme() ?? 'light';
     const context = useContext(HymnalContext);
-
-
-
-    const translations = {
-        en: {
-            sortingLabel: 'Sorting Options',
-            numerical: 'Numerical',
-            alphabetical: 'Alphabetical',
-            topical: 'Topical',
-            deleteHymnal: 'Remove Hymnal',
-            deleteAlertTitle: 'Remove ',
-            deleteAlertMessage: 'You can always download the hymnal again later.',
-            cancel: 'Cancel',
-            delete: 'Remove',
-        },
-        es: {
-            sortingLabel: 'Opciones de Ordenamiento',
-            numerical: 'Numérico',
-            alphabetical: 'Alfabético',
-            topical: 'Tópico',
-            deleteHymnal: 'Borrar Himnario',
-            deleteAlertTitle: 'Borrar ',
-            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
-            cancel: 'Cancelar',
-            delete: 'Borrar',
-        },
-        fr: {
-            sortingLabel: 'Options de Tri',
-            numerical: 'Numérique',
-            alphabetical: 'Alphabétique',
-            topical: 'Topique',
-            deleteHymnal: 'Supprimer le Livre de Hymnes',
-            deleteAlertTitle: 'Supprimer ',
-            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
-            cancel: 'Annuler',
-            delete: 'Supprimer',
-        },
-        de: {
-            sortingLabel: 'Sortieroptionen',
-            numerical: 'Numerisch',
-            alphabetical: 'Alphabetisch',
-            topical: 'Thematisch',
-            deleteHymnal: 'Gesangbuch löschen',
-            deleteAlertTitle: 'Löschen ',
-            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
-            cancel: 'Stornieren',
-            delete: 'Löschen',
-        },
-        sr: {
-            sortingLabel: 'Sortiranje',
-            numerical: 'Numerički',
-            alphabetical: 'Abecedni',
-            topical: 'Tematički',
-            deleteHymnal: 'Obriši himnolog',
-            deleteAlertTitle: 'Obriši ',
-            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
-            cancel: 'Otkaži',
-            delete: 'Obriši',
-        },
-        ja: {
-            sortingLabel: '並べ替えオプション',
-            numerical: '数字順',
-            alphabetical: 'アルファベット順',
-            topical: 'トピック順',
-            deleteHymnal: '賛美歌を削除する',
-            deleteAlertTitle: '削除 ',
-            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
-            cancel: 'キャンセル',
-            delete: '削除',
-        },
-        pt: {
-            sortingLabel: 'Opções de Ordenação',
-            numerical: 'Numérico',
-            alphabetical: 'Alfabético',
-            topical: 'Tópico',
-            deleteHymnal: 'Deletar Hinário',
-            deleteAlertTitle: 'Deletar ',
-            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
-            cancel: 'Cancelar',
-            delete: 'Deletar',
-        }
-    }
-
-    const i18n = useMemo(() => {
-        const instance = new I18n(translations);
-        instance.enableFallback = true;
-        instance.locale = context?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en';
-        return instance;
-    }, [context?.languageOverride]);
+    const i18n = useI18n();
 
     return (
         <DropdownMenu.Root>

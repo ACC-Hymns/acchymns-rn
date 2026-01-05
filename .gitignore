@@ -42,3 +42,4 @@ credentials.json
 *.apk
 
 .env
+components/HymnalMoreMenu.tsx
