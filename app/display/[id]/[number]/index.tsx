@@ -17,6 +17,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
+import { ReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
@@ -86,35 +87,6 @@ export default function DisplayScreen() {
         }
     };
 
-
-
-    const reportIssue = async () => {
-        Alert.alert(i18n.t('reportIssue'), i18n.t('reportIssueMessage'), [
-            {
-                text: i18n.t('cancel'),
-                onPress: () => {
-
-                },
-                style: 'cancel',
-                isPreferred: true
-            },
-            {
-                text: i18n.t('reportIssue'),
-                onPress: async () => {
-                    let result = await reportAPI.report({
-                        book: params.id,
-                        number: params.number ?? '',
-                    });
-                    if (result) {
-                        Alert.alert(i18n.t('reportIssueSuccess'));
-                    } else {
-                        Alert.alert(i18n.t('reportIssueFailure'));
-                    }
-                },
-                style: 'destructive'
-            },
-        ]);
-    }
     const [songData, setSongData] = useState<Song | null>(null);
     useLayoutEffect(() => {
         if (params.number) {
@@ -147,6 +119,25 @@ export default function DisplayScreen() {
     const [isSwiping, setIsSwiping] = useState(false);
 
     const i18n = useI18n();
+
+    const [reportIssueVisible, setReportIssueVisible] = useState(false);
+
+    const reportIssue = () => {
+        setReportIssueVisible(true);
+    };
+
+    const submitReportIssue = async (description: string) => {
+        setReportIssueVisible(false);
+        const result = await reportAPI.report(
+            { book: params.id, number: params.number ?? '' },
+            description
+        );
+        if (result) {
+            Alert.alert(i18n.t('reportIssueSuccess'));
+        } else {
+            Alert.alert(i18n.t('reportIssueFailure'));
+        }
+    };
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
@@ -813,6 +804,11 @@ export default function DisplayScreen() {
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
+            <ReportIssuePrompt
+                visible={reportIssueVisible}
+                onClose={() => setReportIssueVisible(false)}
+                onSubmit={submitReportIssue}
+            />
         </View>
     );
 }

@@ -11,6 +11,7 @@ import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useReportAPI } from "@/scripts/report";
 import { useI18n } from '@/hooks/useI18n';
+import { ReportIssuePrompt } from '@/components/ReportIssuePrompt';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -24,6 +25,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const reportAPI = useReportAPI();
+    const [reportIssueVisible, setReportIssueVisible] = useState(false);
 
     const i18n = useI18n();
 
@@ -62,17 +64,18 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
 
 
 
-    const reportIssue = async () => {
-        let result = await reportAPI.report({
-            book: bookId,
-            number: songId ?? '',
-        });
+    const submitReportIssue = async (description: string) => {
+        setReportIssueVisible(false);
+        const result = await reportAPI.report(
+            { book: bookId, number: songId ?? '' },
+            description
+        );
         if (result) {
             Alert.alert(i18n.t('reportIssueSuccess'));
         } else {
             Alert.alert(i18n.t('reportIssueFailure'));
         }
-    }
+    };
 
     const broadcast = async () => {
 
@@ -136,7 +139,7 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                             <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                         </DropdownMenu.ItemIcon>
                     </DropdownMenu.Item>
-                    <DropdownMenu.Item key="report-issue" onSelect={reportIssue} destructive={true} >
+                    <DropdownMenu.Item key="report-issue" onSelect={() => setReportIssueVisible(true)} destructive={true} >
                         <DropdownMenu.ItemTitle>{i18n.t('reportIssue')}</DropdownMenu.ItemTitle>
                         <DropdownMenu.ItemIcon ios={{ name: 'exclamationmark.bubble' }}>
                             <IconSymbol name='exclamationmark.bubble' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
@@ -144,6 +147,11 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
             </DropdownMenu.Content>
+            <ReportIssuePrompt
+                visible={reportIssueVisible}
+                onClose={() => setReportIssueVisible(false)}
+                onSubmit={submitReportIssue}
+            />
         </DropdownMenu.Root>
     )
 }

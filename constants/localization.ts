@@ -1,4 +1,4 @@
-const supportedLanguages = ["en", "es", "fr", "de", "pt", "sr", "ja"];
+const supportedLanguages = ["en", "es", "fr", "de", "pt", "hu", "sr", "ja"];
 
 function getLanguageName(languageCode: string) {
     switch (languageCode) {
@@ -7,6 +7,7 @@ function getLanguageName(languageCode: string) {
         case 'fr': return 'Français';
         case 'de': return 'Deutsch';
         case 'pt': return 'Português';
+        case 'hu': return 'Magyar';
         case 'sr': return 'Srpski';
         case 'ja': return '日本語';
         default: return languageCode;
@@ -122,6 +123,9 @@ const translations = {
         reportIssue: 'Report Issue',
         reportIssueSuccess: 'Issue reported successfully',
         reportIssueFailure: 'Failed to report issue',
+        reportIssueDescriptionPlaceholder: 'Describe the issue (wrong title, notes, etc.)',
+        reportIssueSubmit: 'Submit',
+        reportIssueDescriptionRequired: 'Please enter a description of the issue.',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Download hymnals to access them offline.',
@@ -229,6 +233,9 @@ const translations = {
         reportIssueMessage: 'Reportar títulos incorrectos, notas de inicio, etc.',
         reportIssueSuccess: 'Problema reportado correctamente',
         reportIssueFailure: 'Error al reportar el problema',
+        reportIssueDescriptionPlaceholder: 'Describe el problema (título incorrecto, notas, etc.)',
+        reportIssueSubmit: 'Enviar',
+        reportIssueDescriptionRequired: 'Introduce una descripción del problema.',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Descarga himnarios para acceder sin conexión.',
@@ -337,6 +344,9 @@ const translations = {
         reportIssueMessage: 'Signaler les titres incorrects, les notes de début, etc.',
         reportIssueSuccess: 'Problème signalé avec succès',
         reportIssueFailure: 'Échec du signalement du problème',
+        reportIssueDescriptionPlaceholder: 'Décrivez le problème (titre erroné, notes, etc.)',
+        reportIssueSubmit: 'Envoyer',
+        reportIssueDescriptionRequired: 'Veuillez saisir une description du problème.',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Téléchargez les hymnaires pour les accéder hors ligne.',
@@ -444,6 +454,9 @@ const translations = {
         reportIssueMessage: 'Falsche Titel, Startnotizen usw. melden',
         reportIssueSuccess: 'Problem erfolgreich gemeldet',
         reportIssueFailure: 'Fehler beim Melden des Problems',
+        reportIssueDescriptionPlaceholder: 'Beschreiben Sie das Problem (falscher Titel, Noten usw.)',
+        reportIssueSubmit: 'Senden',
+        reportIssueDescriptionRequired: 'Bitte geben Sie eine Beschreibung des Problems ein.',
 
         // Hymnal Importer screen
         addHymnalSubtitle: 'Lade Hymnals herunter, um sie offline verfügbar zu machen.',
@@ -551,6 +564,10 @@ const translations = {
         reportIssueMessage: 'Prijavi pogrešne naslove, početne beleške, itd.',
         reportIssueSuccess: 'Problem uspešno prijavljen',
         reportIssueFailure: 'Greška pri prijavi problema',
+        reportIssueDescriptionPlaceholder: 'Opišite problem (pogrešan naslov, beleške itd.)',
+        reportIssueSubmit: 'Pošalji',
+        reportIssueDescriptionRequired: 'Unesite opis problema.',
+
         // Hymnal Importer screen
         addHymnalSubtitle: 'Preuzmite himnale za dostupnost offline.',
         verifying: 'Verifikacija...',
@@ -563,6 +580,116 @@ const translations = {
         verificationFailedMessage: 'Neki fajlovi nisu mogli biti preuzeti. Pokušajte ponovno.',
         ok: 'U redu',
         startingDownload: 'Preuzimanje započelo...',
+    },
+    hu: {
+        // Generic
+        back: 'Vissza',
+        cancel: 'Mégse',
+        delete: 'Törlés',
+        confirm: 'Megerősítés',
+        clear: 'Törlés',
+        details: 'Részletek',
+        noDetailsFound: 'Nincsenek részletek.',
+        oops: 'Upsz!',
+        screenDoesntExist: 'Ez az oldal nem létezik.',
+        goToHomeScreen: 'Vissza a főoldalra!',
+        ignore: 'Mellőzés',
+        reset: 'Visszaállítás',
+        apply: 'Alkalmaz',
+        undo: 'Visszavonás',
+
+        // Search and Bookmarks screen
+        search: 'Keresés',
+        bookmarks: 'Könyvjelzők',
+        featured: 'Kiemelt énekek',
+        recent: 'Legutóbbi keresések',
+        clearAll: 'Összes törlése',
+        clearHistory: 'Előzmények törlése',
+        clearHistoryMessage: 'Ezt a műveletet nem lehet visszavonni',
+        remove: 'Eltávolítás',
+        removeMessage: 'Biztosan törölni szeretné ezt a könyvjelzőt?',
+
+        discover: 'Felfedezés',
+        discoverSubtitle: 'Találatok ehhez: ',
+        promptPlaceholder: "Adjon meg egy témát, motívumot vagy dalszöveget...",
+        topResults: 'Legjobb találatok',
+        filters: 'Szűrők',
+        allHymnals: 'Összes énekeskönyv',
+
+        home: 'Kezdőlap',
+        noHymnals: 'Nincsenek énekeskönyvek',
+        addHymnal: 'Énekeskönyv hozzáadása',
+        deleteAlertTitle: 'Törlés ',
+        deleteAlertMessage: 'Az énekeskönyvet bármikor újra letöltheti.',
+
+        settings: 'Beállítások',
+        info: 'INFORMÁCIÓ',
+        appVersion: 'Alkalmazás verzió',
+
+        help: 'Súgó',
+        general: 'ÁLTALÁNOS',
+        reportBug: 'Hiba jelentése',
+        requestBook: 'Könyv vagy funkció igénylése',
+        privacyPolicy: 'Adatvédelmi irányelvek',
+        debug: 'Hibakeresés',
+        clearCache: 'Gyorsítótár ürítése',
+        deleteHymnals: 'Összes énekeskönyv törlése',
+        resetData: 'Összes adat törlése',
+        clearCacheConfirmation: 'Üríti a gyorsítótárat?',
+        deleteHymnalsConfirmation: 'Törli az összes énekeskönyvet?',
+        clearCacheConfirmationMessage: 'Ez törli az alkalmazás által létrehozott összes gyorsítótár fájlt.',
+        deleteHymnalsConfirmationMessage: 'Ez törli az összes jelenleg letöltött énekeskönyvet.',
+        resetDataConfirmation: 'Minden adatot alaphelyzetbe állít?',
+        resetDataConfirmationMessage: 'Ez mindent töröl, beleértve a könyvjelzőket és a beállításokat is. Ez a folyamat nem vonható vissza.',
+        posthogOptOut: 'Adatgyűjtés kikapcsolása',
+        posthogOptIn: 'Adatgyűjtés bekapcsolása',
+        posthogOptOutConfirmation: 'Kikapcsolja az adatgyűjtést?',
+        posthogOptOutConfirmationMessage: 'Ez kikapcsolja az adatgyűjtést. Bármikor visszakapcsolhatja.',
+
+        preferences: 'Beállítások',
+        accessibilityAndLanguage: 'HOZZÁFÉRÉS ÉS NYELV',
+        legacyNumberSelection: 'Hagyományos számválasztás',
+        language: 'Nyelv',
+        appearance: 'MEGJELENÉS',
+        theme: 'Téma',
+        darkMode: 'Sötét mód',
+        lightMode: 'Világos mód',
+        systemDefault: 'Rendszer alapértelmezett',
+        other: 'Egyéb',
+        invertSheetMusic: 'Kotta színeinek megfordítása',
+
+        sortingLabel: 'Rendezés',
+        numerical: 'Számszerinti',
+        alphabetical: 'Betűrendi',
+        topical: 'Téma szerinti',
+        deleteHymnal: 'Énekeskönyv törlése',
+
+        notes: 'Jegyzetek',
+        piano: 'Zongora',
+        all: 'Mind',
+        removeBookmark: 'Könyvjelző eltávolítása',
+        saveBookmark: 'Mentés könyvjelzőként',
+        share: 'Megosztás',
+        reportIssue: 'Probléma jelentése',
+        reportIssueMessage: 'Hibás címek, kezdőhangok, stb. jelentése',
+        reportIssueSuccess: 'Probléma sikeresen jelentve',
+        reportIssueFailure: 'Hiba történt a jelentés küldésekor',
+        reportIssueDescriptionPlaceholder: 'Írja le a problémát (hibás cím, hangok stb.)',
+        reportIssueSubmit: 'Küldés',
+        reportIssueDescriptionRequired: 'Kérjük, adja meg a probléma leírását.',
+
+        // Hymnal Importer screen
+        addHymnalSubtitle: 'Töltse le az énekeskönyveket az offline eléréshez.',
+        verifying: 'Ellenőrzés...',
+        size: 'Méret',
+        progress: 'Folyamat',
+        failedToLoadHymnals: 'Az énekeskönyveket nem sikerült betölteni',
+        failedToLoadHymnalsMessage: 'Ellenőrizze az internetkapcsolatot, majd próbálja újra.',
+        retry: 'Újra',
+        verificationFailed: 'Az ellenőrzés sikertelen',
+        verificationFailedMessage: 'Néhány fájlt nem sikerült letölteni. Próbálja újra.',
+        ok: 'OK',
+        startingDownload: 'Letöltés indítása...',
     },
     ja: {
         // Generic
@@ -657,6 +784,10 @@ const translations = {
         reportIssueMessage: '誤ったタイトル、開始ノートなどを報告する',
         reportIssueSuccess: '問題が報告されました',
         reportIssueFailure: '問題の報告に失敗しました',
+        reportIssueDescriptionPlaceholder: '問題の内容を入力してください（誤ったタイトル、音符など）',
+        reportIssueSubmit: '送信',
+        reportIssueDescriptionRequired: '問題の説明を入力してください。',
+
         // Hymnal Importer screen
         addHymnalSubtitle: 'オフラインで賛美歌集にアクセスするためにダウンロードします。',
         verifying: '確認中...',
@@ -763,6 +894,10 @@ const translations = {
         reportIssueMessage: 'Reportar títulos errados, notas iniciais, etc.',
         reportIssueSuccess: 'Problema reportado com sucesso',
         reportIssueFailure: 'Falha ao reportar problema',
+        reportIssueDescriptionPlaceholder: 'Descreva o problema (título errado, notas etc.)',
+        reportIssueSubmit: 'Enviar',
+        reportIssueDescriptionRequired: 'Digite uma descrição do problema.',
+
         // Hymnal Importer screen
         addHymnalSubtitle: 'Baixe hinários para acessá-los offline.',
         verifying: 'Verificando...',

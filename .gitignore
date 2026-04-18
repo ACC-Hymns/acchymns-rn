@@ -40,6 +40,7 @@ app-example
 credentials.json
 *.ipa
 *.apk
+*.aab
 
 .env
 components/HymnalMoreMenu.tsx

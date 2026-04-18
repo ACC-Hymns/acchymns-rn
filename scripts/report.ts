@@ -31,7 +31,7 @@ export function useReportAPI() {
     setupClient();
   }, []);
 
-  async function report(song: SongReference) {
+  async function report(song: SongReference, description: string) {
     console.log("Reporting issue for", song);
     if (!client.current) {
       console.warn("DynamoDB client not ready");
@@ -43,6 +43,7 @@ export function useReportAPI() {
       Item: {
         SONG_BOOK: { S: song.book },
         SONG_NUMBER: { S: song.number },
+        DESCRIPTION: { S: description },
       },
     };
 
