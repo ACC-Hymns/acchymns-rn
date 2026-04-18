@@ -1,0 +1,100 @@
+Key,English,Spanish,French,German,Portuguese,Serbian,Japanese
+accessibilityAndLanguage,ACCESSIBILITY & LANGUAGE,ACCESIBILIDAD Y IDIOMA,ACCESSIBILITÉ ET LANGUE,ZUGANG & SPRACHE,ACESSIBILIDADE E LÍNGUA,PRISTUP I JEZIK,アクセシビリティと言語
+actions,ACTIONS,,,,,,
+addHymnal,Add Hymnal,Agregar Himnarios,Ajouter un Livre de Hymnes,Gesangbuch hinzufügen,Adicionar Hinário,Dodajte himnala,賛美歌集を追加
+addHymnalSubtitle,Download hymnals to access them offline.,Descarga himnarios para acceder sin conexión.,Téléchargez les hymnaires pour les accéder hors ligne.,"Lade Hymnals herunter, um sie offline verfügbar zu machen.",Baixe hinários para acessá-los offline.,Preuzmite himnale za dostupnost offline.,オフラインで賛美歌集にアクセスするためにダウンロードします。
+all,All,Todas,Toutes,Alle,Todas,Sve,すべて
+allHymnals,All Hymnals,Todos los Himnarios,Tous les Hymnaires,Alle Gesangbücher,Todos os Hinários,Svi Himnari,すべての聖歌集
+alphabetical,Alphabetical,Alfabético,Alphabétique,Alphabetisch,Alfabético,Abecedni,アルファベット順
+appVersion,App Version,Versión de la aplicación,Version de l'application,App-Version,Versão do aplicativo,Verzija aplikacije,アプリケーションバージョン
+appearance,APPEARANCE,APARIENCIA,APPARIENCE,ERSCHEINUNGSBILD,APARÊNCIA,APARATURA,外観
+apply,Apply,Aplicar,Appliquer,Anwenden,Aplicar,Primeni,適用
+back,Back,Atrás,Retour,Zurück,Voltar,Nazad,戻る
+bookmarks,Bookmarks,Marcadores,Marque-pages,Lesezeichen,Marcadores,Zabilježi,ブックマーク
+broadcast,Broadcast,,,,,,
+cancel,Cancel,Cancelar,Annuler,Stornieren,Cancelar,Otkaži,キャンセル
+clear,Clear,Limpiar,Effacer,Löschen,Limpar,Očisti,クリア
+clearAll,Clear All,Limpiar Todo,Tout Effacer,Alles Löschen,Limpar Tudo,Očisti Sve,すべてクリア
+clearCache,Clear Cache,Limpiar Caché,Effacer le Cache,Cache löschen,Limpar Cache,Očisti keš,キャッシュをクリア
+clearCacheConfirmation,Clear Cache?,Limpiar Caché?,Effacer le Cache?,Cache löschen?,Limpar Cache?,Očisti keš?,キャッシュをクリア?
+clearCacheConfirmationMessage,This will delete all cached files created by the app.,Esto eliminará todos los archivos caché creados por la aplicación.,Cela supprimera tous les fichiers mis en cache créés par l'application.,"Dies wird alle zwischengespeicherten Dateien löschen, die von der App erstellt wurden.",Isso deletará todos os arquivos em cache criados pela aplicação.,Ovo će obrisati sve keš fajlove koje je napravila aplikacija.,これはアプリが作成したキャッシュファイルをすべて削除します。
+clearHistory,Clear History,Limpiar Historial,Effacer l'Historique,Löschen,Limpar Histórico,Očisti Historijat,履歴をクリア
+clearHistoryMessage,You cannot undo this action,No se puede deshacer esta acción,Vous ne pouvez pas annuler cette action,Sie können diese Aktion nicht rückgängig machen,Você não pode desfazer esta ação,Ne možete vratiti ovu akciju,この操作は元に戻せません
+clearScreen,Clear Screen,,,,,,
+confirm,Confirm,Confirmar,Confirmer,Bestätigen,Confirmar,Potvrdi,確認
+darkMode,Dark Mode,Modo Oscuro,Mode Sombre,Dunkelmodus,Modo Escuro,Tamni Modus,ダークモード
+debug,DEBUG,DEBUG,DEBUG,Debuggen,DEBUG,Otlaži,デバッグ
+delete,Remove,Borrar,Supprimer,Löschen,Deletar,Obriši,削除
+deleteAlertMessage,You can always download the hymnal again later.,Siempre puedes descargar el himnario de nuevo más tarde.,Vous pouvez toujours télécharger le livre de hymnes plus tard.,Sie können das Gesangbuch später jederzeit erneut herunterladen.,Você pode sempre baixar o hinário novamente mais tarde.,Možete u ljubom trenutku ponovo preuzeti himnolog.,賛美歌集はいつでも再ダウンロードできます。
+deleteAlertTitle,Remove ,Borrar ,Supprimer ,Löschen ,Deletar ,Obriši ,削除 
+deleteHymnal,Remove Hymnal,Borrar Himnario,Supprimer le Livre de Hymnes,Gesangbuch löschen,Deletar Hinário,Obriši himnolog,賛美歌を削除する
+deleteHymnals,Remove All Hymnals,Eliminar Todos los Hymnals,Supprimer Tous les Hymnals,Alle Hymnals löschen,Deletar Todos os Hymnals,Obriši sve himnarije,賛美歌集を削除
+deleteHymnalsConfirmation,Remove All Hymnals?,Eliminar Todos los Hymnals?,Supprimer Tous les Hymnals?,Alle Hymnals löschen?,Deletar Todos os Hymnals?,Obriši sve himnarije?,賛美歌集を削除?
+deleteHymnalsConfirmationMessage,This will remove all hymnals currently downloaded.,Esto eliminará todos los hymnals actualmente descargados.,Cela supprimera tous les hymnals actuellement téléchargés.,Dies wird alle derzeit heruntergeladenen Hymnals löschen.,Isso deletará todos os hymnals atualmente baixados.,Ovo će obrisati sve himnarije koje su trenutno preuzete.,これは現在ダウンロードされている賛美歌集をすべて削除します。
+details,Details,Detalles,Détails,Details,Detalhes,Detalji,詳細
+discover,Discover,Descubrir,Découvrir,Entdecken,Descobrir,Otkrij,発見
+discoverSubtitle,Results related to ,Resultados relacionados con ,Résultats liés à ,Ergebnisse zu ,Resultados relacionados a ,Rezultati povezani sa ,関連する結果: 
+failedToLoadHymnals,Failed to load Hymnals,No se pudieron cargar los himnarios,Échec du chargement des hymnaires,Hymnals konnten nicht geladen werden,Falha ao carregar os hinários,Hymnale nisu mogli biti učitani,賛美歌集を読み込めませんでした
+failedToLoadHymnalsMessage,Please check your internet connection and try again.,"Por favor, verifica tu conexión a internet y vuelve a intentarlo.",Veuillez vérifier votre connexion internet et réessayer.,Bitte überprüfe deine Internetverbindung und versuche es erneut.,Verifique sua conexão com a internet e tente novamente.,Provjerite svoju internet konekciju i pokušajte ponovno.,インターネット接続を確認して、もう一度お試しください。
+featured,Featured Songs,Canciones Destacadas,Chants Destacés,Vorgestellte Lieder,Músicas Destacadas,Predstavljeni Pjesmi,おすすめの曲
+filters,Filter Hymnals,Filtrar Himnarios,Filtrer les Hymnaires,Gesangbücher filtern,Filtrar Hinários,Filtriraj Himnare,聖歌集を絞り込む
+general,GENERAL,GENERAL,GÉNÉRAL,ALLGEMEIN,GERAL,OPŠTE,一般
+goToHomeScreen,Go to home screen!,¡Ir a la pantalla de inicio!,Retour à l'écran d'accueil !,Zurück zur Startseite!,Voltar para a tela inicial!,Vrati se na početnu stranicu!,ホーム画面に戻る！
+help,Help,Ayuda,Aide,Hilfe,Ajuda,Pomoć,ヘルプ
+home,Home,Inicio,Accueil,Startseite,Início,Početna,ホーム
+ignore,Ignore,Ignorar,Ignorer,Ignorieren,Ignorar,Zanemariti,無視
+info,INFO,INFORMACIÓN,INFORMATIONS,INFORMATIONEN,INFORMAÇÕES,INFORMACIJE,情報
+invertSheetMusic,Invert Notation Colors,Invertir Colores de Notación,Inverser les Couleurs de la Notation,Notensystem invertieren,Inverter Notação,Invertir Notación,ノートの色を反転
+language,Language,Idioma,Langue,Sprache,Língua,Jezik,言語
+legacyNumberSelection,Legacy Number Selection,Selección de Número Antigua,Sélection de Numéro Ancien,Veraltete Zahlauswahl,Seleção de Número Antigo,Starostručna Izbora,旧番号選択
+lightMode,Light Mode,Modo Claro,Mode Clair,Hellmodus,Modo Claro,Svijetli Modus,ライトモード
+logOut,Log Out,,,,,,
+noDetailsFound,No details found.,No se encontraron detalles.,Aucun détail trouvé.,Keine Details gefunden.,Nenhum detalhe encontrado.,Nema detalja pronađen.,詳細が見つかりません。
+noHymnals,No Hymnals,No hay Himnarios,Aucun Livre de Hymnes,Keine Gesangbücher,Sem hinários,Nema himnala,賛美歌集なし
+notes,Notes,Notas,Notes,Noten,Notas,Notatke,ノート
+numerical,Numerical,Numérico,Numérique,Numerisch,Número,Numerički,数字順
+ok,OK,OK,D'accord,OK,OK,U redu,わかった
+oops,Oops!,¡Ay!,Oups!,Hoppla!,Ops!,Ups!,あっ！
+other,Other,Otro,Autre,Andere,Outro,Ostalo,その他
+piano,Piano,Piano,Piano,Piano,Piano,Piano,ピアノ
+posthogOptIn,Opt In to Data Collection,Activar la recopilación de datos,Activer la collecte de données,Datensammlung aktivieren,Ativar a coleta de dados,Aktivirati prikupljanje podataka,データ収集をオンにする
+posthogOptOut,Opt Out of Data Collection,Desactivar la recopilación de datos,Désactiver la collecte de données,Datensammlung deaktivieren,Desativar a coleta de dados,Deaktivirati prikupljanje podataka,データ収集をオフにする
+posthogOptOutConfirmation,Opt Out of Data Collection?,¿Desactivar la recopilación de datos?,Désactiver la collecte de données?,Datensammlung deaktivieren?,Desativar a coleta de dados?,Deaktivirati prikupljanje podataka?,データ収集をオフにする?
+posthogOptOutConfirmationMessage,This will opt you out of data collection. You can opt in again at any time.,Esto desactivará la recopilación de datos. Puede activarla de nuevo en cualquier momento.,Cela désactivera la collecte de données. Vous pouvez l'activer à nouveau à tout moment.,Dies deaktiviert die Datensammlung. Sie können sie jederzeit wieder aktivieren.,Isso desativará a coleta de dados. Você pode ativá-la novamente a qualquer momento.,Ovo će deaktivirati prikupljanje podataka. Možete ih ponovno aktivirati u bilo kojem trenutku.,これはデータ収集をオフにします。いつでもオンにすることができます。
+preferences,Preferences,Preferencias,Préférences,Einstellungen,Preferências,Postavke,設定
+privacyPolicy,Privacy Policy,Política de Privacidad,Politique de Confidentialité,Datenschutzrichtlinie,Política de Privacidade,Politika privatnosti,プライバシーポリシー
+progress,Progress,Progreso,Progression,Fortschritt,Progresso,Napredak,進行状況
+promptPlaceholder,"Enter any topic, theme, or lyrics...","Introduce cualquier tema, asunto o letra...","Entrez un sujet, un thème ou des paroles...","Gib ein Thema, Motiv oder Liedtext ein...","Digite qualquer assunto, tema ou letra...","Unesite bilo koju temu, motiv ili tekst pesme...",トピック、テーマ、歌詞を入力...
+recent,Recent Searches,Búsquedas Recientes,Recherches Récentes,Kürzlich durchsucht,Pesquisas Recentes,Nedavne Pretrage,最近の検索
+remove,Remove,Eliminar,Supprimer,Löschen,Remover,Obriši,削除
+removeBookmark,Remove Bookmark,Eliminar Marcador,Supprimer le Marque-page,Löschen,Remover Marcador,Ukloni Bookmark,ブックマークを削除
+removeMessage,Are you sure you want to remove this bookmark?,¿Estás seguro de querer eliminar este marcador?,Êtes-vous sûr de vouloir supprimer ce marque-page ?,"Sind Sie sicher, dass Sie dieses Lesezeichen entfernen möchten?",Tem certeza que deseja remover este marcador?,Jeste li sigurni da želite obrisati ovu zabilješku?,このブックマークを削除してもよろしいですか？
+reportBug,Report a Bug,Reportar un Bug,Signaler un Bug,Fehler melden,Relatar Bug,Prijavi grešku,バグを報告
+reportIssue,Report Issue,Reportar Problema,Signaler un Problème,Problem melden,Relatar Problema,Prijavite Problem,問題を報告
+reportIssueFailure,Failed to report issue,Error al reportar el problema,Échec du signalement du problème,Fehler beim Melden des Problems,Falha ao reportar problema,Greška pri prijavi problema,問題の報告に失敗しました
+reportIssueMessage,"Report wrong titles, starting notes, etc.","Reportar títulos incorrectos, notas de inicio, etc.","Signaler les titres incorrects, les notes de début, etc.","Falsche Titel, Startnotizen usw. melden","Reportar títulos errados, notas iniciais, etc.","Prijavi pogrešne naslove, početne beleške, itd.",誤ったタイトル、開始ノートなどを報告する
+reportIssueSuccess,Issue reported successfully,Problema reportado correctamente,Problème signalé avec succès,Problem erfolgreich gemeldet,Problema reportado com sucesso,Problem uspešno prijavljen,問題が報告されました
+requestBook,Request a Book or Feature,Solicitar un Libro o Característica,Demander un Livre ou une Fonctionnalité,Buch oder Funktion anfragen,Solicitar Livro ou Funcionalidade,Zatražite knjigu ili funkciju,本または機能をリクエスト
+reset,Reset,Restablecer,Réinitialiser,Zurücksetzen,Redefinir,Poništi,リセット
+resetData,Reset All Data,Restablecer todos los datos,Réinitialiser toutes les données,Alle Daten zurücksetzen,Redefinir todos os dados,Resetovati sve podatke,すべてのデータをリセット
+resetDataConfirmation,Reset All Data?,¿Restablecer todos los datos?,Réinitialiser toutes les données?,Alle Daten zurücksetzen?,Redefinir todos os dados?,Resetovati sve podatke?,すべてのデータをリセットしますか？
+resetDataConfirmationMessage,"This will delete everything, including bookmarks and settings. This cannot be undone.","Esto eliminará todo, incluidos los marcadores y la configuración. Esta acción no se puede deshacer.","Cela supprimera tout, y compris les marque-pages et les paramètres. Cette action est irréversible.","Dies wird alles löschen, einschließlich Lesezeichen und Einstellungen. Dies kann nicht rückgängig gemacht werden.","Isso excluirá tudo, incluindo marcadores e configurações. Esta ação não pode ser desfeita.","Ovo će obrisati sve, uključujući obeleživače i podešavanja. Ovo se ne može poništiti.",ブックマークや設定を含むすべてが削除されます。この操作は取り消せません。
+retry,Retry,Reintentar,Réessayer,Erneut versuchen,Tentar novamente,Pokušaj ponovno,再試行
+saveBookmark,Save as Bookmark,Guardar como Marcador,Enregistrer comme Marque-page,Speichern als Lesezeichen,Salvar como Marcador,Sačuvaj kao Bookmark,ブックマークとして保存
+screenDoesntExist,This screen doesn't exist.,Esta pantalla no existe.,Cette écran n'existe pas.,Diese Seite existiert nicht.,Esta tela não existe.,Ova stranica ne postoji.,この画面は存在しません。
+search,Search,Buscar,Rechercher,Suchen,Pesquisar,Pretraga,検索
+selectedChurch,Selected Church,,,,,,
+setBibleReading,Set Bible Reading,,,,,,
+setSongNumber,Set Song Number,,,,,,
+settings,Settings,Configuración,Paramètres,Einstellungen,Preferências,Postavke,設定
+share,Share,Compartir,Partager,Teilen,Compartilhar,Podelite,共有
+size,Size,Tamaño,Taille,Größe,Tamanho,Veličina,サイズ
+sortingLabel,Sorting Options,Opciones de Ordenamiento,Options de Tri,Sortieroptionen,Ordenar por,Sortiranje,並べ替えオプション
+startingDownload,Starting download...,Iniciando descarga...,Démarrage de la téléchargement...,Herunterladen gestartet...,Iniciando download...,Preuzimanje započelo...,ダウンロードを開始しています...
+systemDefault,System Default,Sistema por Defecto,Système par Défaut,Systemstandard,Sistema Padrão,Sistem Standard,システムデフォルト
+theme,Theme,Tema,Thème,Thema,Tema,Tema,テーマ
+topResults,Top Results,Mejores Resultados,Meilleurs Résultats,Top-Ergebnisse,Principais Resultados,Najbolji Rezultati,トップ結果
+topical,Topical,Tópico,Topique,Thematisch,Tópico,Tematički,トピック順
+verificationFailed,Verification Failed,Verificación Fallida,Échec de la vérification,Verifizierung fehlgeschlagen,Verificação falhou,Verifikacija nije uspjela,確認に失敗しました
+verificationFailedMessage,Some files were unable to download properly. Please try again.,"Algunos archivos no pudieron descargarse correctamente. Por favor, intenta nuevamente.",Certains fichiers n'ont pas pu être téléchargés correctement. Veuillez réessayer.,Einige Dateien konnten nicht ordnungsgemäß heruntergeladen werden. Bitte versuche es erneut.,Alguns arquivos não puderam ser baixados corretamente. Tente novamente.,Neki fajlovi nisu mogli biti preuzeti. Pokušajte ponovno.,一部のファイルが正しくダウンロードされませんでした。もう一度お試しください。
+verifying,Verifying...,Verificando...,Vérification...,Verifizieren...,Verificando...,Verifikacija...,確認中...

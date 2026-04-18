@@ -199,7 +199,7 @@ export default function SelectionScreen() {
                                                 isPreferred: true
                                             },
                                             {
-                                                text: i18n.t('delete'),
+                                                text: i18n.t('remove'),
                                                 onPress: async () => {
                                                     // navigate back
                                                     router.back();

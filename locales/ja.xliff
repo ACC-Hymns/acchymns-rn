@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file original="localization" source-language="en" target-language="ja" datatype="plaintext">
+    <header>
+      <tool tool-id="acchymns" tool-name="ACCHymns" tool-version="1.0"/>
+    </header>
+    <body>
+      <trans-unit id="back">
+        <source>Back</source>
+        <target>戻る</target>
+      </trans-unit>
+      <trans-unit id="cancel">
+        <source>Cancel</source>
+        <target>キャンセル</target>
+      </trans-unit>
+      <trans-unit id="delete">
+        <source>Remove</source>
+        <target>削除</target>
+      </trans-unit>
+      <trans-unit id="confirm">
+        <source>Confirm</source>
+        <target>確認</target>
+      </trans-unit>
+      <trans-unit id="clear">
+        <source>Clear</source>
+        <target>クリア</target>
+      </trans-unit>
+      <trans-unit id="details">
+        <source>Details</source>
+        <target>詳細</target>
+      </trans-unit>
+      <trans-unit id="noDetailsFound">
+        <source>No details found.</source>
+        <target>詳細が見つかりません。</target>
+      </trans-unit>
+      <trans-unit id="oops">
+        <source>Oops!</source>
+        <target>あっ！</target>
+      </trans-unit>
+      <trans-unit id="screenDoesntExist">
+        <source>This screen doesn&apos;t exist.</source>
+        <target>この画面は存在しません。</target>
+      </trans-unit>
+      <trans-unit id="goToHomeScreen">
+        <source>Go to home screen!</source>
+        <target>ホーム画面に戻る！</target>
+      </trans-unit>
+      <trans-unit id="ignore">
+        <source>Ignore</source>
+        <target>無視</target>
+      </trans-unit>
+      <trans-unit id="reset">
+        <source>Reset</source>
+        <target>リセット</target>
+      </trans-unit>
+      <trans-unit id="apply">
+        <source>Apply</source>
+        <target>適用</target>
+      </trans-unit>
+      <trans-unit id="discover">
+        <source>Discover</source>
+        <target>発見</target>
+      </trans-unit>
+      <trans-unit id="discoverSubtitle">
+        <source>Results related to </source>
+        <target>関連する結果: </target>
+      </trans-unit>
+      <trans-unit id="promptPlaceholder">
+        <source>Enter any topic, theme, or lyrics...</source>
+        <target>トピック、テーマ、歌詞を入力...</target>
+      </trans-unit>
+      <trans-unit id="topResults">
+        <source>Top Results</source>
+        <target>トップ結果</target>
+      </trans-unit>
+      <trans-unit id="filters">
+        <source>Filter Hymnals</source>
+        <target>聖歌集を絞り込む</target>
+      </trans-unit>
+      <trans-unit id="allHymnals">
+        <source>All Hymnals</source>
+        <target>すべての聖歌集</target>
+      </trans-unit>
+      <trans-unit id="broadcast">
+        <source>Broadcast</source>
+        <target>Broadcast</target>
+      </trans-unit>
+      <trans-unit id="selectedChurch">
+        <source>Selected Church</source>
+        <target>Selected Church</target>
+      </trans-unit>
+      <trans-unit id="actions">
+        <source>ACTIONS</source>
+        <target>ACTIONS</target>
+      </trans-unit>
+      <trans-unit id="setSongNumber">
+        <source>Set Song Number</source>
+        <target>Set Song Number</target>
+      </trans-unit>
+      <trans-unit id="setBibleReading">
+        <source>Set Bible Reading</source>
+        <target>Set Bible Reading</target>
+      </trans-unit>
+      <trans-unit id="clearScreen">
+        <source>Clear Screen</source>
+        <target>Clear Screen</target>
+      </trans-unit>
+      <trans-unit id="logOut">
+        <source>Log Out</source>
+        <target>Log Out</target>
+      </trans-unit>
+      <trans-unit id="search">
+        <source>Search</source>
+        <target>検索</target>
+      </trans-unit>
+      <trans-unit id="bookmarks">
+        <source>Bookmarks</source>
+        <target>ブックマーク</target>
+      </trans-unit>
+      <trans-unit id="featured">
+        <source>Featured Songs</source>
+        <target>おすすめの曲</target>
+      </trans-unit>
+      <trans-unit id="recent">
+        <source>Recent Searches</source>
+        <target>最近の検索</target>
+      </trans-unit>
+      <trans-unit id="clearAll">
+        <source>Clear All</source>
+        <target>すべてクリア</target>
+      </trans-unit>
+      <trans-unit id="clearHistory">
+        <source>Clear History</source>
+        <target>履歴をクリア</target>
+      </trans-unit>
+      <trans-unit id="clearHistoryMessage">
+        <source>You cannot undo this action</source>
+        <target>この操作は元に戻せません</target>
+      </trans-unit>
+      <trans-unit id="remove">
+        <source>Remove</source>
+        <target>削除</target>
+      </trans-unit>
+      <trans-unit id="removeMessage">
+        <source>Are you sure you want to remove this bookmark?</source>
+        <target>このブックマークを削除してもよろしいですか？</target>
+      </trans-unit>
+      <trans-unit id="home">
+        <source>Home</source>
+        <target>ホーム</target>
+      </trans-unit>
+      <trans-unit id="noHymnals">
+        <source>No Hymnals</source>
+        <target>賛美歌集なし</target>
+      </trans-unit>
+      <trans-unit id="addHymnal">
+        <source>Add Hymnal</source>
+        <target>賛美歌集を追加</target>
+      </trans-unit>
+      <trans-unit id="deleteAlertTitle">
+        <source>Remove </source>
+        <target>削除 </target>
+      </trans-unit>
+      <trans-unit id="deleteAlertMessage">
+        <source>You can always download the hymnal again later.</source>
+        <target>賛美歌集はいつでも再ダウンロードできます。</target>
+      </trans-unit>
+      <trans-unit id="settings">
+        <source>Settings</source>
+        <target>設定</target>
+      </trans-unit>
+      <trans-unit id="info">
+        <source>INFO</source>
+        <target>情報</target>
+      </trans-unit>
+      <trans-unit id="appVersion">
+        <source>App Version</source>
+        <target>アプリケーションバージョン</target>
+      </trans-unit>
+      <trans-unit id="help">
+        <source>Help</source>
+        <target>ヘルプ</target>
+      </trans-unit>
+      <trans-unit id="general">
+        <source>GENERAL</source>
+        <target>一般</target>
+      </trans-unit>
+      <trans-unit id="reportBug">
+        <source>Report a Bug</source>
+        <target>バグを報告</target>
+      </trans-unit>
+      <trans-unit id="requestBook">
+        <source>Request a Book or Feature</source>
+        <target>本または機能をリクエスト</target>
+      </trans-unit>
+      <trans-unit id="privacyPolicy">
+        <source>Privacy Policy</source>
+        <target>プライバシーポリシー</target>
+      </trans-unit>
+      <trans-unit id="debug">
+        <source>DEBUG</source>
+        <target>デバッグ</target>
+      </trans-unit>
+      <trans-unit id="clearCache">
+        <source>Clear Cache</source>
+        <target>キャッシュをクリア</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnals">
+        <source>Remove All Hymnals</source>
+        <target>賛美歌集を削除</target>
+      </trans-unit>
+      <trans-unit id="resetData">
+        <source>Reset All Data</source>
+        <target>すべてのデータをリセット</target>
+      </trans-unit>
+      <trans-unit id="clearCacheConfirmation">
+        <source>Clear Cache?</source>
+        <target>キャッシュをクリア?</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnalsConfirmation">
+        <source>Remove All Hymnals?</source>
+        <target>賛美歌集を削除?</target>
+      </trans-unit>
+      <trans-unit id="clearCacheConfirmationMessage">
+        <source>This will delete all cached files created by the app.</source>
+        <target>これはアプリが作成したキャッシュファイルをすべて削除します。</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnalsConfirmationMessage">
+        <source>This will remove all hymnals currently downloaded.</source>
+        <target>これは現在ダウンロードされている賛美歌集をすべて削除します。</target>
+      </trans-unit>
+      <trans-unit id="resetDataConfirmation">
+        <source>Reset All Data?</source>
+        <target>すべてのデータをリセットしますか？</target>
+      </trans-unit>
+      <trans-unit id="resetDataConfirmationMessage">
+        <source>This will delete everything, including bookmarks and settings. This cannot be undone.</source>
+        <target>ブックマークや設定を含むすべてが削除されます。この操作は取り消せません。</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOut">
+        <source>Opt Out of Data Collection</source>
+        <target>データ収集をオフにする</target>
+      </trans-unit>
+      <trans-unit id="posthogOptIn">
+        <source>Opt In to Data Collection</source>
+        <target>データ収集をオンにする</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOutConfirmation">
+        <source>Opt Out of Data Collection?</source>
+        <target>データ収集をオフにする?</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOutConfirmationMessage">
+        <source>This will opt you out of data collection. You can opt in again at any time.</source>
+        <target>これはデータ収集をオフにします。いつでもオンにすることができます。</target>
+      </trans-unit>
+      <trans-unit id="preferences">
+        <source>Preferences</source>
+        <target>設定</target>
+      </trans-unit>
+      <trans-unit id="accessibilityAndLanguage">
+        <source>ACCESSIBILITY &amp; LANGUAGE</source>
+        <target>アクセシビリティと言語</target>
+      </trans-unit>
+      <trans-unit id="legacyNumberSelection">
+        <source>Legacy Number Selection</source>
+        <target>旧番号選択</target>
+      </trans-unit>
+      <trans-unit id="language">
+        <source>Language</source>
+        <target>言語</target>
+      </trans-unit>
+      <trans-unit id="appearance">
+        <source>APPEARANCE</source>
+        <target>外観</target>
+      </trans-unit>
+      <trans-unit id="theme">
+        <source>Theme</source>
+        <target>テーマ</target>
+      </trans-unit>
+      <trans-unit id="darkMode">
+        <source>Dark Mode</source>
+        <target>ダークモード</target>
+      </trans-unit>
+      <trans-unit id="lightMode">
+        <source>Light Mode</source>
+        <target>ライトモード</target>
+      </trans-unit>
+      <trans-unit id="systemDefault">
+        <source>System Default</source>
+        <target>システムデフォルト</target>
+      </trans-unit>
+      <trans-unit id="other">
+        <source>Other</source>
+        <target>その他</target>
+      </trans-unit>
+      <trans-unit id="invertSheetMusic">
+        <source>Invert Notation Colors</source>
+        <target>ノートの色を反転</target>
+      </trans-unit>
+      <trans-unit id="sortingLabel">
+        <source>Sorting Options</source>
+        <target>並べ替えオプション</target>
+      </trans-unit>
+      <trans-unit id="numerical">
+        <source>Numerical</source>
+        <target>数字順</target>
+      </trans-unit>
+      <trans-unit id="alphabetical">
+        <source>Alphabetical</source>
+        <target>アルファベット順</target>
+      </trans-unit>
+      <trans-unit id="topical">
+        <source>Topical</source>
+        <target>トピック順</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnal">
+        <source>Remove Hymnal</source>
+        <target>賛美歌を削除する</target>
+      </trans-unit>
+      <trans-unit id="notes">
+        <source>Notes</source>
+        <target>ノート</target>
+      </trans-unit>
+      <trans-unit id="piano">
+        <source>Piano</source>
+        <target>ピアノ</target>
+      </trans-unit>
+      <trans-unit id="all">
+        <source>All</source>
+        <target>すべて</target>
+      </trans-unit>
+      <trans-unit id="removeBookmark">
+        <source>Remove Bookmark</source>
+        <target>ブックマークを削除</target>
+      </trans-unit>
+      <trans-unit id="saveBookmark">
+        <source>Save as Bookmark</source>
+        <target>ブックマークとして保存</target>
+      </trans-unit>
+      <trans-unit id="share">
+        <source>Share</source>
+        <target>共有</target>
+      </trans-unit>
+      <trans-unit id="reportIssueMessage">
+        <source>Report wrong titles, starting notes, etc.</source>
+        <target>誤ったタイトル、開始ノートなどを報告する</target>
+      </trans-unit>
+      <trans-unit id="reportIssue">
+        <source>Report Issue</source>
+        <target>問題を報告</target>
+      </trans-unit>
+      <trans-unit id="reportIssueSuccess">
+        <source>Issue reported successfully</source>
+        <target>問題が報告されました</target>
+      </trans-unit>
+      <trans-unit id="reportIssueFailure">
+        <source>Failed to report issue</source>
+        <target>問題の報告に失敗しました</target>
+      </trans-unit>
+      <trans-unit id="addHymnalSubtitle">
+        <source>Download hymnals to access them offline.</source>
+        <target>オフラインで賛美歌集にアクセスするためにダウンロードします。</target>
+      </trans-unit>
+      <trans-unit id="verifying">
+        <source>Verifying...</source>
+        <target>確認中...</target>
+      </trans-unit>
+      <trans-unit id="size">
+        <source>Size</source>
+        <target>サイズ</target>
+      </trans-unit>
+      <trans-unit id="progress">
+        <source>Progress</source>
+        <target>進行状況</target>
+      </trans-unit>
+      <trans-unit id="failedToLoadHymnals">
+        <source>Failed to load Hymnals</source>
+        <target>賛美歌集を読み込めませんでした</target>
+      </trans-unit>
+      <trans-unit id="failedToLoadHymnalsMessage">
+        <source>Please check your internet connection and try again.</source>
+        <target>インターネット接続を確認して、もう一度お試しください。</target>
+      </trans-unit>
+      <trans-unit id="retry">
+        <source>Retry</source>
+        <target>再試行</target>
+      </trans-unit>
+      <trans-unit id="verificationFailed">
+        <source>Verification Failed</source>
+        <target>確認に失敗しました</target>
+      </trans-unit>
+      <trans-unit id="verificationFailedMessage">
+        <source>Some files were unable to download properly. Please try again.</source>
+        <target>一部のファイルが正しくダウンロードされませんでした。もう一度お試しください。</target>
+      </trans-unit>
+      <trans-unit id="ok">
+        <source>OK</source>
+        <target>わかった</target>
+      </trans-unit>
+      <trans-unit id="startingDownload">
+        <source>Starting download...</source>
+        <target>ダウンロードを開始しています...</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

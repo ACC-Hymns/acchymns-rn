@@ -1,10 +1,14 @@
 import { BookIndex, BookSummary, SongList } from '@/constants/types';
 import { Directory, File, Paths } from 'expo-file-system/next';
+import * as FileSystem from 'expo-file-system/legacy';
+import { unzip } from 'react-native-zip-archive';
 import { hashFolder } from './hash';
+import * as Crypto from 'expo-crypto';
 
-const HYMNAL_FOLDER = 'hymnals'; // folder name in the document directory
+const HYMNAL_FOLDER = 'Hymnals'; // folder name in the document directory
 const TEMP_FOLDER = 'temp'; // folder name in the document directory
 const GITHUB_BASE_URL = `https://raw.githubusercontent.com/ACC-Hymns/books/refs/heads/main`
+const downloadingBooks = new Set<string>();
 const DEFAULT_HYMNALS = [
     'ZH',
     'GH',
@@ -35,6 +39,8 @@ async function loadHymnals() {
     if (!Paths.document.exists) {
         throw new Error("Document directory is not available.");
     }
+
+
     const hymnalFolder = new Directory(Paths.document, HYMNAL_FOLDER);
     if (!hymnalFolder.exists) {
         console.log("Hymnal folder does not exist. Creating folder...");
@@ -44,8 +50,11 @@ async function loadHymnals() {
     // read all the folders in the hymnal folder and load the summary.json file
     // Process in parallel to avoid blocking
     const books = hymnalFolder.info().files || [];
+
+
     const results = await Promise.all(
         books.map(async (book) => {
+
             const summaryFile = new File(Paths.document, `${HYMNAL_FOLDER}/${book}/summary.json`);
             if (summaryFile.exists) {
                 try {
@@ -62,137 +71,150 @@ async function loadHymnals() {
             }
         })
     );
-    
+
     // Process results and handle deletions
     for (const result of results) {
         if (result.summary) {
             BOOK_DATA[result.book] = result.summary;
         } else if (result.shouldDelete) {
-            // if the summary file is not found, purge the book folder
-            const bookFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${result.book}`);
-            if (bookFolder.exists) {
-                bookFolder.delete();
-                console.log(`Deleted folder for ${result.book}.`);
-            } else {
-                console.log(`Folder for ${result.book} does not exist.`);
-            }
+            // // if the summary file is not found, purge the book folder
+            // const bookFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${result.book}`);
+            // if (bookFolder.exists) {
+            //     try {
+            //         let list = await bookFolder.list();
+            //         console.log(`List of files in ${result.book}:`, list);
+            //         for (const file of list) {
+            //             console.log(`File: ${file.name}`);
+            //         }
+            //     } catch (e) {
+            //         console.error(`Error deleting folder for ${result.book}:`, e);
+            //     }
+            //     console.log(`Deleted folder for ${result.book}.`);
+            // } else {
+            //     console.log(`Folder for ${result.book} does not exist.`);
+            // }
         }
     }
     return BOOK_DATA;
 }
 
 
-async function downloadHymnal(book: string, onProgress?: (progress: number) => void, onFinish?: (success: boolean) => void) {
-    const folderUrl = `${GITHUB_BASE_URL}/${book}/`;
-    const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}`);
-    const localFolder = new Directory(Paths.document, `${TEMP_FOLDER}/${book}/`);
-    const finalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
+async function downloadHymnal(book: string, expectedSHA256: string, onProgress?: (progress: number) => void, onFinish?: (success: boolean) => void) {
+    console.log(`Downloading ${book}...`);
 
-    // clear temp folder
-    if (localFolder.exists) {
-        localFolder.delete();
-        console.log(`Deleted temp folder for ${book}.`);
-    }
-
-    // Check if the folder already exists
-    if (finalFolder.exists) {
-        console.log(`Folder for ${book} already exists. Skipping download.`);
+    // prevent downloading if already downloading
+    if (downloadingBooks.has(book)) {
+        console.log(`${book} is already downloading. Skipping download.`);
         return;
     }
+    downloadingBooks.add(book);
 
-    // Create the local folder if it doesn't exist
-    localFolder.create({ intermediates: true });
+    // 1. Define clean string paths
+    const zipUrl = `https://github.com/ACC-Hymns/books/releases/download/latest/${book}.zip`;
 
-    // Download metadata files in parallel for better performance
-    const summaryUrl = `${folderUrl}summary.json`;
-    const signatureURL = `${folderUrl}.signature_v2`;
-    const songsUrl = `${folderUrl}songs.json`;
-    
-    const [summaryFile, signatureFile, songsFile] = await Promise.all([
-        File.downloadFileAsync(summaryUrl, localFolder),
-        File.downloadFileAsync(signatureURL, localFolder),
-        File.downloadFileAsync(songsUrl, localFolder)
-    ]);
+    // Ensure we don't have double slashes and use a standard filename
+    const zipFileName = `${book}-package.zip`;
+    const zipFileUri = FileSystem.cacheDirectory + zipFileName;
 
-    if (!summaryFile.exists) {
-        throw new Error(`Failed to download summary.json for ${book}`);
+    // 2. Ensure the destination directory exists (Legacy style)
+    const hymnalsDir = FileSystem.documentDirectory + HYMNAL_FOLDER;
+    const dirInfo = await FileSystem.getInfoAsync(hymnalsDir);
+    if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(hymnalsDir, { intermediates: true });
     }
 
-    // Parse the summary.json file to get the song count
-    const summaryContent = await summaryFile.text();
-    const summary = JSON.parse(summaryContent) as BookSummary;
-
-    // Download index.json in parallel if needed (don't wait for it)
-    let indexFilePromise: Promise<any> | null = null;
-    if (summary.indexAvailable) {
-        const indexUrl = `${folderUrl}index.json`;
-        indexFilePromise = File.downloadFileAsync(indexUrl, localFolder);
-    }
-
-    // Wait for index if it was requested
-    if (indexFilePromise) {
-        await indexFilePromise;
-    }
-
-    // Create songs folder
-    const songsFolder = new Directory(localFolder, `songs`);
-    songsFolder.create({ intermediates: true });
-
-    // Download all song images
-    const songs = await songsFile.text();
-    const songsList = JSON.parse(songs) as SongList;
-
-    // Increase chunk size for better parallelization (50-100 concurrent downloads)
-    const chunkSize = 50;
-    const songNumbers = Object.keys(songsList);
-    const totalSongs = songNumbers.length;
-    
-    // Use atomic counter for thread-safe progress updates
-    let downloadedSongs = 0;
-    const updateProgress = () => {
-        if (onProgress) {
-            onProgress((downloadedSongs / totalSongs) * 100);
+    const downloadResumable = FileSystem.createDownloadResumable(
+        zipUrl,
+        zipFileUri,
+        {},
+        (downloadProgress) => {
+            if (downloadProgress.totalBytesExpectedToWrite > 0) {
+                const progress = (downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite) * 100;
+                onProgress?.(progress);
+            }
         }
-    };
+    );
 
-    for (let i = 0; i < songNumbers.length; i += chunkSize) {
-        const chunk = songNumbers.slice(i, i + chunkSize);
+    try {
+        // Delete the file if it somehow exists from a failed run
+        const fileInfo = await FileSystem.getInfoAsync(zipFileUri);
+        if (fileInfo.exists) {
+            await FileSystem.deleteAsync(zipFileUri);
+        }
 
-        await Promise.allSettled(
-            chunk.map(async (songNumber) => {
-                try {
-                    const songImageUrl = `${folderUrl}songs/${songNumber}.${summary.fileExtension}`;
-                    const songFile = new File(songsFolder, `${songNumber}.${summary.fileExtension}`);
-                    await File.downloadFileAsync(songImageUrl, songFile);
-                    downloadedSongs++;
-                    updateProgress();
-                } catch (error) {
-                    console.error(`Error downloading ${songNumber}.${summary.fileExtension}: ${error}`);
-                    // Continue with other downloads even if one fails
-                }
-            })
-        );
+        const result = await downloadResumable.downloadAsync();
+
+        if (!result || result.status !== 200) {
+            throw new Error(`Server returned status ${result?.status}`);
+        }
+
+        // Ensure progress reaches 100% before moving to verification
+        onProgress?.(100);
+        // // Small delay to ensure UI updates
+        // await new Promise(resolve => setTimeout(resolve, 100));
+        // onProgress?.(101);
+
+        // // verify the checksum - read file using readableStream
+        // const file = new File(result.uri);
+        // const stream = file.readableStream();
         
-        // Only log every 10th chunk to reduce console overhead
-        if ((i / chunkSize) % 10 === 0) {
-            console.log(`Downloaded songs ${i + 1} to ${Math.min(i + chunkSize, songNumbers.length)}`);
-        }
+        // // Read all chunks from the stream and accumulate into a single Uint8Array
+        // const chunks: Uint8Array[] = [];
+        // const reader = stream.getReader();
+        
+        // try {
+        //     while (true) {
+        //         const { done, value } = await reader.read();
+        //         if (done) break;
+        //         if (value) {
+        //             chunks.push(value);
+        //         }
+        //     }
+        // } finally {
+        //     reader.releaseLock();
+        // }
+        
+        // // Calculate total length and combine all chunks
+        // const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        // const bytes = new Uint8Array(totalLength);
+        // let offset = 0;
+        // for (const chunk of chunks) {
+        //     bytes.set(chunk, offset);
+        //     offset += chunk.length;
+        // }
+
+        // // Crypto.digest returns ArrayBuffer when given bytes, convert to hex string
+        // const hashBuffer = await Crypto.digest(
+        //     Crypto.CryptoDigestAlgorithm.SHA256,
+        //     bytes,
+        // );
+
+        // // Convert ArrayBuffer to hex string
+        // const hashArray = new Uint8Array(hashBuffer);
+        // const calculatedSHA256 = Array.from(hashArray)
+        //     .map(byte => byte.toString(16).padStart(2, '0'))
+        //     .join('');
+
+        // // Remove the "sha256:" prefix if present in expectedSHA256
+        // const expectedHash = expectedSHA256.replace(/^sha256:/, '');
+        // if (calculatedSHA256 !== expectedHash) {
+        //     throw new Error(`Checksum verification failed for ${book}. Expected: ${expectedHash}, Got: ${calculatedSHA256}`);
+        // }
+
+        // Unzip to the hymnals directory
+        const destination = FileSystem.documentDirectory + `${HYMNAL_FOLDER}/`;
+        let result_unzip = await unzip(result.uri, destination);
+        
+        // 4. Cleanup
+        await FileSystem.deleteAsync(result.uri, { idempotent: true });
+        downloadingBooks.delete(book);
+
+        console.log(`Successfully installed ${book}`);
+        onFinish?.(true);
+    } catch (e) {
+        console.error("Extraction Error:", e);
+        //onFinish?.(false);
     }
-
-    // Move the downloaded files to the hymnal folder
-    //finalFolder.create({ intermediates: true });
-    localFolder.move(hymnalFolder);
-    console.log(`Moved ${book} folder to ${hymnalFolder.info().uri || "ERROR"}`);
-
-    console.log(`Finished downloading ${summary.name.short}.`);
-    // Ensure progress reaches 100% before moving to verification
-    onProgress?.(100);
-    // Small delay to ensure UI updates
-    await new Promise(resolve => setTimeout(resolve, 100));
-    onProgress?.(101);
-    // verify the download
-    const valid = await hashFolder(finalFolder.info().uri || "ERROR");
-    onFinish?.(valid);
 }
 
 async function removeHymnal(book: string) {
@@ -201,7 +223,7 @@ async function removeHymnal(book: string) {
         try {
             hymnalFolder.delete();
             console.log(`Deleted ${book} hymnal folder.`);
-        } catch(e) {
+        } catch (e) {
             console.log(e);
         }
     } else {
@@ -230,7 +252,7 @@ async function cachedReadFile(filePath: string): Promise<string> {
 async function getSongData(book: string) {
     const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
     const songsFile = new File(hymnalFolder, `songs.json`);
-    if(!songsFile.exists)
+    if (!songsFile.exists)
         return undefined;
     const songsContent = await cachedReadFile(songsFile.info().uri || "");
     const songsList = JSON.parse(songsContent) as SongList;

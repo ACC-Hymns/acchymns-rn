@@ -17,6 +17,9 @@ import { SearchBar } from '@rneui/themed';
 import { fontFamily } from '@/constants/assets';
 import * as ContextMenu from 'zeego/context-menu'
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Ionicons } from '@expo/vector-icons';
+import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
 
 interface SongItemWithMenuProps {
     item: SongSearchInfo;
@@ -89,6 +92,19 @@ export default function SearchScreen() {
     const [isNavigating, setIsNavigating] = useState(false);
     const i18n = useI18n();
 
+    const [selectedHymnals, setSelectedHymnals] = useState<string[]>([]);
+
+    const hymnalsAvailable = useMemo(() => {
+        if (!context) return [];
+        let hymnals = Object.keys(context?.BOOK_DATA ?? {}).filter((h) => context?.BOOK_DATA[h] != undefined);
+        
+        // remove selected hymnals from the list that are not in the context.BOOK_DATA
+        let currentSelectedHymnals = selectedHymnals.filter((h) => hymnals.includes(h));
+        setSelectedHymnals(currentSelectedHymnals);
+
+        return hymnals;
+    }, [context?.BOOK_DATA]);
+
     function stripSearchText(text: string) {
         return text
             .replace(/[.,/#!$%^&*;:{}=\-_'’"`~()]/g, "")
@@ -130,6 +146,7 @@ export default function SearchScreen() {
 
         const fetchData = async () => {
             try {
+                
                 let songList: SongSearchInfo[] = [];
                 for (const id in context.BOOK_DATA) {
                     const songData = await getSongData(id);
@@ -207,9 +224,10 @@ export default function SearchScreen() {
 
         const stripped_search = stripSearchText(search);
         const filtered = songList.filter((s) =>
-            s.stripped_title?.includes(stripped_search) ||
-            s?.stripped_first_line?.includes(stripped_search) ||
-            s?.number == stripped_search
+            (s.stripped_title?.includes(stripped_search) ||
+                s?.stripped_first_line?.includes(stripped_search) ||
+                s?.number == stripped_search) &&
+            (selectedHymnals.length === 0 || selectedHymnals.includes(s.book.name.short))
         );
 
         // Pre-compute cleaned titles to avoid repeated .replace() calls in sort
@@ -221,7 +239,7 @@ export default function SearchScreen() {
         return cleaned.sort((a, b) =>
             a.cleanedTitle.localeCompare(b.cleanedTitle)
         ).map(({ cleanedTitle, ...rest }) => rest);
-    }, [search, songList]);
+    }, [search, songList, selectedHymnals]);
 
     useEffect(() => {
         setDataSource(filteredData);
@@ -303,6 +321,22 @@ export default function SearchScreen() {
         );
     }, [existingBookmarks, handleBookmarkToggle, theme]);
 
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const isModalOpenRef = useRef(false);
+
+    const handlePress = useCallback(() => {
+        if (!bottomSheetModalRef.current) return;
+        if (isModalOpenRef.current) {
+            bottomSheetModalRef.current.dismiss();
+        } else {
+            bottomSheetModalRef.current.present();
+        }
+    }, []);
+
+    const handleSheetChanges = useCallback((index: number) => {
+        isModalOpenRef.current = index === 0;
+    }, []);
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             {loading ? (
@@ -356,8 +390,33 @@ export default function SearchScreen() {
                                     round={true}
                                     showCancel={true}
                                 />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+
+                                    <TouchableOpacity
+                                        disabled={hymnalsAvailable.length === 0}
+                                        style={[styles.filterButton, { flexDirection: 'row', alignItems: 'center', opacity: hymnalsAvailable.length === 0 ? 0.5 : 1 }]}
+                                        onPress={() => {
+                                            Keyboard.dismiss();
+                                            handlePress();
+                                        }}
+                                    >
+                                        <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters') + (selectedHymnals.length > 0 ? ` (${selectedHymnals.length})` : '')}</StyledText>
+                                        <Ionicons
+                                            name="filter"
+                                            size={18}
+                                            color={Colors[theme]['text']}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                                {hymnalsAvailable.length === 0 && (
+                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
+                                        <StyledText style={styles.fadedText}>{i18n.t('noHymnals')}</StyledText>
+                                        <View style={{ height: 5 }} />
+                                        <StyledText style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</StyledText>
+                                    </View>
+                                )}
                                 {
-                                    (searchHistory.length > 0 && search.trim().length == 0) && (
+                                    (hymnalsAvailable.length > 0 && searchHistory.length > 0 && search.trim().length == 0) && (
                                         <View style={styles.searchHistoryContainer}>
                                             <View style={styles.searchHistoryHeader}>
                                                 <StyledText style={styles.searchHistoryTitle}>{i18n.t('recent')}</StyledText>
@@ -435,6 +494,14 @@ export default function SearchScreen() {
                             </>
                         }
                     />
+
+                    <DiscoverFiltersBottomSheet
+                        bottomSheetModalRef={bottomSheetModalRef}
+                        hymnalsAvailable={hymnalsAvailable}
+                        selectedHymnals={selectedHymnals}
+                        setSelectedHymnals={setSelectedHymnals}
+                        onSheetChanges={handleSheetChanges}
+                    />
                 </View>
             )}
         </TouchableWithoutFeedback>
@@ -466,7 +533,6 @@ function makeStyles(theme: "light" | "dark") {
         searchBarContainer: {
             backgroundColor: Colors[theme].background,
             marginHorizontal: -8,
-            marginBottom: 20,
             borderBottomColor: 'transparent',
             borderTopColor: 'transparent',
         },
@@ -559,6 +625,23 @@ function makeStyles(theme: "light" | "dark") {
             color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
             fontFamily: 'Lato',
             textAlign: 'center'
+        },
+        filterText: {
+            color: Colors[theme]['text'],
+            fontSize: 18,
+            marginRight: 8,
+        },
+        filterButton: {
+            backgroundColor: Colors[theme]['settingsButton'],
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 15,
+            paddingHorizontal: 20,
+            marginVertical: 8,
+            borderRadius: 32,
+            borderWidth: 0.5,
+            borderColor: Colors[theme]['divider'],
         }
     });
 

@@ -31,11 +31,8 @@ import {
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
 import { useI18n } from '@/hooks/useI18n';
 import { Ionicons } from '@expo/vector-icons';
-import {
-    BottomSheetModal,
-    BottomSheetView,
-} from '@gorhom/bottom-sheet';
-import { Checkbox } from '@futurejj/react-native-checkbox';
+import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import StyledText from '@/components/StyledText';
 import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';
@@ -68,6 +65,14 @@ export default function DiscoverScreen() {
             .normalize("NFD")
             .replace(/\p{Diacritic}/gu, "");
     }
+
+    useFocusEffect(
+        useCallback(() => {
+            return () => {
+                bottomSheetModalRef.current?.dismiss();
+            }
+        }, [])
+    );
 
     useLayoutEffect(() => {
         if (!context) return;
@@ -213,98 +218,101 @@ export default function DiscoverScreen() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1, backgroundColor: Colors[theme].background }}>
                 <View style={{ flex: 1 }}>
-                    <KeyboardStickyView style={[styles.footerContainer]} offset={offset}>
-                        {prompt.trim().length === 0 && dataSource.length == 0 && (
-                            <FlatList
-                                data={promptSuggestions}
-                                horizontal={true}
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{
-                                    paddingHorizontal: 10,
-                                    paddingVertical: 5,
-                                }}
-                                renderItem={({ item }) => (
-                                    <Pressable
-                                        style={styles.suggestionButton}
-                                        onPress={() => {
-                                            setPrompt(item);
-                                        }}
-                                    >
-                                        <StyledText style={styles.suggestionButtonText}>
-                                            {item}
-                                        </StyledText>
-                                    </Pressable>
-                                )}
-                                keyExtractor={(item, index) => index.toString()}
-                            />
-                        )}
-                        <ConicGradientRenderer
-                            borderRadius={18}
-                            poke={3}
-                            colors={[
-                                Colors[theme]['settingsButton'],
-                                "#C95EFF",
-                                "#94ABFF",
-                                Colors[theme]['settingsButton'],
-                            ]}
-                            spinRate={loading ? 450 : 15}
-                            enabled={prompt.trim().length > 0 || loading}
-                        >
-                            <View style={styles.promptBox}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons
-                                        name="sparkles"
-                                        size={18}
-                                        color={Colors[theme]['fadedText']}
-                                    />
-                                    <TextInput
-                                        style={styles.promptInput}
-                                        placeholderTextColor={Colors[theme].fadedText}
-                                        onChangeText={setPrompt}
-                                        value={prompt}
-                                        placeholder={`${i18n.t('promptPlaceholder')}`}
-                                        keyboardType="default"
-                                    />
-                                </View>
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
+                    {hymnalsAvailable.length > 0 && (
+                        <KeyboardStickyView style={[styles.footerContainer]} offset={offset}>
+                            {prompt.trim().length === 0 && dataSource.length == 0 && (
+                                <FlatList
+                                    data={promptSuggestions}
+                                    horizontal={true}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5,
                                     }}
-                                >
-                                    <TouchableOpacity
-                                        style={styles.promptButton}
-                                        onPress={() => {
-                                            Keyboard.dismiss();
-                                            handlePress();
-                                        }}
-                                    >
-                                        <Ionicons
-                                            name="filter"
-                                            size={24}
-                                            color={Colors[theme]['fadedText']}
-                                        />
-                                    </TouchableOpacity>
-                                    {prompt.trim().length > 0 && !loading && (
-                                        <TouchableOpacity
-                                            style={styles.promptButton}
+                                    renderItem={({ item }) => (
+                                        <Pressable
+                                            style={styles.suggestionButton}
                                             onPress={() => {
-                                                Keyboard.dismiss();
-                                                sendPrompt(prompt);
+                                                setPrompt(item);
                                             }}
                                         >
+                                            <StyledText style={styles.suggestionButtonText}>
+                                                {item}
+                                            </StyledText>
+                                        </Pressable>
+                                    )}
+                                    keyExtractor={(item, index) => index.toString()}
+                                />
+                            )}
+                            <ConicGradientRenderer
+                                borderRadius={18}
+                                poke={3}
+                                colors={[
+                                    Colors[theme]['settingsButton'],
+                                    "#C95EFF",
+                                    "#94ABFF",
+                                    Colors[theme]['settingsButton'],
+                                ]}
+                                spinRate={loading ? 450 : 15}
+                                enabled={prompt.trim().length > 0 || loading}
+                            >
+                                <View style={styles.promptBox}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Ionicons
+                                            name="sparkles"
+                                            size={18}
+                                            color={Colors[theme]['fadedText']}
+                                        />
+                                        <TextInput
+                                            style={styles.promptInput}
+                                            placeholderTextColor={Colors[theme].fadedText}
+                                            onChangeText={setPrompt}
+                                            value={prompt}
+                                            placeholder={`${i18n.t('promptPlaceholder')}`}
+                                            keyboardType="default"
+                                        />
+                                    </View>
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                        }}
+                                    >
+                                        <TouchableOpacity
+                                            style={[styles.filterButton, { flexDirection: 'row', alignItems: 'center' }]}
+                                            onPress={() => {
+                                                Keyboard.dismiss();
+                                                handlePress();
+                                            }}
+                                        >
+                                            <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters')}</StyledText>
                                             <Ionicons
-                                                name="arrow-up"
-                                                size={24}
-                                                color={Colors[theme]['fadedText']}
+                                                name="filter"
+                                                size={18}
+                                                color={Colors[theme]['text']}
                                             />
                                         </TouchableOpacity>
-                                    )}
+                                        {prompt.trim().length > 0 && !loading && (
+                                            <TouchableOpacity
+                                                style={styles.promptButton}
+                                                onPress={() => {
+                                                    Keyboard.dismiss();
+                                                    sendPrompt(prompt);
+                                                }}
+                                            >
+                                                <Ionicons
+                                                    name="arrow-up"
+                                                    size={24}
+                                                    color={Colors[theme]['fadedText']}
+                                                />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                 </View>
-                            </View>
-                        </ConicGradientRenderer>
-                    </KeyboardStickyView>
+                            </ConicGradientRenderer>
+                        </KeyboardStickyView>
+                    )}
 
                     <FlatList
                         ref={scrollViewRef}
@@ -410,97 +418,30 @@ export default function DiscoverScreen() {
                                         </View>
                                     )}
                                 </View>
+                                {hymnalsAvailable.length === 0 && (
+                                    <View style={{
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        minHeight: 250
+                                    }}>
+                                        <StyledText style={styles.fadedText}>{i18n.t('noHymnals')}</StyledText>
+                                        <View style={{ height: 5 }} />
+                                        <StyledText style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</StyledText>
+                                    </View>
+                                )}
                             </>
                         }
                     />
                 </View>
 
-
-                <BottomSheetModal
-                    ref={bottomSheetModalRef}
-                    onChange={handleSheetChanges}
-                    style={styles.bottomSheet}
-                    backgroundStyle={styles.bottomSheet}
-                    handleIndicatorStyle={styles.handleIndicator}
-                >
-                    <BottomSheetView style={styles.contentContainer}>
-                        <View style={{ marginTop: -20, width: '100%' }}>
-                            <View
-                                style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    width: '100%',
-                                }}
-                            >
-                                <View style={styles.closeButton}>
-                                    <Ionicons name="close" size={24} color={Colors[theme]['settingsButton']} />
-                                </View>
-                                <StyledText style={styles.bottomSheetHeaderText}>
-                                    {i18n.t('filters')}
-                                </StyledText>
-                                <TouchableOpacity
-                                    style={styles.closeButton}
-                                    onPress={() => bottomSheetModalRef.current?.dismiss()}
-                                >
-                                    <Ionicons name="close" size={24} color={Colors[theme]['fadedText']} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{ marginLeft: 20, marginTop: 10 }}>
-                                <Pressable
-                                    style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}
-                                    onPress={() => setSelectedHymnals([])}
-                                >
-                                    <Checkbox
-                                        status={selectedHymnals.length < 1 ? 'checked' : 'unchecked'}
-                                        color={Colors[theme]['text']}
-                                    />
-                                    <StyledText style={styles.filterText}>{i18n.t('allHymnals')}</StyledText>
-                                </Pressable>
-                                {hymnalsAvailable.map((item) => (
-                                    <Pressable
-                                        key={item}
-                                        style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 5 }}
-                                        onPress={() => {
-                                            if (selectedHymnals.includes(item)) {
-                                                setSelectedHymnals(selectedHymnals.filter((h) => h !== item));
-                                            } else {
-                                                setSelectedHymnals([...selectedHymnals, item]);
-                                            }
-                                        }}
-                                    >
-                                        <Checkbox
-                                            status={selectedHymnals.includes(item) ? 'checked' : 'unchecked'}
-                                            color={context?.BOOK_DATA[item]?.primaryColor || Colors[theme]['primary']}
-                                            uncheckedColor={context?.BOOK_DATA[item]?.primaryColor || Colors[theme]['primary']}
-                                        />
-                                        <StyledText style={styles.filterText}>
-                                            {context?.BOOK_DATA[item]?.name.medium || item}
-                                        </StyledText>
-                                    </Pressable>
-                                ))}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        justifyContent: 'center',
-                                        gap: 20,
-                                        marginVertical: 20,
-                                    }}
-                                >
-                                    <TouchableOpacity onPress={() => setSelectedHymnals([])} style={styles.resetButton}>
-                                        <StyledText style={styles.resetButtonText}>{i18n.t('reset')}</StyledText>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        onPress={() => bottomSheetModalRef.current?.dismiss()}
-                                        style={styles.applyButton}
-                                    >
-                                        <StyledText style={styles.applyButtonText}>{i18n.t('apply')}</StyledText>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </BottomSheetView>
-                </BottomSheetModal>
+                <DiscoverFiltersBottomSheet
+                    bottomSheetModalRef={bottomSheetModalRef}
+                    hymnalsAvailable={hymnalsAvailable}
+                    selectedHymnals={selectedHymnals}
+                    setSelectedHymnals={setSelectedHymnals}
+                    onSheetChanges={handleSheetChanges}
+                />
             </View>
         </TouchableWithoutFeedback>
     )
@@ -508,6 +449,11 @@ export default function DiscoverScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        filterText: {
+            color: Colors[theme]['text'],
+            fontSize: 18,
+            marginRight: 8,
+        },
         verseStraightRect: {
             position: 'absolute',
             marginLeft: 45,
@@ -534,63 +480,6 @@ function makeStyles(theme: "light" | "dark") {
             width: '100%',
             bottom: Platform.OS === 'ios' ? 80 : 100
         },
-        resetButtonText: {
-            color: Colors[theme]['text'],
-            fontSize: 16,
-            textAlign: 'center',
-        },
-        applyButtonText: {
-            color: 'white',
-            fontSize: 16,
-            textAlign: 'center',
-        },
-        resetButton: {
-            backgroundColor: Colors[theme]['settingsButton'],
-            borderRadius: 16,
-            padding: 16,
-            minWidth: 100,
-        },
-        applyButton: {
-            backgroundColor: Colors[theme]['primary'],
-            borderRadius: 16,
-            padding: 16,
-            minWidth: 100,
-        },
-        filterText: {
-            color: Colors[theme]['text'],
-            fontSize: 16,
-            marginLeft: 10,
-        },
-        bottomSheetHeaderText: {
-            color: Colors[theme]['text'],
-            fontSize: 18,
-            textAlign: 'center',
-        },
-        handleIndicator: {
-            backgroundColor: Colors[theme]['border'],
-            height: 0,
-        },
-        contentContainer: {
-            flex: 1,
-            padding: 8,
-            paddingBottom: 20,
-            alignItems: 'center',
-        },
-        bottomSheet: {
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 7 },
-            shadowOpacity: 0.43,
-            shadowRadius: 9.51,
-            elevation: 15,
-            backgroundColor: Colors[theme]['settingsButton'],
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-        },
-        closeButton: {
-            backgroundColor: Colors[theme]['settingsButton'],
-            borderRadius: 32,
-            padding: 8,
-        },
         promptButton: {
             backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 32,
@@ -600,6 +489,19 @@ function makeStyles(theme: "light" | "dark") {
             shadowOpacity: 0.3,
             shadowOffset: { width: 0, height: 0 },
             elevation: 1,
+        },
+        fadedText: {
+            fontSize: 24,
+            fontWeight: '500',
+            color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
+            fontFamily: 'Lato'
+        },
+        descriptionText: {
+            fontSize: 16,
+            fontWeight: '400',
+            color: Colors[theme]['fadedText'], // Dynamically set text color using useThemeColor
+            fontFamily: 'Lato',
+            textAlign: 'center'
         },
         promptBox: {
             backgroundColor: Colors[theme]['settingsButton'],
@@ -633,6 +535,18 @@ function makeStyles(theme: "light" | "dark") {
             shadowOffset: { width: 0, height: 0 },
             elevation: 1,
         },
+        filterButton: {
+            backgroundColor: Colors[theme]['settingsButton'],
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 15,
+            paddingHorizontal: 20,
+            marginVertical: 4,
+            borderRadius: 32,
+            borderWidth: 0.5,
+            borderColor: Colors[theme]['divider'],
+        },
         promptInput: {
             height: 40,
             borderColor: Colors[theme]['text'],
@@ -656,7 +570,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         textStyle: {
             fontSize: 32,
-            fontWeight: 500, 
+            fontWeight: 500,
             fontFamily: 'Lato',
             color: Colors[theme]['text'],
         },
@@ -666,7 +580,7 @@ function makeStyles(theme: "light" | "dark") {
         },
         subtitleTextStyleBold: {
             fontSize: 18,
-            fontWeight: 500, 
+            fontWeight: 500,
             fontFamily: 'Lato',
             color: Colors[theme]['text'],
             maxWidth: '60%',

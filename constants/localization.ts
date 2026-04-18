@@ -18,7 +18,6 @@ const translations = {
         // Generic
         back: 'Back',
         cancel: 'Cancel',
-        delete: 'Remove',
         confirm: 'Confirm',
         clear: 'Clear',
         details: 'Details',
@@ -29,13 +28,14 @@ const translations = {
         ignore: 'Ignore',
         reset: 'Reset',
         apply: 'Apply',
+        undo: 'Undo',
 
         // Discover screen
         discover: 'Discover',
         discoverSubtitle: 'Results related to ',
         promptPlaceholder: "Enter any topic, theme, or lyrics...",
         topResults: 'Top Results',
-        filters: 'Filter Hymnals',
+        filters: 'Filters',
         allHymnals: 'All Hymnals',
 
         // Broadcast screen
@@ -151,6 +151,7 @@ const translations = {
         ignore: 'Ignorar',
         reset: 'Restablecer',
         apply: 'Aplicar',
+        undo: 'Deshacer',
 
         // Search and Bookmarks screen
         search: 'Buscar',
@@ -167,7 +168,7 @@ const translations = {
         discoverSubtitle: 'Resultados relacionados con ',
         promptPlaceholder: "Introduce cualquier tema, asunto o letra...",
         topResults: 'Mejores Resultados',
-        filters: 'Filtrar Himnarios',
+        filters: 'Filtros',
         allHymnals: 'Todos los Himnarios',
 
         home: 'Inicio',
@@ -257,6 +258,7 @@ const translations = {
         ignore: 'Ignorer',
         reset: 'Réinitialiser',
         apply: 'Appliquer',
+        undo: 'Annuler',
 
         // Search and Bookmarks screen
         search: 'Rechercher',
@@ -273,7 +275,7 @@ const translations = {
         discoverSubtitle: 'Résultats liés à ',
         promptPlaceholder: "Entrez un sujet, un thème ou des paroles...",
         topResults: 'Meilleurs Résultats',
-        filters: 'Filtrer les Hymnaires',
+        filters: 'Filtres',
         allHymnals: 'Tous les Hymnaires',
 
         home: 'Accueil',
@@ -364,6 +366,7 @@ const translations = {
         ignore: 'Ignorieren',
         reset: 'Zurücksetzen',
         apply: 'Anwenden',
+        undo: 'Rückgängig',
 
         // Search and Bookmarks screen
         search: 'Suchen',
@@ -380,7 +383,7 @@ const translations = {
         discoverSubtitle: 'Ergebnisse zu ',
         promptPlaceholder: "Gib ein Thema, Motiv oder Liedtext ein...",
         topResults: 'Top-Ergebnisse',
-        filters: 'Gesangbücher filtern',
+        filters: 'Filter',
         allHymnals: 'Alle Gesangbücher',
 
         home: 'Startseite',
@@ -470,9 +473,10 @@ const translations = {
         ignore: 'Zanemariti',
         reset: 'Poništi',
         apply: 'Primeni',
+        undo: 'Vrati',
 
         // Search and Bookmarks screen
-        search: 'Pretraži',
+        search: 'Pretraga',
         bookmarks: 'Zabilježi',
         featured: 'Predstavljeni Pjesmi',
         recent: 'Nedavne Pretrage',
@@ -486,14 +490,14 @@ const translations = {
         discoverSubtitle: 'Rezultati povezani sa ',
         promptPlaceholder: "Unesite bilo koju temu, motiv ili tekst pesme...",
         topResults: 'Najbolji Rezultati',
-        filters: 'Filtriraj Himnare',
+        filters: 'Filtri',
         allHymnals: 'Svi Himnari',
 
         home: 'Početna',
-        noHymnals: 'Nema himnala',
-        addHymnal: 'Dodajte himnala',
+        noHymnals: 'Nema pesmarica',
+        addHymnal: 'Dodajte pesmarica',
         deleteAlertTitle: 'Obriši ',
-        deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
+        deleteAlertMessage: 'Pesmaricu možete ponovo preuzeti u bilo kom trenutku.',
 
         settings: 'Postavke',
         info: 'INFORMACIJE',
@@ -535,7 +539,7 @@ const translations = {
         numerical: 'Numerički',
         alphabetical: 'Abecedni',
         topical: 'Tematički',
-        deleteHymnal: 'Obriši himnolog',
+        deleteHymnal: 'Obriši pesmarica',
 
         notes: 'Notatke',
         piano: 'Piano',
@@ -575,6 +579,7 @@ const translations = {
         ignore: '無視',
         reset: 'リセット',
         apply: '適用',
+        undo: '元に戻す',
 
         // Search and Bookmarks screen
         search: '検索',
@@ -680,6 +685,7 @@ const translations = {
         ignore: 'Ignorar',
         reset: 'Redefinir',
         apply: 'Aplicar',
+        undo: 'Desfazer',
 
         // Search and Bookmarks screen
         search: 'Pesquisar',
@@ -696,7 +702,7 @@ const translations = {
         discoverSubtitle: 'Resultados relacionados a ',
         promptPlaceholder: "Digite qualquer assunto, tema ou letra...",
         topResults: 'Principais Resultados',
-        filters: 'Filtrar Hinários',
+        filters: 'Filtros',
         allHymnals: 'Todos os Hinários',
 
         home: 'Início',
@@ -718,10 +724,10 @@ const translations = {
         clearCache: 'Limpar Cache',
         deleteHymnals: 'Deletar Todos os Hymnals',
         resetData: 'Redefinir todos os dados',
-        clearCacheConfirmation: 'Limpar Cache?',
-        deleteHymnalsConfirmation: 'Deletar Todos os Hymnals?',
+        clearCacheConfirmation: 'Limpar Cache?',  
+        deleteHymnalsConfirmation: 'Ukloniti sve pesmarice?',
         clearCacheConfirmationMessage: 'Isso deletará todos os arquivos em cache criados pela aplicação.',
-        deleteHymnalsConfirmationMessage: 'Isso deletará todos os hymnals atualmente baixados.',
+        deleteHymnalsConfirmationMessage: 'Ovo će ukloniti sve trenutno preuzete pesmarice.',
         resetDataConfirmation: 'Redefinir todos os dados?',
         resetDataConfirmationMessage: 'Isso excluirá tudo, incluindo marcadores e configurações. Esta ação não pode ser desfeita.',
         posthogOptOut: 'Desativar a coleta de dados',

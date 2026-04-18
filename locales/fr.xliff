@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file original="localization" source-language="en" target-language="fr" datatype="plaintext">
+    <header>
+      <tool tool-id="acchymns" tool-name="ACCHymns" tool-version="1.0"/>
+    </header>
+    <body>
+      <trans-unit id="back">
+        <source>Back</source>
+        <target>Retour</target>
+      </trans-unit>
+      <trans-unit id="cancel">
+        <source>Cancel</source>
+        <target>Annuler</target>
+      </trans-unit>
+      <trans-unit id="delete">
+        <source>Remove</source>
+        <target>Supprimer</target>
+      </trans-unit>
+      <trans-unit id="confirm">
+        <source>Confirm</source>
+        <target>Confirmer</target>
+      </trans-unit>
+      <trans-unit id="clear">
+        <source>Clear</source>
+        <target>Effacer</target>
+      </trans-unit>
+      <trans-unit id="details">
+        <source>Details</source>
+        <target>Détails</target>
+      </trans-unit>
+      <trans-unit id="noDetailsFound">
+        <source>No details found.</source>
+        <target>Aucun détail trouvé.</target>
+      </trans-unit>
+      <trans-unit id="oops">
+        <source>Oops!</source>
+        <target>Oups!</target>
+      </trans-unit>
+      <trans-unit id="screenDoesntExist">
+        <source>This screen doesn&apos;t exist.</source>
+        <target>Cette écran n&apos;existe pas.</target>
+      </trans-unit>
+      <trans-unit id="goToHomeScreen">
+        <source>Go to home screen!</source>
+        <target>Retour à l&apos;écran d&apos;accueil !</target>
+      </trans-unit>
+      <trans-unit id="ignore">
+        <source>Ignore</source>
+        <target>Ignorer</target>
+      </trans-unit>
+      <trans-unit id="reset">
+        <source>Reset</source>
+        <target>Réinitialiser</target>
+      </trans-unit>
+      <trans-unit id="apply">
+        <source>Apply</source>
+        <target>Appliquer</target>
+      </trans-unit>
+      <trans-unit id="discover">
+        <source>Discover</source>
+        <target>Découvrir</target>
+      </trans-unit>
+      <trans-unit id="discoverSubtitle">
+        <source>Results related to </source>
+        <target>Résultats liés à </target>
+      </trans-unit>
+      <trans-unit id="promptPlaceholder">
+        <source>Enter any topic, theme, or lyrics...</source>
+        <target>Entrez un sujet, un thème ou des paroles...</target>
+      </trans-unit>
+      <trans-unit id="topResults">
+        <source>Top Results</source>
+        <target>Meilleurs Résultats</target>
+      </trans-unit>
+      <trans-unit id="filters">
+        <source>Filter Hymnals</source>
+        <target>Filtrer les Hymnaires</target>
+      </trans-unit>
+      <trans-unit id="allHymnals">
+        <source>All Hymnals</source>
+        <target>Tous les Hymnaires</target>
+      </trans-unit>
+      <trans-unit id="broadcast">
+        <source>Broadcast</source>
+        <target>Broadcast</target>
+      </trans-unit>
+      <trans-unit id="selectedChurch">
+        <source>Selected Church</source>
+        <target>Selected Church</target>
+      </trans-unit>
+      <trans-unit id="actions">
+        <source>ACTIONS</source>
+        <target>ACTIONS</target>
+      </trans-unit>
+      <trans-unit id="setSongNumber">
+        <source>Set Song Number</source>
+        <target>Set Song Number</target>
+      </trans-unit>
+      <trans-unit id="setBibleReading">
+        <source>Set Bible Reading</source>
+        <target>Set Bible Reading</target>
+      </trans-unit>
+      <trans-unit id="clearScreen">
+        <source>Clear Screen</source>
+        <target>Clear Screen</target>
+      </trans-unit>
+      <trans-unit id="logOut">
+        <source>Log Out</source>
+        <target>Log Out</target>
+      </trans-unit>
+      <trans-unit id="search">
+        <source>Search</source>
+        <target>Rechercher</target>
+      </trans-unit>
+      <trans-unit id="bookmarks">
+        <source>Bookmarks</source>
+        <target>Marque-pages</target>
+      </trans-unit>
+      <trans-unit id="featured">
+        <source>Featured Songs</source>
+        <target>Chants Destacés</target>
+      </trans-unit>
+      <trans-unit id="recent">
+        <source>Recent Searches</source>
+        <target>Recherches Récentes</target>
+      </trans-unit>
+      <trans-unit id="clearAll">
+        <source>Clear All</source>
+        <target>Tout Effacer</target>
+      </trans-unit>
+      <trans-unit id="clearHistory">
+        <source>Clear History</source>
+        <target>Effacer l&apos;Historique</target>
+      </trans-unit>
+      <trans-unit id="clearHistoryMessage">
+        <source>You cannot undo this action</source>
+        <target>Vous ne pouvez pas annuler cette action</target>
+      </trans-unit>
+      <trans-unit id="remove">
+        <source>Remove</source>
+        <target>Supprimer</target>
+      </trans-unit>
+      <trans-unit id="removeMessage">
+        <source>Are you sure you want to remove this bookmark?</source>
+        <target>Êtes-vous sûr de vouloir supprimer ce marque-page ?</target>
+      </trans-unit>
+      <trans-unit id="home">
+        <source>Home</source>
+        <target>Accueil</target>
+      </trans-unit>
+      <trans-unit id="noHymnals">
+        <source>No Hymnals</source>
+        <target>Aucun Livre de Hymnes</target>
+      </trans-unit>
+      <trans-unit id="addHymnal">
+        <source>Add Hymnal</source>
+        <target>Ajouter un Livre de Hymnes</target>
+      </trans-unit>
+      <trans-unit id="deleteAlertTitle">
+        <source>Remove </source>
+        <target>Supprimer </target>
+      </trans-unit>
+      <trans-unit id="deleteAlertMessage">
+        <source>You can always download the hymnal again later.</source>
+        <target>Vous pouvez toujours télécharger le livre de hymnes plus tard.</target>
+      </trans-unit>
+      <trans-unit id="settings">
+        <source>Settings</source>
+        <target>Paramètres</target>
+      </trans-unit>
+      <trans-unit id="info">
+        <source>INFO</source>
+        <target>INFORMATIONS</target>
+      </trans-unit>
+      <trans-unit id="appVersion">
+        <source>App Version</source>
+        <target>Version de l&apos;application</target>
+      </trans-unit>
+      <trans-unit id="help">
+        <source>Help</source>
+        <target>Aide</target>
+      </trans-unit>
+      <trans-unit id="general">
+        <source>GENERAL</source>
+        <target>GÉNÉRAL</target>
+      </trans-unit>
+      <trans-unit id="reportBug">
+        <source>Report a Bug</source>
+        <target>Signaler un Bug</target>
+      </trans-unit>
+      <trans-unit id="requestBook">
+        <source>Request a Book or Feature</source>
+        <target>Demander un Livre ou une Fonctionnalité</target>
+      </trans-unit>
+      <trans-unit id="privacyPolicy">
+        <source>Privacy Policy</source>
+        <target>Politique de Confidentialité</target>
+      </trans-unit>
+      <trans-unit id="debug">
+        <source>DEBUG</source>
+        <target>DEBUG</target>
+      </trans-unit>
+      <trans-unit id="clearCache">
+        <source>Clear Cache</source>
+        <target>Effacer le Cache</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnals">
+        <source>Remove All Hymnals</source>
+        <target>Supprimer Tous les Hymnals</target>
+      </trans-unit>
+      <trans-unit id="resetData">
+        <source>Reset All Data</source>
+        <target>Réinitialiser toutes les données</target>
+      </trans-unit>
+      <trans-unit id="clearCacheConfirmation">
+        <source>Clear Cache?</source>
+        <target>Effacer le Cache?</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnalsConfirmation">
+        <source>Remove All Hymnals?</source>
+        <target>Supprimer Tous les Hymnals?</target>
+      </trans-unit>
+      <trans-unit id="clearCacheConfirmationMessage">
+        <source>This will delete all cached files created by the app.</source>
+        <target>Cela supprimera tous les fichiers mis en cache créés par l&apos;application.</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnalsConfirmationMessage">
+        <source>This will remove all hymnals currently downloaded.</source>
+        <target>Cela supprimera tous les hymnals actuellement téléchargés.</target>
+      </trans-unit>
+      <trans-unit id="resetDataConfirmation">
+        <source>Reset All Data?</source>
+        <target>Réinitialiser toutes les données?</target>
+      </trans-unit>
+      <trans-unit id="resetDataConfirmationMessage">
+        <source>This will delete everything, including bookmarks and settings. This cannot be undone.</source>
+        <target>Cela supprimera tout, y compris les marque-pages et les paramètres. Cette action est irréversible.</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOut">
+        <source>Opt Out of Data Collection</source>
+        <target>Désactiver la collecte de données</target>
+      </trans-unit>
+      <trans-unit id="posthogOptIn">
+        <source>Opt In to Data Collection</source>
+        <target>Activer la collecte de données</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOutConfirmation">
+        <source>Opt Out of Data Collection?</source>
+        <target>Désactiver la collecte de données?</target>
+      </trans-unit>
+      <trans-unit id="posthogOptOutConfirmationMessage">
+        <source>This will opt you out of data collection. You can opt in again at any time.</source>
+        <target>Cela désactivera la collecte de données. Vous pouvez l&apos;activer à nouveau à tout moment.</target>
+      </trans-unit>
+      <trans-unit id="preferences">
+        <source>Preferences</source>
+        <target>Préférences</target>
+      </trans-unit>
+      <trans-unit id="accessibilityAndLanguage">
+        <source>ACCESSIBILITY &amp; LANGUAGE</source>
+        <target>ACCESSIBILITÉ ET LANGUE</target>
+      </trans-unit>
+      <trans-unit id="legacyNumberSelection">
+        <source>Legacy Number Selection</source>
+        <target>Sélection de Numéro Ancien</target>
+      </trans-unit>
+      <trans-unit id="language">
+        <source>Language</source>
+        <target>Langue</target>
+      </trans-unit>
+      <trans-unit id="appearance">
+        <source>APPEARANCE</source>
+        <target>APPARIENCE</target>
+      </trans-unit>
+      <trans-unit id="theme">
+        <source>Theme</source>
+        <target>Thème</target>
+      </trans-unit>
+      <trans-unit id="darkMode">
+        <source>Dark Mode</source>
+        <target>Mode Sombre</target>
+      </trans-unit>
+      <trans-unit id="lightMode">
+        <source>Light Mode</source>
+        <target>Mode Clair</target>
+      </trans-unit>
+      <trans-unit id="systemDefault">
+        <source>System Default</source>
+        <target>Système par Défaut</target>
+      </trans-unit>
+      <trans-unit id="other">
+        <source>Other</source>
+        <target>Autre</target>
+      </trans-unit>
+      <trans-unit id="invertSheetMusic">
+        <source>Invert Notation Colors</source>
+        <target>Inverser les Couleurs de la Notation</target>
+      </trans-unit>
+      <trans-unit id="sortingLabel">
+        <source>Sorting Options</source>
+        <target>Options de Tri</target>
+      </trans-unit>
+      <trans-unit id="numerical">
+        <source>Numerical</source>
+        <target>Numérique</target>
+      </trans-unit>
+      <trans-unit id="alphabetical">
+        <source>Alphabetical</source>
+        <target>Alphabétique</target>
+      </trans-unit>
+      <trans-unit id="topical">
+        <source>Topical</source>
+        <target>Topique</target>
+      </trans-unit>
+      <trans-unit id="deleteHymnal">
+        <source>Remove Hymnal</source>
+        <target>Supprimer le Livre de Hymnes</target>
+      </trans-unit>
+      <trans-unit id="notes">
+        <source>Notes</source>
+        <target>Notes</target>
+      </trans-unit>
+      <trans-unit id="piano">
+        <source>Piano</source>
+        <target>Piano</target>
+      </trans-unit>
+      <trans-unit id="all">
+        <source>All</source>
+        <target>Toutes</target>
+      </trans-unit>
+      <trans-unit id="removeBookmark">
+        <source>Remove Bookmark</source>
+        <target>Supprimer le Marque-page</target>
+      </trans-unit>
+      <trans-unit id="saveBookmark">
+        <source>Save as Bookmark</source>
+        <target>Enregistrer comme Marque-page</target>
+      </trans-unit>
+      <trans-unit id="share">
+        <source>Share</source>
+        <target>Partager</target>
+      </trans-unit>
+      <trans-unit id="reportIssueMessage">
+        <source>Report wrong titles, starting notes, etc.</source>
+        <target>Signaler les titres incorrects, les notes de début, etc.</target>
+      </trans-unit>
+      <trans-unit id="reportIssue">
+        <source>Report Issue</source>
+        <target>Signaler un Problème</target>
+      </trans-unit>
+      <trans-unit id="reportIssueSuccess">
+        <source>Issue reported successfully</source>
+        <target>Problème signalé avec succès</target>
+      </trans-unit>
+      <trans-unit id="reportIssueFailure">
+        <source>Failed to report issue</source>
+        <target>Échec du signalement du problème</target>
+      </trans-unit>
+      <trans-unit id="addHymnalSubtitle">
+        <source>Download hymnals to access them offline.</source>
+        <target>Téléchargez les hymnaires pour les accéder hors ligne.</target>
+      </trans-unit>
+      <trans-unit id="verifying">
+        <source>Verifying...</source>
+        <target>Vérification...</target>
+      </trans-unit>
+      <trans-unit id="size">
+        <source>Size</source>
+        <target>Taille</target>
+      </trans-unit>
+      <trans-unit id="progress">
+        <source>Progress</source>
+        <target>Progression</target>
+      </trans-unit>
+      <trans-unit id="failedToLoadHymnals">
+        <source>Failed to load Hymnals</source>
+        <target>Échec du chargement des hymnaires</target>
+      </trans-unit>
+      <trans-unit id="failedToLoadHymnalsMessage">
+        <source>Please check your internet connection and try again.</source>
+        <target>Veuillez vérifier votre connexion internet et réessayer.</target>
+      </trans-unit>
+      <trans-unit id="retry">
+        <source>Retry</source>
+        <target>Réessayer</target>
+      </trans-unit>
+      <trans-unit id="verificationFailed">
+        <source>Verification Failed</source>
+        <target>Échec de la vérification</target>
+      </trans-unit>
+      <trans-unit id="verificationFailedMessage">
+        <source>Some files were unable to download properly. Please try again.</source>
+        <target>Certains fichiers n&apos;ont pas pu être téléchargés correctement. Veuillez réessayer.</target>
+      </trans-unit>
+      <trans-unit id="ok">
+        <source>OK</source>
+        <target>D&apos;accord</target>
+      </trans-unit>
+      <trans-unit id="startingDownload">
+        <source>Starting download...</source>
+        <target>Démarrage de la téléchargement...</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -42,6 +42,12 @@ async function getHTMLStringFromSong(
     // Common CSS for both PDF and image viewers
     const commonCSS = `
     body, html {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
         margin: 0;
         padding: 0;
         width: 100%;
@@ -234,7 +240,7 @@ async function getHTMLStringFromSong(
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0,">
     <title>Song ${songId}</title>
     <style>
         ${commonCSS}

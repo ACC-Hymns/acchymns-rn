@@ -31,42 +31,6 @@ export default function HomeScreen() {
     // before rendering, check if the user has any books
     // if not, push the user to the hymnal importer
 
-    // 1. Wrap in useCallback to prevent unnecessary re-attachments
-    const deleteHymnal = useCallback(async (bookKey: string) => {
-        console.log(`Deleting ${bookKey}...`);
-
-        try {
-            // Run deletions
-            await removeHymnal(bookKey);
-
-            // Batch state updates:
-            // Update progress and book data simultaneously
-            context?.setDownloadProgressValues((prev) => {
-                const { [bookKey]: _, ...rest } = prev; // Clean way to delete key
-                return rest;
-            });
-
-            // Reload the master list
-            const updatedBooks = await loadHymnals();
-            context?.SET_BOOK_DATA(updatedBooks);
-
-            console.log("Hymnal deleted and state reloaded.");
-        } catch (error) {
-            console.error("Failed to delete hymnal:", error);
-        }
-    }, [context?.setDownloadProgressValues, context?.SET_BOOK_DATA, context?.BOOK_DATA]);
-    // Use specific context functions as deps, not the whole data object
-
-    useEffect(() => {
-        if (!context) return;
-
-        // Only assign if it's actually different
-        if (context.deleteHymnal !== deleteHymnal) {
-            context.deleteHymnal = deleteHymnal;
-        }
-
-        loadOrder();
-    }, [deleteHymnal]); // Runs when the function reference changes
 
     const [sortOrder, setSortOrder] = useState<string[]>([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -123,10 +87,10 @@ export default function HomeScreen() {
     // Update sortOrder when BOOK_DATA changes to remove deleted items
     useEffect(() => {
         if (!context?.BOOK_DATA || sortOrder.length === 0 || isInitialLoad) return;
-        
+
         // Filter out any items in sortOrder that no longer exist in BOOK_DATA
         const validSortOrder = sortOrder.filter((key) => context?.BOOK_DATA[key]);
-        
+
         // If the order changed, update it
         if (validSortOrder.length !== sortOrder.length) {
             setSortOrder(validSortOrder);
@@ -143,7 +107,7 @@ export default function HomeScreen() {
 
     const HymnalItem: React.FC<{ item: string }> = ({ item }) => {
 
-        if(!context?.BOOK_DATA?.[item]) {
+        if (!context?.BOOK_DATA?.[item]) {
             return null;
         }
 
@@ -184,7 +148,7 @@ export default function HomeScreen() {
 
     // Loading skeleton animation
     const skeletonOpacity = React.useRef(new RNAnimated.Value(0.3)).current;
-    
+
     React.useEffect(() => {
         if (isInitialLoad) {
             const pulseAnimation = RNAnimated.loop(
@@ -232,6 +196,12 @@ export default function HomeScreen() {
                             />
                         ))}
                     </View>
+                ) : gridData.length === 0 ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 20 }}>
+                        <StyledText style={styles.fadedText}>{i18n.t('noHymnals')}</StyledText>
+                        <View style={{ height: 5 }} />
+                        <StyledText style={styles.descriptionText}>{i18n.t('addHymnalSubtitle')}</StyledText>
+                    </View>
                 ) : (
                     <Sortable.Grid
                         columns={1}
@@ -244,7 +214,7 @@ export default function HomeScreen() {
                         enableActiveItemSnap={false}
                         onOrderChange={haptic}
                         onDragStart={haptic}
-                        onDragEnd={({data}) => {
+                        onDragEnd={({ data }) => {
                             setSortOrder(data);
                         }}
                     />
@@ -262,7 +232,7 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
             </Animated.ScrollView>
-            
+
 
         </View>
     );

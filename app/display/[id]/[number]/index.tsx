@@ -359,7 +359,6 @@ export default function DisplayScreen() {
                 if (!nextRoute)
                     return;
 
-                console.log('Navigating to:', nextRoute.name);
                 if (!nextRoute.name?.startsWith('index')) {
                     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
                 } else {

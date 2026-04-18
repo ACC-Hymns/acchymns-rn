@@ -29,6 +29,7 @@ export const Colors  = {
     divider: '#e8e8e8',
     destructive: '#fd3b31',
     settingsButton: '#fff',
+    settingsButtonTransparent: 'rgba(255, 255, 255, 0.0)',
     buttonTap: '#DDDDDD'
   },
   dark: {
@@ -37,6 +38,7 @@ export const Colors  = {
     background: '#000',
     songBackground: '#000',
     settingsButton: '#141414',
+    settingsButtonTransparent: 'rgba(20, 20, 20, 0.0)',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',

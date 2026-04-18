@@ -126,6 +126,7 @@ export default function BroadcastOptionsScreen() {
     )
     return (
         <>
+            <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <KeyboardAvoidingView style={{
                     backgroundColor: Colors[theme]['background'],
@@ -244,6 +245,7 @@ export default function BroadcastOptionsScreen() {
                     </View>
                 </KeyboardAvoidingView >
             </TouchableWithoutFeedback>
+            </View>
         </>
     );
 }

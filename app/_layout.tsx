@@ -8,7 +8,7 @@ import 'react-native-reanimated';
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { loadHymnals } from '@/scripts/hymnals';
+import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
 import { HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { View, Appearance } from 'react-native';
@@ -173,6 +173,31 @@ export default function RootLayout() {
         Appearance.setColorScheme(appliedTheme as any);
     }, [themeOverride]);
 
+
+    const deleteHymnal = async (book: string) => {
+        console.log(`Deleting ${book}...`);
+
+        try {
+            // Run deletions
+            await removeHymnal(book);
+
+            // Batch state updates:
+            // Update progress and book data simultaneously
+            context?.setDownloadProgressValues((prev) => {
+                const { [book]: _, ...rest } = prev; // Clean way to delete key
+                return rest;
+            });
+
+            // Reload the master list
+            const updatedBooks = await loadHymnals();
+            context?.SET_BOOK_DATA(updatedBooks);
+
+            console.log("Hymnal deleted and state reloaded.");
+        } catch (error) {
+            console.error("Failed to delete hymnal:", error);
+        }
+    }
+
     // save preferences to async storage
     useEffect(() => {
 
@@ -211,7 +236,8 @@ export default function RootLayout() {
             setBroadcastingToken,
             broadcastingChurch,
             setBroadcastingChurch,
-            resetPreferences
+            resetPreferences,
+            deleteHymnal
         };
     }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited, broadcastingToken, setBroadcastingToken, broadcastingChurch, setBroadcastingChurch]);
     

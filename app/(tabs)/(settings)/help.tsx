@@ -10,6 +10,7 @@ import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
 import PostHog, { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HelpScreen() {
 
@@ -168,12 +169,15 @@ export default function HelpScreen() {
                                         isPreferred: true
                                     },
                                     {
-                                        text: i18n.t('delete'),
+                                        text: i18n.t('remove'),
                                         onPress: async () => {
                                             // remove progress values
                                             context?.setDownloadProgressValues({});
                                             await deleteAllHymnals();
                                             const books = await loadHymnals();
+
+                                            const RECENT_SEARCHES_KEY = 'recent_searches';
+                                            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify([]));
                                             context?.SET_BOOK_DATA(books);
                                         },
                                         style: 'destructive'

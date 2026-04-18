@@ -10,7 +10,6 @@ export function useReportAPI() {
   useEffect(() => {
     const setupClient = async () => {
       try {
-        console.log("Initializing DynamoDB client...");
         const newClient = new DynamoDBClient({
           region: "us-east-2",
           credentials: fromCognitoIdentityPool({
@@ -24,7 +23,6 @@ export function useReportAPI() {
         await newClient.config.credentials();
 
         setIsReady(true);
-        console.log("DynamoDB client ready");
       } catch (err) {
         console.error("Failed to initialize client:", err);
       }

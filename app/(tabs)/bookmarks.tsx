@@ -239,7 +239,7 @@ export default function BookmarkScreen() {
                                     style: 'cancel',
                                 },
                                 {
-                                    text: i18n.t('delete'),
+                                    text: i18n.t('remove'),
                                     style: 'destructive',
                                     onPress: () => {
                                         // Remove the item from the bookmarks
