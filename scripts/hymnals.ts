@@ -1,5 +1,5 @@
 import { BookIndex, BookSummary, SongList } from '@/constants/types';
-import { Directory, File, Paths } from 'expo-file-system/next';
+import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystem from 'expo-file-system/legacy';
 import { unzip } from 'react-native-zip-archive';
 import { hashFolder } from './hash';
@@ -43,7 +43,6 @@ async function loadHymnals() {
 
     const hymnalFolder = new Directory(Paths.document, HYMNAL_FOLDER);
     if (!hymnalFolder.exists) {
-        console.log("Hymnal folder does not exist. Creating folder...");
         hymnalFolder.create({ intermediates: true });
     }
 
@@ -53,7 +52,7 @@ async function loadHymnals() {
 
 
     const results = await Promise.all(
-        books.map(async (book) => {
+        books.map(async (book: any) => {
 
             const summaryFile = new File(Paths.document, `${HYMNAL_FOLDER}/${book}/summary.json`);
             if (summaryFile.exists) {
@@ -66,7 +65,6 @@ async function loadHymnals() {
                     return { book, summary: null, shouldDelete: true };
                 }
             } else {
-                console.log(`Summary file not found for ${book}.`);
                 return { book, summary: null, shouldDelete: true };
             }
         })
@@ -100,11 +98,9 @@ async function loadHymnals() {
 
 
 async function downloadHymnal(book: string, expectedSHA256: string, onProgress?: (progress: number) => void, onFinish?: (success: boolean) => void) {
-    console.log(`Downloading ${book}...`);
 
     // prevent downloading if already downloading
     if (downloadingBooks.has(book)) {
-        console.log(`${book} is already downloading. Skipping download.`);
         return;
     }
     downloadingBooks.add(book);
@@ -209,7 +205,6 @@ async function downloadHymnal(book: string, expectedSHA256: string, onProgress?:
         await FileSystem.deleteAsync(result.uri, { idempotent: true });
         downloadingBooks.delete(book);
 
-        console.log(`Successfully installed ${book}`);
         onFinish?.(true);
     } catch (e) {
         console.error("Extraction Error:", e);
@@ -222,12 +217,10 @@ async function removeHymnal(book: string) {
     if (hymnalFolder.exists) {
         try {
             hymnalFolder.delete();
-            console.log(`Deleted ${book} hymnal folder.`);
         } catch (e) {
             console.log(e);
         }
     } else {
-        console.log(`Hymnal folder for ${book} does not exist.`);
     }
 }
 
@@ -272,7 +265,6 @@ async function clearCache() {
     const cacheFolder = new Directory(Paths.document, `${TEMP_FOLDER}/`);
     if (cacheFolder.exists) {
         cacheFolder.delete();
-        console.log(`Deleted cache folder.`);
     }
 }
 
@@ -280,7 +272,6 @@ async function deleteAllHymnals() {
     const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/`);
     if (hymnalFolder.exists) {
         hymnalFolder.delete();
-        console.log(`Deleted all hymnals.`);
     }
 }
 

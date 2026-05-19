@@ -7,8 +7,8 @@ import {
     TouchableOpacity,
     FlatList,
     StyleSheet,
-    useColorScheme,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from './StyledText';
 import { IconSymbol } from './ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';

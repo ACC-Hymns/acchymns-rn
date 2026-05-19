@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity, useColorScheme, Pressable, View, TouchableHighlight } from 'react-native';
+import { StyleSheet, TouchableOpacity, Pressable, View, TouchableHighlight } from 'react-native';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Checkbox } from '@futurejj/react-native-checkbox';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,9 +7,33 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { FlatList } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+function parseStoredOrder(raw: string | null): string[] {
+    if (!raw) {
+        return [];
+    }
+
+    try {
+        const parsed: unknown = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== 'string')) {
+            return [];
+        }
+        return [...new Set(parsed)];
+    } catch {
+        return [];
+    }
+}
+
+function reconcileOrder(savedOrder: string[], currentKeys: string[]): string[] {
+    const currentKeySet = new Set(currentKeys);
+    const normalizedSaved = [...new Set(savedOrder)].filter((key) => currentKeySet.has(key));
+    const missingKeys = currentKeys.filter((key) => !normalizedSaved.includes(key));
+    return [...normalizedSaved, ...missingKeys];
+}
 
 interface DiscoverFiltersBottomSheetProps {
     bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
@@ -59,13 +83,8 @@ export function DiscoverFiltersBottomSheet({
             ref={bottomSheetModalRef}
             onAnimate={async () => {
                 const order = await AsyncStorage.getItem("hymnal_sort_order");
-                if (order) {
-                    const sortedHymnalsData = JSON.parse(order);
-                    const sortedHymnals = sortedHymnalsData.filter((hymnal: string) => hymnalsAvailable.includes(hymnal));
-                    setAvailableHymnalsSorted(sortedHymnals);
-                } else {
-                    setAvailableHymnalsSorted(hymnalsAvailable);
-                }
+                const sortedHymnals = reconcileOrder(parseStoredOrder(order), hymnalsAvailable);
+                setAvailableHymnalsSorted(sortedHymnals);
                 setQueuedChanges(selectedHymnals);
             }}
             onChange={(index) => {

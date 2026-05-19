@@ -7,7 +7,6 @@
     "icon": "./assets/icons/ios-light.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "owner": "acc-hymns",
     "ios": {
       "supportsTablet": true,
@@ -16,6 +15,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAllowsArbitraryLoads": true,
+        "UIDesignRequiresCompatibility": true,
         "UIBackgroundModes": [
           "audio"
         ]
@@ -68,7 +68,11 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/latoregular.ttf", "./assets/fonts/latoblack.ttf", "./assets/fonts/latobold.ttf"],
+          "fonts": [
+            "./assets/fonts/latoregular.ttf",
+            "./assets/fonts/latoblack.ttf",
+            "./assets/fonts/latobold.ttf"
+          ],
           "android": {
             "fonts": [
               {
@@ -121,7 +125,7 @@
               "RNFBApp",
               "RNFBAuth"
             ],
-            "deploymentTarget": "15.5"
+            "deploymentTarget": "16.4"
           },
           "android": {
             "ndkVersion": "29.0.14206865"
@@ -132,7 +136,9 @@
       "expo-asset",
       "./plugins/withAndroidSvgFix",
       "./plugins/withGlideFix",
-      "./plugins/withMetaspaceFix"
+      "./plugins/withMetaspaceFix",
+      "expo-image",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

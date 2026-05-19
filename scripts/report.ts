@@ -32,7 +32,6 @@ export function useReportAPI() {
   }, []);
 
   async function report(song: SongReference, description: string) {
-    console.log("Reporting issue for", song);
     if (!client.current) {
       console.warn("DynamoDB client not ready");
       return null;
@@ -50,7 +49,6 @@ export function useReportAPI() {
     try {
       const command = new PutItemCommand(data);
       const response = await client.current.send(command);
-      console.log("Report sent successfully", response);
       return response;
     } catch (err) {
       console.error("Failed to send report:", err);

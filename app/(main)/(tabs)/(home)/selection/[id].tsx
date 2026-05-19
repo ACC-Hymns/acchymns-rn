@@ -1,0 +1,665 @@
+import React, { use, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList, Dimensions, Button, TouchableHighlight, Alert, Platform } from 'react-native';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { HymnalContext } from '@/constants/context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BookIndex, BookSummary, SongList, SortMode } from '@/constants/types';
+import { getBookIndex, getSongData } from '@/scripts/hymnals';
+import { Gesture, GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
+import { Colors } from '@/constants/Colors';
+import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import StyledText from '@/components/StyledText';
+import { useSongListData } from '@/hooks/useSongListData';
+import { useBookData } from '@/hooks/useBookData';
+import { useI18n } from '@/hooks/useI18n';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function SelectionScreen() {
+    const { id } = useLocalSearchParams();
+    const theme = useColorScheme() ?? 'light';
+
+    const translations = {
+        en: {
+            sortingLabel: 'Sorting Options',
+            numerical: 'Numerical',
+            alphabetical: 'Alphabetical',
+            topical: 'Topical',
+            deleteHymnal: 'Remove Hymnal',
+            deleteAlertTitle: 'Remove ',
+            deleteAlertMessage: 'You can always download the hymnal again later.',
+            cancel: 'Cancel',
+            delete: 'Remove',
+        },
+        es: {
+            sortingLabel: 'Opciones de Ordenamiento',
+            numerical: 'Numérico',
+            alphabetical: 'Alfabético',
+            topical: 'Tópico',
+            deleteHymnal: 'Borrar Himnario',
+            deleteAlertTitle: 'Borrar ',
+            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
+            cancel: 'Cancelar',
+            delete: 'Borrar',
+        },
+        fr: {
+            sortingLabel: 'Options de Tri',
+            numerical: 'Numérique',
+            alphabetical: 'Alphabétique',
+            topical: 'Topique',
+            deleteHymnal: 'Supprimer le Livre de Hymnes',
+            deleteAlertTitle: 'Supprimer ',
+            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
+            cancel: 'Annuler',
+            delete: 'Supprimer',
+        },
+        de: {
+            sortingLabel: 'Sortieroptionen',
+            numerical: 'Numerisch',
+            alphabetical: 'Alphabetisch',
+            topical: 'Thematisch',
+            deleteHymnal: 'Gesangbuch löschen',
+            deleteAlertTitle: 'Löschen ',
+            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
+            cancel: 'Stornieren',
+            delete: 'Löschen',
+        },
+        sr: {
+            sortingLabel: 'Sortiranje',
+            numerical: 'Numerički',
+            alphabetical: 'Abecedni',
+            topical: 'Tematički',
+            deleteHymnal: 'Obriši himnolog',
+            deleteAlertTitle: 'Obriši ',
+            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
+            cancel: 'Otkaži',
+            delete: 'Obriši',
+        },
+        ja: {
+            sortingLabel: '並べ替えオプション',
+            numerical: '数字順',
+            alphabetical: 'アルファベット順',
+            topical: 'トピック順',
+            deleteHymnal: '賛美歌を削除する',
+            deleteAlertTitle: '削除 ',
+            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
+            cancel: 'キャンセル',
+            delete: '削除',
+        },
+        pt: {
+            sortingLabel: 'Opções de Ordenação',
+            numerical: 'Numérico',
+            alphabetical: 'Alfabético',
+            topical: 'Tópico',
+            deleteHymnal: 'Deletar Hinário',
+            deleteAlertTitle: 'Deletar ',
+            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
+            cancel: 'Cancelar',
+            delete: 'Deletar',
+        }
+    }
+
+
+
+    // get book data from context
+    const context = useContext(HymnalContext);
+    const i18n = useI18n();
+
+
+    const book = useBookData(id as string, context);
+    const { songs, topicalIndex, loading, error } = useSongListData(book);
+
+    const [sortMode, setSortMode] = useState<SortMode>(SortMode.NUMERICAL);
+    const [isNavigating, setIsNavigating] = useState(false);
+    const navigation = useNavigation();
+    if (context) {
+        context.setSortMode = handleSortModeChange;
+    }
+
+    useLayoutEffect(() => {
+        if (!book) return;
+
+        if (Platform.OS === 'ios') {
+            navigation.setOptions({
+                title: book.name.medium,
+                headerTintColor: Colors[theme].tint,
+                contentStyle: { backgroundColor: Colors[theme].background },
+                unstable_headerLeftItems: () => [
+                    {
+                        type: 'button',
+                        label: 'Back',
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'chevron.left'
+                        },
+                        tintColor: Colors[theme].icon,
+                        onPress: () => {
+                            router.back();
+                        }
+                    }
+                ],
+                unstable_headerRightItems: () => [
+                    {
+                        type: 'menu',
+                        label: i18n.t('sortingOptions'),
+                        icon: {
+                            type: 'sfSymbol',
+                            name: 'ellipsis',
+                        },
+                        tintColor: Colors[theme].icon,
+                        menu: {
+                            title: i18n.t("sortingLabel"),
+                            items: [
+                                {
+                                    type: 'action',
+                                    label: i18n.t('numerical'),
+                                    icon: {
+                                        type: 'sfSymbol',
+                                        name: 'textformat.123',
+                                    },
+                                    onPress: async () => {
+                                        context?.setSortMode?.(SortMode.NUMERICAL);
+                                    },
+                                }, {
+                                    type: 'action',
+                                    label: i18n.t('alphabetical'),
+                                    icon: {
+                                        type: 'sfSymbol',
+                                        name: 'textformat.abc',
+                                    },
+                                    onPress: async () => {
+                                        context?.setSortMode?.(SortMode.ALPHABETICAL)
+                                    },
+                                }, {
+                                    type: 'action',
+                                    label: i18n.t('topical'),
+                                    disabled: !book.indexAvailable,
+                                    icon: {
+                                        type: 'sfSymbol',
+                                        name: 'book',
+                                    },
+                                    onPress: () => {
+                                        context?.setSortMode?.(SortMode.TOPICAL)
+                                    },
+                                }, {
+                                    type: 'action',
+                                    label: i18n.t('deleteHymnal'),
+                                    destructive: true,
+                                    icon: {
+                                        type: 'sfSymbol',
+                                        name: 'trash',
+                                    },
+                                    onPress: () => {
+                                        Alert.alert(`${i18n.t('deleteAlertTitle')}"${book.name.medium}"`, i18n.t('deleteAlertMessage'), [
+                                            {
+                                                text: i18n.t('cancel'),
+                                                onPress: () => {
+
+                                                },
+                                                style: 'cancel',
+                                                isPreferred: true
+                                            },
+                                            {
+                                                text: i18n.t('remove'),
+                                                onPress: async () => {
+                                                    // navigate back
+                                                    router.back();
+                                                    await context?.deleteHymnal?.(book.name.short);
+                                                },
+                                                style: 'destructive'
+                                            },
+                                        ]);
+                                    },
+                                }
+                            ],
+                        },
+                    },
+                ],
+            });
+        } else {
+            navigation.setOptions({
+                title: book.name.medium,
+                headerTitleAlign: 'center',
+                headerRight: () => (
+                    <HymnalMoreMenu bookSummary={book} />
+                ),
+                headerLeft: () => (
+                    <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
+                        <IconSymbol
+                            name="chevron.left"
+                            size={24}
+                            weight="medium"
+                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                        />
+                    </TouchableOpacity>
+                )
+            });
+        }
+
+    }, [book, id, navigation, context?.languageOverride, theme]);
+
+    function handleSortModeChange(mode: SortMode) {
+        setSortMode(mode);
+        navigation.setOptions({
+            headerShadowVisible: false,
+        });
+    }
+
+    const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
+
+    const toggleDropdown = (index: string) => {
+        setOpenDropdowns(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
+
+    // Calculate number of columns based on screen width
+    // Each item is 60px wide + 12px margin (6px on each side) = 72px per item
+    // Using useState + useEffect to ensure stable value for FlatList
+    const calculateNumColumns = (screenWidth: number): number => {
+        const itemWidth = 60; // width of each button
+        const itemMargin = 12; // 6px margin on each side
+        const itemTotalWidth = itemWidth + itemMargin;
+        const horizontalPadding = 30; // approximate padding/margins on screen edges
+        
+        const availableWidth = screenWidth - horizontalPadding;
+        const calculatedColumns = Math.floor(availableWidth / itemTotalWidth);
+        
+        // Ensure at least 1 column, otherwise scale naturally
+        return Math.max(1, calculatedColumns);
+    };
+
+    const [numColumns, setNumColumns] = useState(() => 
+        calculateNumColumns(Dimensions.get('window').width)
+    );
+
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setNumColumns(calculateNumColumns(window.width));
+        });
+
+        return () => subscription?.remove();
+    }, []);
+
+    return (
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
+            {book && songs && (
+                <View style={{ flex: 1 }}>
+                    {sortMode === SortMode.NUMERICAL && (
+                        <View style={{ flex: 1 }}>
+                            {(context?.legacyNumberGrouping) ? (
+                                <FlatList // NUMERICAL LIST
+                                    data={Object.keys(songs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))}
+                                    keyExtractor={(item) => item}
+                                    key={`legacy-${numColumns}`}
+                                    numColumns={numColumns}
+                                    contentContainerStyle={{
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    style={{ flex: 1, width: '100%', paddingTop: 20 }}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={{
+                                                margin: 6,
+                                                width: 60,
+                                                height: 60,
+                                                borderRadius: 30,
+                                                backgroundColor: book.primaryColor,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                            }}
+                                            onPressIn={() => {
+                                                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
+                                            }}
+                                            onPress={() => {
+                                                // check if im already navigating
+                                                router.navigate({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
+                                            }}
+                                        >
+                                            <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 700, fontFamily: 'Lato' }}>{item}</StyledText>
+                                        </TouchableOpacity>
+                                    )}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
+                                            });
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <FlatList
+                                    data={Object.keys(songs).reduce((ranges: number[], number: string) => {
+                                        const num = parseInt(number);
+                                        let rangeStart, rangeEnd;
+                                        if (num <= 99) {
+                                            rangeStart = 1;
+                                            rangeEnd = 99
+                                        } else {
+                                            rangeStart = Math.floor(num / 100) * 100;
+                                            rangeEnd = rangeStart + 99;
+                                        }
+
+                                        // Check if there are any songs in this range
+                                        const songsInRange = Object.keys(songs).some(songNumber => {
+                                            const n = parseInt(songNumber);
+                                            return n >= rangeStart && n <= rangeEnd;
+                                        });
+
+                                        if (!ranges.includes(rangeStart) && songsInRange) {
+                                            ranges.push(rangeStart);
+                                        }
+                                        return ranges;
+                                    }, [] as number[])}
+                                    key={`new-${numColumns}`}
+                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    keyExtractor={(rangeStart) => rangeStart.toString()}
+                                    renderItem={({ item: rangeStart, index }) => {
+                                        // Find the highest song number in this range
+                                        const maxInRange = Math.min(
+                                            (index == 0 ? rangeStart + 98 : rangeStart + 99),
+                                            Math.max(...Object.keys(songs)
+                                                .map(num => parseInt(num))
+                                                .filter(num => num >= rangeStart && num <= rangeStart + 99)
+                                            )
+                                        );
+
+                                        const songsInRange = Object.keys(songs)
+                                            .filter(num => {
+                                                const songNum = parseInt(num);
+                                                return songNum >= rangeStart && songNum <= maxInRange;
+                                            })
+                                            .sort((a, b) => parseInt(a) - parseInt(b));
+
+                                        return (
+                                            <View key={rangeStart} style={{ marginTop: index === 0 ? 12 : 0 }}>
+                                                <TouchableOpacity
+                                                onPress={() => {
+                                                    toggleDropdown(index.toString())
+                                                }}
+                                                style={{
+                                                    backgroundColor: Colors[theme].headerBackground,
+                                                    shadowColor: '#000',
+                                                    shadowOffset: {
+                                                        width: 0,
+                                                        height: 2,
+                                                    },
+                                                    shadowOpacity: 0.05,
+                                                    shadowRadius: 5,
+                                                    elevation: 3,
+                                                    borderRadius: 12,
+                                                    height: 60,
+                                                    marginVertical: 4,
+                                                    marginHorizontal: 15,
+                                                }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
+                                                        <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{rangeStart === maxInRange ? rangeStart : `${rangeStart} - ${maxInRange}`}</StyledText>
+                                                        <Ionicons
+                                                            name={openDropdowns[index.toString()] ? "chevron-up" : "chevron-down"}
+                                                            size={18}
+                                                            weight="medium"
+                                                            color={Colors[theme].icon}
+                                                        />
+                                                    </View>
+                                                </TouchableOpacity>
+
+                                                {openDropdowns[index.toString()] && (
+                                                    <View style={{
+                                                        marginHorizontal: 15, marginTop: 5, marginBottom: 15, justifyContent: 'center',
+                                                        alignItems: 'center'
+                                                    }}>
+                                                        <FlatList
+                                                            data={songsInRange}
+                                                            keyExtractor={(number) => number}
+                                                            key={`dropdown-${numColumns}`}
+                                                            numColumns={numColumns}
+                                                            renderItem={({ item: number }) => (
+                                                                <TouchableOpacity
+                                                                    style={{
+                                                                        margin: 6,
+                                                                        width: 60,
+                                                                        height: 60,
+                                                                        borderRadius: 30,
+                                                                        backgroundColor: book.primaryColor,
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                    }}
+                                                                    onPressIn={() => {
+                                                                        router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: number } });
+                                                                    }}
+                                                                    onPress={() => {
+                                                                        // check if im already navigating
+                                                                        router.navigate({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: number } });
+                                                                    }}
+                                                                >
+                                                                    <StyledText style={{ color: '#fff', fontSize: 24, fontWeight: 700, fontFamily: 'Lato' }}>{number}</StyledText>
+                                                                </TouchableOpacity>
+                                                            )}
+                                                        />
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    }}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
+                                            });
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
+                                />
+                            )}
+                        </View>
+                    )}
+                    {sortMode === SortMode.ALPHABETICAL && (
+                        <View style={{ flex: 1 }}>
+                            {(context?.legacyNumberGrouping) ? (
+                                <FlatList // ALPHABETICAL LIST
+                                    data={Object.keys(songs).sort((a, b) => songs[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songs[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    keyExtractor={(item) => item}
+                                    key='legacy'
+                                    contentContainerStyle={{
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    style={{ flex: 1, width: '100%', paddingTop: 20 }}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={{
+                                                margin: 4,
+                                                width: Dimensions.get('window').width - 60,
+                                                borderRadius: 12,
+                                                backgroundColor: book.primaryColor,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                paddingVertical: 10, // Add padding to allow content to grow
+                                                // Ensure a minimum height of 60
+                                            }}
+
+                                            onPress={() => {
+                                                if (isNavigating) return;
+                                                router.push({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
+                                                setIsNavigating(true);
+                                                setTimeout(() => setIsNavigating(false), 400); // or after navigation completes
+                                            }}
+
+                                            activeOpacity={0.7}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 20 }}>
+                                                <View style={{ width: '80%', alignSelf: 'flex-start' }}>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 500, fontFamily: 'Lato', textAlign: 'left' }}>{songs[item].title}</StyledText>
+                                                </View>
+                                                <View style={{ width: '20%', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                                    <StyledText style={{ color: '#fff', fontSize: 20, fontWeight: 400, fontFamily: 'Lato', textAlign: 'right' }}>#{item}</StyledText>
+                                                </View>
+                                            </View>
+
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            ) : (
+                                <FlatList // ALPHABETICAL LIST
+                                    data={Object.keys(songs).sort((a, b) => songs[a].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(songs[b].title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")))}
+                                    keyExtractor={(number) => number}
+                                    key='new'
+                                    contentContainerStyle={{
+                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                    }}
+                                    renderItem={({ item: number, index }) => (
+                                        <TouchableOpacity
+                                            key={number}
+                                            onPress={() => {
+                                                if (isNavigating) return;
+                                                router.push({
+                                                    pathname: '/display/[id]/[number]',
+                                                    params: { id: book.name.short, number }
+                                                });
+                                                setIsNavigating(true);
+                                                setTimeout(() => setIsNavigating(false), 400);
+                                            }}
+                                            style={{
+                                                marginTop: index === 0 ? 12 : 0,
+                                                padding: 12,
+                                                borderRadius: 8,
+                                                backgroundColor: Colors[theme].background,
+                                                marginHorizontal: 15
+                                            }}>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 700, fontFamily: 'Lato' }}>
+                                                    #{number}
+                                                </StyledText>
+                                                <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                    {songs[number].title}
+                                                </StyledText>
+                                            </View>
+                                        </TouchableOpacity>
+                                    )}
+                                    onScroll={(event) => {
+                                        if (event.nativeEvent.contentOffset.y > 0) {
+                                            navigation.setOptions({
+                                                headerShadowVisible: true,
+                                            });
+                                        } else {
+                                            navigation.setOptions({
+                                                headerShadowVisible: false,
+                                            });
+                                        }
+                                    }}
+                                />
+                            )}
+                        </View>
+                    )}
+                    {sortMode === SortMode.TOPICAL && (
+                        <View style={{ flex: 1 }}>
+                            <FlatList
+                                data={Object.keys(topicalIndex || {})}
+                                contentContainerStyle={{ paddingBottom: 120 }}
+                                keyExtractor={(key) => key}
+                                renderItem={({ item: key, index }) => {
+
+                                    const songsInTopic = (topicalIndex || {})[key]?.map(song => ({ ...songs[song], number: song })) || [];
+
+                                    return (
+                                        <View key={key} style={{ marginTop: index === 0 ? 12 : 0 }}>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    toggleDropdown(key)
+                                                }}
+                                                style={{
+                                                    backgroundColor: Colors[theme].headerBackground,
+                                                    shadowColor: '#000',
+                                                    shadowOffset: {
+                                                        width: 0,
+                                                        height: 2,
+                                                    },
+                                                    shadowOpacity: 0.05,
+                                                    shadowRadius: 5,
+                                                    elevation: 3,
+                                                    borderRadius: 12,
+                                                    height: 60,
+                                                    marginVertical: 4,
+                                                    marginHorizontal: 15,
+                                                }}>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: '100%' }}>
+                                                    <StyledText style={{ fontSize: 18, color: Colors[theme].text }}>{key}</StyledText>
+                                                    <Ionicons
+                                                        name={openDropdowns[key] ? "chevron-up" : "chevron-down"}
+                                                        size={18}
+                                                        weight="medium"
+                                                        color={Colors[theme].icon}
+                                                    />
+                                                </View>
+                                            </TouchableOpacity>
+
+                                            {openDropdowns[key] && (
+                                                <View style={{ marginHorizontal: 15, marginTop: 5, marginBottom: 15 }}>
+                                                    <FlatList
+                                                        data={songsInTopic}
+                                                        keyExtractor={(song) => song.number || ''}
+                                                        renderItem={({ item: song }) => (
+                                                            <TouchableOpacity
+                                                                key={song.number}
+                                                                onPress={() => {
+                                                                    if (isNavigating) return;
+                                                                    router.push({
+                                                                        pathname: '/display/[id]/[number]',
+                                                                        params: { id: book.name.short, number: song.number }
+                                                                    });
+                                                                    setIsNavigating(true);
+                                                                    setTimeout(() => setIsNavigating(false), 400);
+                                                                }}
+                                                                style={{
+                                                                    padding: 12,
+                                                                    borderRadius: 8,
+                                                                    backgroundColor: Colors[theme].background,
+                                                                    marginVertical: 2,
+                                                                }}>
+                                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25 }}>
+                                                                        #{song.number}
+                                                                    </StyledText>
+                                                                    <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>
+                                                                        {song.title}
+                                                                    </StyledText>
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        )}
+                                                    />
+                                                </View>
+                                            )}
+                                        </View>
+                                    );
+                                }}
+                                onScroll={(event) => {
+                                    if (event.nativeEvent.contentOffset.y > 0) {
+                                        navigation.setOptions({
+                                            headerShadowVisible: true,
+                                        });
+                                    } else {
+                                        navigation.setOptions({
+                                            headerShadowVisible: false,
+                                        });
+                                    }
+                                }}
+                            />
+                        </View>
+                    )}
+                </View>
+            )}
+        </GestureHandlerRootView>
+    );
+}

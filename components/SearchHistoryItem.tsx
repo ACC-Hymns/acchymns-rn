@@ -1,8 +1,9 @@
 // default component
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme, StyleSheet, PanResponder, Pressable, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, PanResponder, Pressable, Animated } from 'react-native';
 import { IconSymbol } from './ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import StyledText from './StyledText';
 import { Ionicons } from '@expo/vector-icons';

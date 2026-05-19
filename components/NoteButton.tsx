@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { TouchableOpacity, useColorScheme, Image, View } from "react-native";
+import { TouchableOpacity, Image, View } from "react-native";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { Asset } from "expo-asset";
 import { Clef, getNotePng, Note } from "@/constants/assets";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import { isIOS26DesignEnabled } from "@/constants/iosDesign";
 
 const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: () => void }) => {
 	const [imageUri, setImageUri] = useState<string | null>(null);
 	const theme = useColorScheme() ?? 'light';
+    const isLiquidGlass = isIOS26DesignEnabled();
 
 	useEffect(() => {
 
@@ -33,10 +36,11 @@ const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: 
 				width: 65,
 				height: 65,
 				borderColor: Colors[theme].border,
-				borderWidth: 1,
+				borderWidth: isLiquidGlass ? 0 : 1,
 				borderRadius: 12,
 				justifyContent: 'center',
 				alignItems: 'center',
+				backgroundColor: Colors[theme].settingsButton,
 			}}>
 			<Ionicons
 				name={'musical-notes'}
@@ -53,8 +57,9 @@ const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: 
 					width: 65,
 					height: 65,
 					borderColor: Colors[theme].border,
-					borderWidth: 1,
+					borderWidth: isLiquidGlass ? 0 : 1,
 					borderRadius: 12,
+					backgroundColor: Colors[theme].settingsButton,
 				}}
 			/>
 		</TouchableOpacity>
@@ -69,8 +74,9 @@ const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: 
 					height: 65,
 					resizeMode: 'contain',
 					borderColor: Colors[theme].border,
-					borderWidth: 1,
+					borderWidth: isLiquidGlass ? 0 : 1,
 					borderRadius: 12,
+					backgroundColor: Colors[theme].settingsButton,
 				}}
 				tintColor={theme === 'dark' ? 'white' : 'black'}
 			/>

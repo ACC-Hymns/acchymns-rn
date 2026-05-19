@@ -9,8 +9,11 @@ const tintColorLight = '#000';
 const tintColorDark = '#fff';
 export const Colors  = {
   light: {
+    liquidGlass: 'rgba(255, 255, 255, 0.5)',
+    liquidGlassFrosted: 'rgba(255, 255, 255, 0.6)',
     text: '#000000',
     fadedText: '#8A9199', // More faded text color
+    artistText: '#8A9199',
     background: '#F2F2F7',
     songBackground: '#fff',
     tint: tintColorLight,
@@ -33,8 +36,11 @@ export const Colors  = {
     buttonTap: '#DDDDDD'
   },
   dark: {
+    liquidGlass: 'rgba(85, 85, 85, 0.1)',
+    liquidGlassFrosted: 'rgba(39, 39, 39, 0.75)',
     text: '#FFFFFF',
     fadedText: '#787E83', // More faded text color
+    artistText: 'rgb(201, 201, 201)',
     background: '#000',
     songBackground: '#000',
     settingsButton: '#141414',

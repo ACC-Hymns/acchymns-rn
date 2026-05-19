@@ -1,4 +1,4 @@
-import { Directory, File, Paths } from 'expo-file-system/next';
+import { Directory, File, Paths } from 'expo-file-system';
 import { sha1 } from 'js-sha1';
 import { Platform } from 'react-native';
 
@@ -56,7 +56,6 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
     const signatureFile = new File(folderUri, Platform.OS === 'ios' ? 'signature_v2.txt' : '.signature_v2');
 
     if(!signatureFile.exists) {
-        console.log('Signature file not found');
         return false;
     }
 
@@ -113,7 +112,6 @@ export async function hashFolder(folderUri: string): Promise<boolean> {
         // Check if any file failed validation
         const failed = results.find(r => !r.valid);
         if (failed) {
-            console.log(`File ${failed.fileName} failed validation`);
             return false;
         }
         

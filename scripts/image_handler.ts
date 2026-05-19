@@ -1,8 +1,9 @@
 import { BookSummary } from "@/constants/types";
 import { HYMNAL_FOLDER } from "./hymnals";
-import { File, Paths } from 'expo-file-system/next';
+import { File, Paths } from 'expo-file-system';
 import { Colors } from "@/constants/Colors";
 import { Platform } from "react-native";
+import { isIOS26DesignEnabled } from "@/constants/iosDesign";
 
 
 async function getHTMLStringFromSong(
@@ -12,13 +13,7 @@ async function getHTMLStringFromSong(
     theme: 'dark' | 'light',
     headerHeight: number
 ) {
-    let isLiquidGlass = false;
-    if (Platform.OS === 'ios') {
-        const majorVersion = parseInt(Platform.Version, 10);
-        if (majorVersion >= 26) {
-            isLiquidGlass = true;
-        }
-    }
+    const isLiquidGlass = isIOS26DesignEnabled();
     // Build file path and get base64 content
     const fileExtension = bookData.fileExtension;
     const filePath = `${HYMNAL_FOLDER}/${bookData.name.short}/songs/${songId}.${fileExtension}`.replace(/\/\//g, '/');
@@ -39,7 +34,9 @@ async function getHTMLStringFromSong(
     // Calculate header height as percentage of viewport height
     const headerHeightVh = isLiquidGlass ? headerHeight * 110 : 0;
 
-    // Common CSS for both PDF and image viewers
+    const isAndroid = Platform.OS === 'android';
+
+    // Common CSS for both PDF and image viewers (touch-action for Android is set in JS so zoomed pan works)
     const commonCSS = `
     body, html {
         -webkit-touch-callout: none;
@@ -66,6 +63,78 @@ async function getHTMLStringFromSong(
         display: block;
     }
   `;
+
+    const androidRnBridgeScript = isAndroid ? `
+    <script>
+    (function () {
+        function syncTouchAction() {
+            var vv = window.visualViewport;
+            var z = vv ? vv.scale : 1;
+            var ta = z <= 1.02 ? 'pan-y pinch-zoom' : 'pan-x pan-y pinch-zoom';
+            document.documentElement.style.touchAction = ta;
+            if (document.body) {
+                document.body.style.touchAction = ta;
+            }
+            var cc = document.querySelector('.content-container');
+            if (cc) {
+                cc.style.touchAction = ta;
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', syncTouchAction);
+            window.visualViewport.addEventListener('scroll', syncTouchAction);
+        }
+        syncTouchAction();
+
+        var startX = 0, startY = 0, tracking = false, vetoVertical = false;
+
+        function zoomAllowsSongSwipe() {
+            return !window.visualViewport || window.visualViewport.scale <= 1.02;
+        }
+
+        document.addEventListener('touchstart', function (e) {
+            if (e.touches.length !== 1) {
+                tracking = false;
+                return;
+            }
+            tracking = true;
+            vetoVertical = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function (e) {
+            if (!tracking || e.touches.length !== 1) return;
+            var mx = e.touches[0].clientX - startX;
+            var my = e.touches[0].clientY - startY;
+            if (Math.abs(my) > 28 && Math.abs(my) > Math.abs(mx) * 1.1) {
+                vetoVertical = true;
+            }
+        }, { passive: true });
+
+        function onTouchEnd(e) {
+            if (!tracking) return;
+            tracking = false;
+            if (!window.ReactNativeWebView) return;
+            if (!zoomAllowsSongSwipe() || vetoVertical) return;
+            var t = e.changedTouches[0];
+            if (!t) return;
+            var dx = t.clientX - startX;
+            var dy = t.clientY - startY;
+            if (Math.abs(dx) < 64) return;
+            if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
+            var direction = dx > 0 ? 'right' : 'left';
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'horizontalSongSwipe',
+                direction: direction
+            }));
+        }
+
+        document.addEventListener('touchend', onTouchEnd, { passive: true });
+        document.addEventListener('touchcancel', function () { tracking = false; }, { passive: true });
+    })();
+    </script>` : '';
 
     if (isPDF) {
         // PDF viewer using PDF.js
@@ -232,6 +301,7 @@ async function getHTMLStringFromSong(
             document.getElementById('loading').textContent = 'Error loading PDF: ' + error.message;
         });
     </script>
+    ${androidRnBridgeScript}
 </body>
 </html>`;
     } else {
@@ -240,7 +310,7 @@ async function getHTMLStringFromSong(
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0,">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
     <title>Song ${songId}</title>
     <style>
         ${commonCSS}
@@ -257,6 +327,7 @@ async function getHTMLStringFromSong(
     <div class="content-container">
         <img id="songImage" class="fit-width-image" src="${dataUri}" alt="Hymn ${songId}">
     </div>
+    ${androidRnBridgeScript}
 </body>
 </html>`;
     }

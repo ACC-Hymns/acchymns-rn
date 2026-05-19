@@ -1,21 +1,22 @@
-import { useEffect, useState } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
+import { HymnalContext } from '@/constants/context';
+import { useContext, useEffect, useState } from 'react';
+import { Appearance, useColorScheme as useSystemColorScheme } from 'react-native';
 
-/**
- * To support static rendering, this value needs to be re-calculated on the client side for web
- */
-export function useColorScheme() {
+export function useColorScheme(): 'light' | 'dark' {
+  const context = useContext(HymnalContext);
+  const systemTheme = useSystemColorScheme();
+  const override = context?.themeOverride;
+
   const [hasHydrated, setHasHydrated] = useState(false);
-
   useEffect(() => {
     setHasHydrated(true);
   }, []);
 
-  const colorScheme = useRNColorScheme();
-
-  if (hasHydrated) {
-    return colorScheme;
+  if (override === 'light' || override === 'dark') {
+    return override;
   }
 
-  return 'light';
+  const resolvedSystemTheme =
+    (hasHydrated ? systemTheme : null) ?? Appearance.getColorScheme();
+  return resolvedSystemTheme === 'dark' ? 'dark' : 'light';
 }
