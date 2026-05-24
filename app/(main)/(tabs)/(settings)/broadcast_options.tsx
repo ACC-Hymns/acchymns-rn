@@ -10,7 +10,6 @@ import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
-import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { request_client, set } from '@/scripts/broadcast';
@@ -50,11 +49,11 @@ export default function BroadcastOptionsScreen() {
     function signout() {
         context?.setBroadcastingToken(null);
         context?.setBroadcastingChurch(null);
-        router.replace('/(tabs)/(settings)/broadcast');
+        router.replace('/(main)/(tabs)/(settings)/broadcast');
     }
 
     async function clear() {
-        if(!context?.broadcastingChurch)
+        if (!context?.broadcastingChurch)
             return;
         await set(request_client(), context?.broadcastingChurch, "", "", [-1], "");
     }
@@ -81,25 +80,25 @@ export default function BroadcastOptionsScreen() {
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/broadcast_song')}
+                            onPress={() => router.push('/(main)/(tabs)/(settings)/broadcast_song')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('setSongNumber')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                    <IconSymbol name="chevron.right" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                         <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/broadcast_bible')}
+                            onPress={() => router.push('/(main)/(tabs)/(settings)/broadcast_bible')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('setBibleReading')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                    <IconSymbol name="chevron.right" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
@@ -157,7 +156,7 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             paddingHorizontal: '5%',
             paddingVertical: 14,
-            
+
         },
         settingsText: {
             fontSize: 18,

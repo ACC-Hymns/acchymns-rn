@@ -14,7 +14,7 @@ import { IconSymbol } from './ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { Colors } from '@/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 
 interface ScripturePickerProps {
     send: (input: Reading) => void;

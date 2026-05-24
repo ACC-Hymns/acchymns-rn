@@ -15,7 +15,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAllowsArbitraryLoads": true,
-        "UIDesignRequiresCompatibility": true,
+        "UIDesignRequiresCompatibility": false,
         "UIBackgroundModes": [
           "audio"
         ]
@@ -26,7 +26,8 @@
         "tinted": "./assets/icons/ios-tinted.png"
       },
       "usesAppleSignIn": true,
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "deploymentTarget": "16.4"
     },
     "android": {
       "adaptiveIcon": {
@@ -114,17 +115,10 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
         }
       ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
       [
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static",
-            "forceStaticLinking": [
-              "RNFBApp",
-              "RNFBAuth"
-            ],
             "deploymentTarget": "16.4"
           },
           "android": {
@@ -138,7 +132,9 @@
       "./plugins/withGlideFix",
       "./plugins/withMetaspaceFix",
       "expo-image",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-status-bar",
+      "@rnrepo/expo-config-plugin"
     ],
     "experiments": {
       "typedRoutes": true

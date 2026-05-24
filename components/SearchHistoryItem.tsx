@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import StyledText from './StyledText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 
 
 interface SearchHistoryItemProps {

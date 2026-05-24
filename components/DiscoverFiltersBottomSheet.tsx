@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Pressable, View, TouchableHighlight } from 'react-native';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { Checkbox } from '@futurejj/react-native-checkbox';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
@@ -81,18 +81,15 @@ export function DiscoverFiltersBottomSheet({
     return (
         <BottomSheetModal
             ref={bottomSheetModalRef}
-            onAnimate={async () => {
+            onChange={async (index) => {
                 const order = await AsyncStorage.getItem("hymnal_sort_order");
                 const sortedHymnals = reconcileOrder(parseStoredOrder(order), hymnalsAvailable);
                 setAvailableHymnalsSorted(sortedHymnals);
                 setQueuedChanges(selectedHymnals);
-            }}
-            onChange={(index) => {
                 onSheetChanges?.(index);
             }}
             style={styles.bottomSheet}
             backgroundStyle={styles.bottomSheet}
-            handleIndicatorStyle={styles.handleIndicator}
         >
             <BottomSheetView style={styles.contentContainer}>
                 <View style={{ width: '100%' }}>
@@ -135,20 +132,6 @@ export function DiscoverFiltersBottomSheet({
                                 )}
                                 keyExtractor={(item) => item}
                             />
-                            <LinearGradient
-                                colors={[Colors[theme].settingsButton, Colors[theme].settingsButtonTransparent]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 0, y: 1 }}
-                                style={styles.topFade}
-                                pointerEvents="none"
-                            />
-                            <LinearGradient
-                                colors={[Colors[theme].settingsButtonTransparent, Colors[theme].settingsButton]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 0, y: 1 }}
-                                style={styles.bottomFade}
-                                pointerEvents="none"
-                            />
                         </View>
                         <View
                             style={{
@@ -185,7 +168,7 @@ function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
         handleIndicator: {
             backgroundColor: Colors[theme]['divider'],
-            height: 4,
+            height: 0,
             width: 48,
         },
         contentContainer: {
@@ -252,22 +235,6 @@ function makeStyles(theme: "light" | "dark") {
         flatListWrapper: {
             position: 'relative',
             maxHeight: 250,
-        },
-        topFade: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 20,
-            zIndex: 1,
-        },
-        bottomFade: {
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 20,
-            zIndex: 1,
         },
         hymnalItem: {
             flexDirection: 'row',

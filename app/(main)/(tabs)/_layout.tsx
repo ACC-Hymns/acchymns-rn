@@ -4,14 +4,13 @@ import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import StyledText from '@/components/StyledText';
 import { router, usePathname } from 'expo-router';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import TrackPlayer, { Event, MediaItem, PlaybackState, PlaybackStateChangedEvent, useIsPlaying } from '@rntp/player';
+import TrackPlayer, { Event, MediaItem, useIsPlaying } from '@rntp/player';
 import { useFeatureFlag } from 'posthog-react-native';
+import Ionicons from 'react-native-vector-icons/ionicons'
 
 const DEBUG_MEDIA_ACCESSORY = __DEV__;
 
@@ -37,7 +36,6 @@ function MediaBottomAccessoryContent({
         if (!DEBUG_MEDIA_ACCESSORY) return;
         if (placementLogRef.current === placement) return;
         placementLogRef.current = placement;
-        console.log('[MediaBottomAccessory:placement]', { placement, trackId: track.mediaId });
     }, [placement, track.mediaId]);
 
     const routeParams = parseMediaId(track.mediaId);
@@ -125,7 +123,6 @@ function useTabBarMediaTrack(watch: boolean): MediaItem | null {
             });
             if (snapshot !== debugSnapshotRef.current) {
                 debugSnapshotRef.current = snapshot;
-                console.log('[MediaBottomAccessory:state]', JSON.parse(snapshot));
             }
         } catch (e) {
             console.warn('[MediaBottomAccessory:state] refresh failed', e);

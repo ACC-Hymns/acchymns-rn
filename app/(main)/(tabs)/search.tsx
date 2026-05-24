@@ -18,8 +18,8 @@ import { SearchBar } from '@rneui/themed';
 import { fontFamily } from '@/constants/assets';
 import * as ContextMenu from 'zeego/context-menu'
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetModal } from '@expo/ui/community/bottom-sheet';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
 
 interface SongItemWithMenuProps {

@@ -1,4 +1,4 @@
-import { Alert, InteractionManager, Platform, TouchableOpacity } from 'react-native'
+import { InteractionManager, Platform, TouchableOpacity } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
@@ -7,24 +7,22 @@ import { Bookmark, Song } from '@/constants/types';
 import * as Sharing from 'expo-sharing';
 import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useReportAPI } from "@/scripts/report";
 import { useI18n } from '@/hooks/useI18n';
-import { ReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as SwiftUI from '@expo/ui/swift-ui';
+import { RNHostView } from '@expo/ui/swift-ui';
 
 interface DisplayMoreMenuProps {
     bookId: string;
     songId?: string;
+    onReportIssuePress?: () => void;
 }
 
-export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
+export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayMoreMenuProps) {
     const theme = useColorScheme() ?? 'light';
     const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const reportAPI = useReportAPI();
-    const [reportIssueVisible, setReportIssueVisible] = useState(false);
     /**
      * iOS (react-native-ios-context-menu / Zeego): the bookmark row calls setState inside onSelect,
      * so the native menu is rebuilt and does not keep a bogus "selected" checkmark. Share and
@@ -34,7 +32,6 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     const [nativeMenuKey, setNativeMenuKey] = useState(0);
     const [menuInstanceId, setMenuInstanceId] = useState(0);
     const reportOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
     const i18n = useI18n();
 
@@ -78,33 +75,6 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
         }
     }, []);
 
-    const closeReportIssue = useCallback(() => {
-        clearPendingReportOpen();
-        setReportIssueVisible(false);
-    }, [clearPendingReportOpen]);
-
-    const submitReportIssue = async (description: string) => {
-        if (isSubmittingReport) {
-            return;
-        }
-        clearPendingReportOpen();
-        setIsSubmittingReport(true);
-        setReportIssueVisible(false);
-        try {
-            const result = await reportAPI.report(
-                { book: bookId, number: songId ?? '' },
-                description
-            );
-            if (result) {
-                Alert.alert(i18n.t('reportIssueSuccess'));
-            } else {
-                Alert.alert(i18n.t('reportIssueFailure'));
-            }
-        } finally {
-            setIsSubmittingReport(false);
-        }
-    };
-
     const broadcast = async () => {
 
     }
@@ -135,13 +105,14 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
         InteractionManager.runAfterInteractions(() => {
             clearPendingReportOpen();
             setNativeMenuKey((k) => k + 1);
-            // Android: native popup must finish closing or the next Modal won't show / receive touches.
+            // Native menus must finish closing or the next Modal won't receive touches.
+            const delay = Platform.OS === 'ios' ? 350 : 120;
             reportOpenTimeoutRef.current = setTimeout(() => {
                 reportOpenTimeoutRef.current = null;
-                setReportIssueVisible(true);
-            }, 120);
+                onReportIssuePress?.();
+            }, delay);
         });
-    }, [clearPendingReportOpen]);
+    }, [clearPendingReportOpen, onReportIssuePress]);
 
     useEffect(() => {
         return () => {
@@ -152,14 +123,16 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
     return (
         <>
             {Platform.OS === 'ios' ? (
-                <SwiftUI.Host matchContents>
+                <SwiftUI.Host key={nativeMenuKey} matchContents>
                     <SwiftUI.Menu
                         label={
-                            <IconSymbol
-                                name="ellipsis.circle"
-                                size={24}
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                            />
+                            <RNHostView matchContents>
+                                <IconSymbol
+                                    name="ellipsis.circle"
+                                    size={24}
+                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                                />
+                            </RNHostView>
                         }
                     >
                         <SwiftUI.Button
@@ -246,11 +219,6 @@ export function DisplayMoreMenu({ bookId, songId }: DisplayMoreMenuProps) {
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             )}
-            <ReportIssuePrompt
-                visible={reportIssueVisible}
-                onClose={closeReportIssue}
-                onSubmit={submitReportIssue}
-            />
         </>
     )
 }

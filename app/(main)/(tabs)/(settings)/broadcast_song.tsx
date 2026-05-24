@@ -10,7 +10,7 @@ import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';

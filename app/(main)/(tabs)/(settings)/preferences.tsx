@@ -75,7 +75,7 @@ export default function PreferencesScreen() {
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
 
                         <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/language')}
+                            onPress={() => router.push('/(main)/(tabs)/(settings)/language')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
@@ -92,7 +92,7 @@ export default function PreferencesScreen() {
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
-                            onPress={() => router.push('/(tabs)/(settings)/theme')}
+                            onPress={() => router.push('/(main)/(tabs)/(settings)/theme')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>

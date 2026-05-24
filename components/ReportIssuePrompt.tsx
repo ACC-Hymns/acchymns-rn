@@ -50,15 +50,23 @@ export function ReportIssuePrompt({ visible, onClose, onSubmit }: ReportIssuePro
             transparent
             onRequestClose={onClose}
             statusBarTranslucent
+            presentationStyle={Platform.OS === 'ios' ? 'overFullScreen' : undefined}
         >
             <View style={styles.root}>
-                <Pressable style={[styles.scrim, { backgroundColor: 'rgba(0,0,0,0.45)' }]} onPress={onClose} />
+                <Pressable
+                    style={[styles.scrim, { backgroundColor: 'rgba(0,0,0,0.45)' }]}
+                    onPress={onClose}
+                    accessibilityRole="button"
+                    accessibilityLabel={i18n.t('cancel')}
+                />
                 <View style={styles.centerLayer} pointerEvents="box-none">
                     <KeyboardAvoidingView
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                         style={styles.kav}
+                        pointerEvents="box-none"
                     >
                         <View
+                            onStartShouldSetResponder={() => true}
                             style={[
                                 styles.card,
                                 {
@@ -108,10 +116,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrim: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
     },
     centerLayer: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         justifyContent: 'center',
         padding: 24,
     },

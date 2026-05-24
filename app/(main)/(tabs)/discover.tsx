@@ -31,9 +31,9 @@ import {
 import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@expo/ui/community/bottom-sheet';
 import StyledText from '@/components/StyledText';
 import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';

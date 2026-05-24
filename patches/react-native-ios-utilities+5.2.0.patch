@@ -1,0 +1,17 @@
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift b/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
+index 09be306..e3add2a 100644
+--- a/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
++++ b/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
+@@ -25,8 +25,10 @@ public extension RCTView {
+     return rootView.recursivelyFindSubview(whereType: targetType);
+   };
+ 
+-  var closestParentReactContentView: RCTRootContentView? {
+-    let targetType = RCTRootContentView.self;
++  var closestParentReactContentView: RCTView? {
++    guard let targetType = NSClassFromString("RCTRootContentView") as? RCTView.Type else {
++      return nil;
++    };
+ 
+     if let match = self.recursivelyFindParentView(whereType: targetType) {
+       return match;

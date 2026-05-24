@@ -13,16 +13,18 @@ import {
     BottomSheetModal,
     BottomSheetView,
     BottomSheetModalProvider,
-} from '@gorhom/bottom-sheet';
-import SegmentedControl from '@react-native-segmented-control/segmented-control';
+} from '@expo/ui/community/bottom-sheet';
+import SegmentedControl from '@expo/ui/community/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
+import { ReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { getHTMLStringFromSong } from '@/scripts/image_handler';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
-import { Ionicons } from '@expo/vector-icons';
+import { useReportAPI } from '@/scripts/report';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import { error } from 'pdf-lib';
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
@@ -34,7 +36,7 @@ import { useBookData } from '@/hooks/useBookData';
 import { useSongData } from '@/hooks/useSongData';
 import { useSongListData } from '@/hooks/useSongListData';
 import WebView from 'react-native-webview';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleOnRN } from 'react-native-worklets';
 import { ScreenHeight } from 'react-native-elements/dist/helpers';
@@ -145,6 +147,38 @@ export default function DisplayScreen() {
     const [isSwiping, setIsSwiping] = useState(false);
 
     const i18n = useI18n();
+    const reportAPI = useReportAPI();
+    const [reportIssueVisible, setReportIssueVisible] = useState(false);
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+    const openReportIssuePrompt = useCallback(() => {
+        setReportIssueVisible(true);
+    }, []);
+
+    const closeReportIssuePrompt = useCallback(() => {
+        setReportIssueVisible(false);
+    }, []);
+
+    const submitReportIssue = useCallback(async (description: string) => {
+        if (isSubmittingReport) {
+            return;
+        }
+        setIsSubmittingReport(true);
+        setReportIssueVisible(false);
+        try {
+            const result = await reportAPI.report(
+                { book: params.id, number: params.number ?? '' },
+                description
+            );
+            if (result) {
+                Alert.alert(i18n.t('reportIssueSuccess'));
+            } else {
+                Alert.alert(i18n.t('reportIssueFailure'));
+            }
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    }, [i18n, isSubmittingReport, params.id, params.number, reportAPI]);
 
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
@@ -157,6 +191,12 @@ export default function DisplayScreen() {
         && !!book
         && !!songs
         && !!imageData;
+
+    useEffect(() => {
+        if (!isDisplayScreenFocused) {
+            setReportIssueVisible(false);
+        }
+    }, [isDisplayScreenFocused]);
 
     const musicSheetOpen = useSwiftUIBottomSheet ? isSwiftBottomSheetPresented : isGorhomMusicSheetOpen;
 
@@ -247,7 +287,6 @@ export default function DisplayScreen() {
                     <Ionicons
                         name="chevron-back"
                         size={24}
-                        weight="medium"
                         color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                     />
                 </TouchableOpacity>
@@ -278,7 +317,11 @@ export default function DisplayScreen() {
                             />
                         </TouchableOpacity>
                     ) : (<></>)}
-                    <DisplayMoreMenu bookId={params.id} songId={params.number} />
+                    <DisplayMoreMenu
+                        bookId={params.id}
+                        songId={params.number}
+                        onReportIssuePress={openReportIssuePrompt}
+                    />
                 </View>
             ) : null,
             headerStyle: keepsStaticHeaderSlot || isIos26OrNewer
@@ -288,6 +331,7 @@ export default function DisplayScreen() {
     }, [
         isHeaderVisible,
         isIos26OrNewer,
+        openReportIssuePrompt,
         songNotes.length,
         context?.broadcastingToken,
         params.id,
@@ -434,6 +478,12 @@ export default function DisplayScreen() {
                     if (response.ok) {
                         setHasPiano(true);
 
+                        // if the same track is already playing, don't set it again
+                        const currentTrack = TrackPlayer.getActiveMediaItem();
+                        if (currentTrack?.mediaId === `${params.id}:${params.number}`) {
+                            return;
+                        }
+                        
                         const track_data = {
                             mediaId: `${params.id}:${params.number}`,
                             url: URL, // Load media from the network
@@ -441,7 +491,7 @@ export default function DisplayScreen() {
                             artist: book.name.medium,
                             artworkUrl: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
                         };
-                        await TrackPlayer.setMediaItem(track_data);
+                        TrackPlayer.setMediaItem(track_data);
                     } else {
 
                     }
@@ -485,11 +535,6 @@ export default function DisplayScreen() {
                         await new Promise(resolve => setTimeout(resolve, 0));
                     }
                 }
-                await setAudioModeAsync({
-                    playsInSilentMode: true,
-                    interruptionMode: 'mixWithOthers',
-                    interruptionModeAndroid: 'duckOthers'
-                })
             } catch (e) {
                 console.error(e);
             } finally {
@@ -606,9 +651,15 @@ export default function DisplayScreen() {
                     onPress={async () => {
                         const isPlaying = await TrackPlayer.isPlaying();
                         if (isPlaying)
-                            await TrackPlayer.pause();
-                        else
-                            await TrackPlayer.play();
+                            TrackPlayer.pause();
+                        else {
+                            // if the track is at the end, seek to the beginning
+                            const currentPosition = TrackPlayer.getProgress();
+                            if (currentPosition.position >= currentPosition.duration) {
+                                TrackPlayer.seekTo(0);
+                            }
+                            TrackPlayer.play();
+                        }
                     }}
                 >
                     <Ionicons
@@ -1110,6 +1161,11 @@ export default function DisplayScreen() {
                     )}
                 </Animated.View>
             )}
+            <ReportIssuePrompt
+                visible={reportIssueVisible}
+                onClose={closeReportIssuePrompt}
+                onSubmit={submitReportIssue}
+            />
         </View>
     );
 }

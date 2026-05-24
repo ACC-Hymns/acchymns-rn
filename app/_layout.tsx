@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { getLoadedFonts, useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,12 +24,11 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
 import TrackPlayer from '@rntp/player';
 import { PlayerCommand } from '@rntp/player';
 import { BackgroundEvent, Event } from '@rntp/player';
 import { validate_token } from '@/scripts/broadcast';
-import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 
 
 global.Buffer = Buffer;
@@ -110,7 +109,6 @@ export default function RootLayout() {
         setup();
     }, []);
 
-    const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
     const [stableUserId, setStableUserId] = useState<string | null>(null);
 
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
@@ -253,13 +251,8 @@ export default function RootLayout() {
     // Use shared I18n hook
     const i18n = useI18n();
 
-    function handleAuthStateChanged(user: FirebaseAuthTypes.User | null) {
-        setUser(user);
-    }
-
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(getAuth(), handleAuthStateChanged);
 
         // Load preferences from async storage - batch operations
         getOrCreateStableUserId()
@@ -338,10 +331,6 @@ export default function RootLayout() {
         }).catch((error) => {
             console.error("Error loading hymnals:", error);
         });
-
-        return () => {
-            unsubscribe();
-        };
     }, [loaded, SET_BOOK_DATA]);
 
     if (!appIsReady || !stableUserId) {
@@ -359,7 +348,7 @@ export default function RootLayout() {
                 distinctId: stableUserId,
             },
         }} autocapture={{ captureScreens: false }}>
-            <PostHogIdentity stableUserId={stableUserId} user={user} />
+            <PostHogIdentity stableUserId={stableUserId} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <HymnalContext.Provider value={context}>
                     <QueryClientProvider client={queryClient}>

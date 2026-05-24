@@ -1,5 +1,5 @@
 // This file is a fallback for using Ionicons on Android and web.
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 import { SymbolWeight } from 'expo-symbols';
 import React from 'react';
 import { OpaqueColorValue, StyleProp, TextStyle } from 'react-native';
@@ -29,7 +29,7 @@ const MAPPING = {
   'network.slash': 'cloud-offline-outline'
 } as Partial<
   Record<
-    import('expo-symbols').SymbolViewProps['name'],
+    string,
     React.ComponentProps<typeof Ionicons>['name']
   >
 >;
@@ -50,8 +50,7 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<StyledTextStyle>;
-  weight?: SymbolWeight;
+  style?: StyleProp<TextStyle>;
 }) {
-  return <Ionicons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return <Ionicons color={color} size={size} name={MAPPING[name] ?? ''} style={style} />;
 }

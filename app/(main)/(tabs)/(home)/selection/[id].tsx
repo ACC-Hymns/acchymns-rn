@@ -14,7 +14,7 @@ import { useSongListData } from '@/hooks/useSongListData';
 import { useBookData } from '@/hooks/useBookData';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/ionicons'
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
@@ -120,122 +120,22 @@ export default function SelectionScreen() {
     useLayoutEffect(() => {
         if (!book) return;
 
-        if (Platform.OS === 'ios') {
-            navigation.setOptions({
-                title: book.name.medium,
-                headerTintColor: Colors[theme].tint,
-                contentStyle: { backgroundColor: Colors[theme].background },
-                unstable_headerLeftItems: () => [
-                    {
-                        type: 'button',
-                        label: 'Back',
-                        icon: {
-                            type: 'sfSymbol',
-                            name: 'chevron.left'
-                        },
-                        tintColor: Colors[theme].icon,
-                        onPress: () => {
-                            router.back();
-                        }
-                    }
-                ],
-                unstable_headerRightItems: () => [
-                    {
-                        type: 'menu',
-                        label: i18n.t('sortingOptions'),
-                        icon: {
-                            type: 'sfSymbol',
-                            name: 'ellipsis',
-                        },
-                        tintColor: Colors[theme].icon,
-                        menu: {
-                            title: i18n.t("sortingLabel"),
-                            items: [
-                                {
-                                    type: 'action',
-                                    label: i18n.t('numerical'),
-                                    icon: {
-                                        type: 'sfSymbol',
-                                        name: 'textformat.123',
-                                    },
-                                    onPress: async () => {
-                                        context?.setSortMode?.(SortMode.NUMERICAL);
-                                    },
-                                }, {
-                                    type: 'action',
-                                    label: i18n.t('alphabetical'),
-                                    icon: {
-                                        type: 'sfSymbol',
-                                        name: 'textformat.abc',
-                                    },
-                                    onPress: async () => {
-                                        context?.setSortMode?.(SortMode.ALPHABETICAL)
-                                    },
-                                }, {
-                                    type: 'action',
-                                    label: i18n.t('topical'),
-                                    disabled: !book.indexAvailable,
-                                    icon: {
-                                        type: 'sfSymbol',
-                                        name: 'book',
-                                    },
-                                    onPress: () => {
-                                        context?.setSortMode?.(SortMode.TOPICAL)
-                                    },
-                                }, {
-                                    type: 'action',
-                                    label: i18n.t('deleteHymnal'),
-                                    destructive: true,
-                                    icon: {
-                                        type: 'sfSymbol',
-                                        name: 'trash',
-                                    },
-                                    onPress: () => {
-                                        Alert.alert(`${i18n.t('deleteAlertTitle')}"${book.name.medium}"`, i18n.t('deleteAlertMessage'), [
-                                            {
-                                                text: i18n.t('cancel'),
-                                                onPress: () => {
-
-                                                },
-                                                style: 'cancel',
-                                                isPreferred: true
-                                            },
-                                            {
-                                                text: i18n.t('remove'),
-                                                onPress: async () => {
-                                                    // navigate back
-                                                    router.back();
-                                                    await context?.deleteHymnal?.(book.name.short);
-                                                },
-                                                style: 'destructive'
-                                            },
-                                        ]);
-                                    },
-                                }
-                            ],
-                        },
-                    },
-                ],
-            });
-        } else {
-            navigation.setOptions({
-                title: book.name.medium,
-                headerTitleAlign: 'center',
-                headerRight: () => (
-                    <HymnalMoreMenu bookSummary={book} />
-                ),
-                headerLeft: () => (
-                    <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                        <IconSymbol
-                            name="chevron.left"
-                            size={24}
-                            weight="medium"
-                            color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-                        />
-                    </TouchableOpacity>
-                )
-            });
-        }
+        navigation.setOptions({
+            title: book.name.medium,
+            headerTitleAlign: 'center',
+            headerRight: () => (
+                <HymnalMoreMenu bookSummary={book} />
+            ),
+            headerLeft: () => (
+                <TouchableOpacity hitSlop={10} onPress={() => router.back()}>
+                    <Ionicons
+                        name="chevron-back"
+                        size={24}
+                        color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                    />
+                </TouchableOpacity>
+            )
+        });
 
     }, [book, id, navigation, context?.languageOverride, theme]);
 
@@ -405,7 +305,6 @@ export default function SelectionScreen() {
                                                         <Ionicons
                                                             name={openDropdowns[index.toString()] ? "chevron-up" : "chevron-down"}
                                                             size={18}
-                                                            weight="medium"
                                                             color={Colors[theme].icon}
                                                         />
                                                     </View>
@@ -599,7 +498,6 @@ export default function SelectionScreen() {
                                                     <Ionicons
                                                         name={openDropdowns[key] ? "chevron-up" : "chevron-down"}
                                                         size={18}
-                                                        weight="medium"
                                                         color={Colors[theme].icon}
                                                     />
                                                 </View>

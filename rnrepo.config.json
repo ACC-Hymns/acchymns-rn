@@ -1,0 +1,14 @@
+{
+  "denyList": {
+    "ios": [
+      "react-native-worklets",
+      "react-native-reanimated",
+      "react-native-screens"
+    ],
+    "android": [
+      "react-native-worklets",
+      "react-native-reanimated",
+      "react-native-screens"
+    ]
+  }
+}

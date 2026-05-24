@@ -2,7 +2,6 @@ import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { HymnalContext } from "@/constants/context";
-import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useI18n } from "@/hooks/useI18n";
 import { useContext } from "react";
