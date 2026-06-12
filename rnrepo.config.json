@@ -1,14 +1,18 @@
 {
   "denyList": {
-    "ios": [
-      "react-native-worklets",
-      "react-native-reanimated",
-      "react-native-screens"
-    ],
     "android": [
       "react-native-worklets",
       "react-native-reanimated",
-      "react-native-screens"
+      "react-native-screens",
+      "@react-native-vector-icons/ionicons",
+      "react-native-vector-icons"
+    ],
+    "ios": [
+      "react-native-worklets",
+      "react-native-reanimated",
+      "react-native-screens",
+      "@react-native-vector-icons/ionicons",
+      "react-native-vector-icons"
     ]
   }
 }

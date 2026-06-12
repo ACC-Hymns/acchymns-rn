@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from
 import { StyleSheet, TouchableOpacity, Pressable, View, TouchableHighlight } from 'react-native';
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { Checkbox } from '@futurejj/react-native-checkbox';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons/static'
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';

@@ -3,7 +3,6 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, P
 import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
@@ -14,6 +13,7 @@ import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { request_client, set } from '@/scripts/broadcast';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function BroadcastOptionsScreen() {
 
@@ -86,7 +86,7 @@ export default function BroadcastOptionsScreen() {
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('setSongNumber')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <IconSymbol name="chevron.right" size={14} color={Colors[theme].fadedIcon} />
+                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
@@ -98,7 +98,7 @@ export default function BroadcastOptionsScreen() {
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('setBibleReading')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <IconSymbol name="chevron.right" size={14} color={Colors[theme].fadedIcon} />
+                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>

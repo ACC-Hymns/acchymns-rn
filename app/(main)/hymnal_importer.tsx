@@ -1,5 +1,4 @@
 import GradientButton from '@/components/GradientButton';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
@@ -14,6 +13,7 @@ import { Text, View, StyleSheet, Platform, ScrollView, TouchableOpacity, SafeAre
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
 import StyledText from '@/components/StyledText';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 // GitHub Release API types
 type GitHubUser = {
@@ -410,7 +410,7 @@ export default function HymnalImporter() {
             <View style={styles.screenContainer}>
 
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                    <IconSymbol name="network.slash" size={64} color={Colors[theme]['fadedText']} />
+                    <Ionicons name="cloud-offline-outline" size={64} color={Colors[theme]['fadedText']} />
                     <StyledText style={{ color: Colors[theme]['fadedText'], fontSize: 18, marginTop: 16, fontWeight: '500' }}>
                         {i18n.t('failedToLoadHymnals')}
                     </StyledText>
@@ -544,7 +544,7 @@ export default function HymnalImporter() {
                                             </View>
                                             {(context?.downloadProgressValues[hymnalId] ?? 0) === 0 && (
                                                 <View style={{ position: 'absolute', right: 20, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
-                                                    <IconSymbol name="plus.circle" size={32} weight='light' color="white" />
+                                                    <Ionicons name="add-circle-outline" size={32} color="white" />
                                                 </View>
                                             )}
                                         </View>

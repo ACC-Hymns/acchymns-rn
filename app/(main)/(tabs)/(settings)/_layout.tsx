@@ -1,5 +1,4 @@
 import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
 import { HymnalContext } from "@/constants/context";
 import { router, Stack } from "expo-router";

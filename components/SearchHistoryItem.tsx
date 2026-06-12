@@ -1,12 +1,11 @@
 // default component
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, PanResponder, Pressable, Animated } from 'react-native';
-import { IconSymbol } from './ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import StyledText from './StyledText';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 
 
 interface SearchHistoryItemProps {
@@ -102,8 +101,8 @@ export function SearchHistoryItem({ item, onPress, onGestureStart, onGestureEnd,
                             onPress();
                         }}
                     >
-                        <IconSymbol
-                            name="magnifyingglass"
+                        <Ionicons
+                            name="search-outline"
                             size={24}
                             color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                         />

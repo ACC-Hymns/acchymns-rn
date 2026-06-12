@@ -10,7 +10,7 @@ import { router, usePathname } from 'expo-router';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
 import TrackPlayer, { Event, MediaItem, useIsPlaying } from '@rntp/player';
 import { useFeatureFlag } from 'posthog-react-native';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 
 const DEBUG_MEDIA_ACCESSORY = __DEV__;
 
@@ -189,13 +189,19 @@ export default function TabLayout() {
                     contentStyle={{ backgroundColor: Colors[theme].background }}
                 >
                     <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('home')}</NativeTabs.Trigger.Label>
-                    <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='home-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                    <NativeTabs.Trigger.Icon src={{
+                        default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='home-outline' />,
+                        selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='home' />,
+                    }} selectedColor={Colors[theme].tabIconSelected} />
                 </NativeTabs.Trigger>
                 <NativeTabs.Trigger name="search"
                     contentStyle={{ backgroundColor: Colors[theme].background }}
                 >
                     <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('search')}</NativeTabs.Trigger.Label>
-                    <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='search-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                    <NativeTabs.Trigger.Icon src={{
+                        default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='search-outline' />,
+                        selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='search' />,
+                    }} selectedColor={Colors[theme].tabIconSelected} />
                 </NativeTabs.Trigger>
 
                 
@@ -205,7 +211,10 @@ export default function TabLayout() {
                             contentStyle={{ backgroundColor: Colors[theme].background }}
                         >
                             <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('discover')}</NativeTabs.Trigger.Label>
-                            <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                            <NativeTabs.Trigger.Icon src={{
+                                default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope-outline' />,
+                                selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope' />,
+                            }} selectedColor={Colors[theme].tabIconSelected} />
                             <NativeTabs.Trigger.Badge>New</NativeTabs.Trigger.Badge>
                         </NativeTabs.Trigger>
                     ) : (
@@ -213,7 +222,10 @@ export default function TabLayout() {
                             contentStyle={{ backgroundColor: Colors[theme].background }}
                         >
                             <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('discover')}</NativeTabs.Trigger.Label>
-                            <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                            <NativeTabs.Trigger.Icon src={{
+                                default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope-outline' />,
+                                selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='telescope' />,
+                            }} selectedColor={Colors[theme].tabIconSelected} />
                         </NativeTabs.Trigger>
                     )
                 )}
@@ -222,13 +234,19 @@ export default function TabLayout() {
                     contentStyle={{ backgroundColor: Colors[theme].background }}
                 >
                     <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('bookmarks')}</NativeTabs.Trigger.Label>
-                    <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='bookmark-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                    <NativeTabs.Trigger.Icon src={{
+                        default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='bookmark-outline' />,
+                        selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='bookmark' />,
+                    }} selectedColor={Colors[theme].tabIconSelected} />
                 </NativeTabs.Trigger>
                 <NativeTabs.Trigger name="(settings)"
                     contentStyle={{ backgroundColor: Colors[theme].background }}
                 >
                     <NativeTabs.Trigger.Label selectedStyle={{ color: Colors[theme].text }}>{i18n.t('settings')}</NativeTabs.Trigger.Label>
-                    <NativeTabs.Trigger.Icon src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name='settings-outline' />} selectedColor={Colors[theme].tabIconSelected} />
+                    <NativeTabs.Trigger.Icon src={{
+                        default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='settings-outline' />,
+                        selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='settings' />,
+                    }} selectedColor={Colors[theme].tabIconSelected} />
                 </NativeTabs.Trigger>
         </NativeTabs>
         );

@@ -1,16 +1,17 @@
 import { InteractionManager, Platform, TouchableOpacity } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
-import { IconSymbol } from './ui/IconSymbol'
 import { Colors } from '@/constants/Colors';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Bookmark, Song } from '@/constants/types';
-import * as Sharing from 'expo-sharing';
+import { Share } from 'react-native';
 import { getSongData } from '@/scripts/hymnals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as SwiftUI from '@expo/ui/swift-ui';
 import { RNHostView } from '@expo/ui/swift-ui';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import { HymnalContext } from '@/constants/context';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -20,6 +21,7 @@ interface DisplayMoreMenuProps {
 
 export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayMoreMenuProps) {
     const theme = useColorScheme() ?? 'light';
+    const context = useContext(HymnalContext);
     const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
     const [isBookmarked, setIsBookmarked] = useState(false);
@@ -127,8 +129,8 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                     <SwiftUI.Menu
                         label={
                             <RNHostView matchContents>
-                                <IconSymbol
-                                    name="ellipsis.circle"
+                                <Ionicons
+                                    name="ellipsis-horizontal"
                                     size={24}
                                     color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                                 />
@@ -149,8 +151,9 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                             label="Share"
                             systemImage="square.and.arrow.up"
                             onPress={async () => {
-                                await Sharing.shareAsync(`https://acchymns.app/display/${bookId}/${songId}`, {
-                                    dialogTitle: songData?.title
+                                await Share.share({
+                                    title: `${songData?.title}`,
+                                    message: `https://acchymns.app/display/${bookId}/${songId}`,
                                 });
                             }}
                         />
@@ -173,8 +176,8 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                 >
                     <DropdownMenu.Trigger>
                     <TouchableOpacity onPress={() => { }} hitSlop={10}>
-                            <IconSymbol
-                                name="ellipsis.circle"
+                            <Ionicons
+                                name="ellipsis-horizontal"
                                 size={24}
                                 color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                             />
@@ -191,13 +194,14 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                                 {isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
                             </DropdownMenu.ItemTitle>
                             <DropdownMenu.ItemIcon ios={{ name: 'bookmark' }}>
-                                <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                                <Ionicons name='bookmark-outline' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                             </DropdownMenu.ItemIcon>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item key={`share-${menuInstanceId}`} onSelect={async () => {
                             try {
-                                await Sharing.shareAsync(`https://acchymns.app/display/${bookId}/${songId}`, {
-                                    dialogTitle: songData?.title
+                                await Share.share({
+                                    title: `${songData?.title}`,
+                                    message: `https://acchymns.app/display/${bookId}/${songId}`,
                                 });
                             } finally {
                                 InteractionManager.runAfterInteractions(() => {
@@ -207,13 +211,13 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                         }}>
                             <DropdownMenu.ItemTitle>{i18n.t('share')}</DropdownMenu.ItemTitle>
                             <DropdownMenu.ItemIcon ios={{ name: 'square.and.arrow.up' }}>
-                                <IconSymbol name='square.and.arrow.up' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                                <Ionicons name='share-outline' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                             </DropdownMenu.ItemIcon>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item key={`report-issue-${menuInstanceId}`} onSelect={openReportIssueAfterMenuCloses} destructive={true} >
                             <DropdownMenu.ItemTitle>{i18n.t('reportIssue')}</DropdownMenu.ItemTitle>
                             <DropdownMenu.ItemIcon ios={{ name: 'exclamationmark.bubble' }}>
-                                <IconSymbol name='exclamationmark.bubble' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                                <Ionicons name='flag-outline' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                             </DropdownMenu.ItemIcon>
                         </DropdownMenu.Item>
                     </DropdownMenu.Content>

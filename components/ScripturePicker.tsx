@@ -10,16 +10,15 @@ import {
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from './StyledText';
-import { IconSymbol } from './ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { Colors } from '@/constants/Colors';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 
 interface ScripturePickerProps {
     send: (input: Reading) => void;
 }
-export default function ScripturePicker({send}: ScripturePickerProps) {
+export default function ScripturePicker({ send }: ScripturePickerProps) {
 
     const context = useContext(HymnalContext);
 
@@ -81,8 +80,8 @@ export default function ScripturePicker({send}: ScripturePickerProps) {
                     style={styles.input}
                     onPress={() => {
                         setModalVisible(true);
-                        
-                        if(rangeStart) {
+
+                        if (rangeStart) {
                             setStep('verses')
                         } else if (selectedChapter) {
                             setStep('chapters')
@@ -128,9 +127,12 @@ export default function ScripturePicker({send}: ScripturePickerProps) {
                                 setRangeStart(null);
                                 setRangeEnd(null);
                             }}
-                            style={{ flexDirection: 'row', alignItems: 'center' }} hitSlop={5}>
-                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                            <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
+                            hitSlop={10}>
+                            <Ionicons
+                                name="chevron-back"
+                                size={24}
+                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                            />
                         </TouchableOpacity>
                         {step === 'books' && (
                             <Text style={styles.headerTitle}>Select Book</Text>
@@ -145,9 +147,13 @@ export default function ScripturePicker({send}: ScripturePickerProps) {
                         )}
                         <TouchableOpacity
                             onPress={() => { }}
-                            style={{ flexDirection: 'row', alignItems: 'center', opacity: 0 }} hitSlop={5}>
-                            <IconSymbol name="chevron.left" size={18} color="#007AFF" />
-                            <StyledText style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>{i18n.t('back')}</StyledText>
+                            style={{ opacity: 0 }}
+                            hitSlop={10}>
+                            <Ionicons
+                                name="chevron-back"
+                                size={24}
+                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                            />
                         </TouchableOpacity>
                     </View>
 

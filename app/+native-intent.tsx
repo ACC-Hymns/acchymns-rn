@@ -1,20 +1,20 @@
+import { pathFromDeepLink } from '@/scripts/deepLink';
+
 /**
  * Normalize native URLs before Expo Router resolves them.
- * TrackPlayer on Android can emit trackplayer://notification.click when
- * the media notification is tapped; without handling this, Expo Router
- * falls through to the not-found screen.
+ * - Universal/App links: https://acchymns.app/display/CH/100 → /display/CH/100
+ * - Custom scheme: acchymns://display/CH/100 → /display/CH/100
+ * - TrackPlayer: ignore synthetic notification deep links
  */
 export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
     try {
-        const url = new URL(path, 'myapp://');
+        const url = new URL(path, 'acchymns://');
         if (url.protocol === 'trackplayer:' && url.host === 'notification.click') {
-            // Ignore TrackPlayer's synthetic deep-link so notification taps just
-            // bring the app to foreground without navigation.
             return '';
         }
     } catch {
-        // If parsing fails, keep the original path and let Expo Router handle it.
+        // If parsing fails, continue with path normalization below.
     }
 
-    return path;
+    return pathFromDeepLink(path);
 }

@@ -4,12 +4,12 @@ import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function ThemeScreen() {
 
@@ -77,7 +77,7 @@ export default function ThemeScreen() {
                                             {themeName(themeItem)}
                                         </StyledText>
                                         {selectedTheme === themeItem && (
-                                            <IconSymbol name="checkmark" size={18} weight='medium' color={Colors[theme].primary} />
+                                            <Ionicons name="checkmark" size={18} color={Colors[theme].primary} />
                                         )}
                                     </View>
                                 </TouchableHighlight>

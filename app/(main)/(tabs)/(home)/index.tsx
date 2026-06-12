@@ -1,5 +1,4 @@
 import GradientButton from '@/components/GradientButton';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -16,6 +15,7 @@ import Sortable from 'react-native-sortables';
 import { scheduleOnRN } from 'react-native-worklets';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { Animated as RNAnimated } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 function parseStoredOrder(raw: string | null): { order: string[]; isValid: boolean } {
     if (!raw) {
@@ -246,10 +246,9 @@ export default function HomeScreen() {
                     <TouchableOpacity
                         onPress={() => router.push('/hymnal_importer')}
                     >
-                        <IconSymbol
-                            name="plus.circle"
+                        <Ionicons
+                            name="add-circle-outline"
                             size={56}
-                            weight='light'
                             color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                         />
                     </TouchableOpacity>

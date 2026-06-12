@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Alert, Platform, useWindowDimensions, InteractionManager } from 'react-native';
+import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager } from 'react-native';
+import Alert from '@blazejkustra/react-native-alert';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { router, Stack, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
@@ -16,7 +17,7 @@ import {
 } from '@expo/ui/community/bottom-sheet';
 import SegmentedControl from '@expo/ui/community/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
-import { ReportIssuePrompt } from '@/components/ReportIssuePrompt';
+import { showReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
@@ -24,7 +25,7 @@ import { getHTMLStringFromSong } from '@/scripts/image_handler';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
 import { useReportAPI } from '@/scripts/report';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 import { error } from 'pdf-lib';
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
@@ -148,23 +149,13 @@ export default function DisplayScreen() {
 
     const i18n = useI18n();
     const reportAPI = useReportAPI();
-    const [reportIssueVisible, setReportIssueVisible] = useState(false);
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-
-    const openReportIssuePrompt = useCallback(() => {
-        setReportIssueVisible(true);
-    }, []);
-
-    const closeReportIssuePrompt = useCallback(() => {
-        setReportIssueVisible(false);
-    }, []);
 
     const submitReportIssue = useCallback(async (description: string) => {
         if (isSubmittingReport) {
             return;
         }
         setIsSubmittingReport(true);
-        setReportIssueVisible(false);
         try {
             const result = await reportAPI.report(
                 { book: params.id, number: params.number ?? '' },
@@ -180,10 +171,13 @@ export default function DisplayScreen() {
         }
     }, [i18n, isSubmittingReport, params.id, params.number, reportAPI]);
 
+    const openReportIssuePrompt = useCallback(() => {
+        showReportIssuePrompt(i18n, submitReportIssue);
+    }, [i18n, submitReportIssue]);
+
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
-    const [isSwiftBottomSheetPresented, setIsSwiftBottomSheetPresented] = useState(false);
-    const [isGorhomMusicSheetOpen, setIsGorhomMusicSheetOpen] = useState(false);
+    const [musicSheetOpen, setMusicSheetOpen] = useState(false);
     const lastHandledOpenSheetTokenRef = useRef<string | null>(null);
     const [pendingOpenSheetToken, setPendingOpenSheetToken] = useState<string | null>(null);
     const isDisplayFullyLoaded = isDisplayScreenFocused
@@ -192,13 +186,6 @@ export default function DisplayScreen() {
         && !!songs
         && !!imageData;
 
-    useEffect(() => {
-        if (!isDisplayScreenFocused) {
-            setReportIssueVisible(false);
-        }
-    }, [isDisplayScreenFocused]);
-
-    const musicSheetOpen = useSwiftUIBottomSheet ? isSwiftBottomSheetPresented : isGorhomMusicSheetOpen;
 
     useEffect(() => {
         if (!isDisplayScreenFocused) {
@@ -246,13 +233,6 @@ export default function DisplayScreen() {
     }, []);
 
     const handlePress = useCallback(async () => {
-        if (useSwiftUIBottomSheet) {
-            if (!isSwiftBottomSheetPresented) {
-                await lockToPortraitBeforeSheetOpen();
-            }
-            setIsSwiftBottomSheetPresented((prev) => !prev);
-            return;
-        }
         if (!bottomSheetModalRef.current) return;
 
         if (isModalOpenRef.current) {
@@ -261,11 +241,11 @@ export default function DisplayScreen() {
             await lockToPortraitBeforeSheetOpen();
             bottomSheetModalRef.current.present();
         }
-    }, [isSwiftBottomSheetPresented, lockToPortraitBeforeSheetOpen, useSwiftUIBottomSheet]);
+    }, [lockToPortraitBeforeSheetOpen, useSwiftUIBottomSheet]);
 
     const handleSheetChanges = useCallback((index: number) => {
         isModalOpenRef.current = index === 0;
-        setIsGorhomMusicSheetOpen(index >= 0);
+        setMusicSheetOpen(index >= 0);
     }, []);
 
     async function broadcastSong() {
@@ -305,7 +285,7 @@ export default function DisplayScreen() {
                             />
                         </TouchableOpacity>
                     ) : (<></>)}
-                                        {context?.broadcastingToken ? (
+                    {context?.broadcastingToken ? (
                         <TouchableOpacity
                             onPress={broadcastSong}
                             hitSlop={{ top: 14, bottom: 14, left: 18, right: 18 }}
@@ -382,18 +362,14 @@ export default function DisplayScreen() {
             if (cancelled) return;
             setSelectedIndex(shouldOpenPiano ? 1 : 0);
 
-            if (useSwiftUIBottomSheet) {
-                setIsSwiftBottomSheetPresented(true);
-            } else {
-                // BottomSheet ref can lag right after navigation; retry briefly.
-                for (let i = 0; i < 8; i++) {
-                    if (cancelled) return;
-                    if (bottomSheetModalRef.current) {
-                        bottomSheetModalRef.current.present();
-                        break;
-                    }
-                    await new Promise((resolve) => setTimeout(resolve, 80));
+            // BottomSheet ref can lag right after navigation; retry briefly.
+            for (let i = 0; i < 8; i++) {
+                if (cancelled) return;
+                if (bottomSheetModalRef.current) {
+                    bottomSheetModalRef.current.present();
+                    break;
                 }
+                await new Promise((resolve) => setTimeout(resolve, 80));
             }
 
             if (cancelled) return;
@@ -483,7 +459,7 @@ export default function DisplayScreen() {
                         if (currentTrack?.mediaId === `${params.id}:${params.number}`) {
                             return;
                         }
-                        
+
                         const track_data = {
                             mediaId: `${params.id}:${params.number}`,
                             url: URL, // Load media from the network
@@ -524,7 +500,7 @@ export default function DisplayScreen() {
                 // reverse notes - use spread instead of slice().reverse() for better performance
                 const reversedNotes = songNotes ? [...songNotes].reverse() : [];
                 setSongNotes(reversedNotes);
-                
+
                 // Create audio players asynchronously to avoid blocking
                 for (const note of reversedNotes) {
                     const assetId = getNoteMp3(note);
@@ -1052,80 +1028,40 @@ export default function DisplayScreen() {
                     <ActivityIndicator size="large" />
                 </View>
             )}
-            {useSwiftUIBottomSheet ? (
-                isSwiftBottomSheetPresented ? (
-                    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-                        <SwiftUIHost style={styles.swiftUIBottomSheetHost}>
-                            <SwiftUIBottomSheet
-                                isPresented={isSwiftBottomSheetPresented}
-                                onIsPresentedChange={setIsSwiftBottomSheetPresented}
-                            >
-                                <SwiftUI.Group
-                                    modifiers={[
-                                        presentationDetents([{ fraction: 0.25 }]),
-                                    ]}
-                                >
-                                    <SwiftUIRNHostView>
-                                        <View style={styles.contentContainer}>
-                                            <SegmentedControl
-                                                style={{
-                                                    width: hasPiano ? 300 : 100,
-                                                    height: 32,
-                                                }}
-                                                selectedIndex={selectedIndex}
-                                                values={hasPiano ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
-                                                onChange={(event) => {
-                                                    setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
-                                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                                }}
-                                            />
-                                            {selectedIndex === 0 && (
-                                                NotesTab()
-                                            )}
-                                            {selectedIndex === 1 && (
-                                                PianoTab()
-                                            )}
-                                        </View>
-                                    </SwiftUIRNHostView>
-                                    </SwiftUI.Group>
-                            </SwiftUIBottomSheet>
-                        </SwiftUIHost>
-                    </View>
-                ) : null
-            ) : (
-                <BottomSheetModalProvider>
-                    <BottomSheetModal
-                        ref={bottomSheetModalRef}
-                        onChange={handleSheetChanges}
-                        style={styles.bottomSheet}
-                        backgroundStyle={styles.bottomSheet}
-                        handleIndicatorStyle={styles.handleIndicator}
-                        enableContentPanningGesture={false}
-                    >
-                        <BottomSheetView style={styles.contentContainer}>
-                            <SegmentedControl
-                                style={{
-                                    width: hasPiano ? 300 : 100,
-                                    height: 32,
-                                }}
-                                selectedIndex={selectedIndex}
-                                values={hasPiano ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
-                                onChange={(event) => {
-                                    setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                }}
-                            />
-                            {selectedIndex === 0 && (
-                                NotesTab()
-                            )}
-                            {selectedIndex === 1 && (
-                                PianoTab()
-                            )}
+            <BottomSheetModalProvider>
+                <BottomSheetModal
+                    ref={bottomSheetModalRef}
+                    onChange={handleSheetChanges}
+                    style={styles.bottomSheet}
+                    backgroundStyle={styles.bottomSheet}
+                    handleIndicatorStyle={styles.handleIndicator}
+                    enablePanDownToClose={true}
+                    enableContentPanningGesture={false}
+                >
+                    <BottomSheetView style={styles.contentContainer}>
+                        <SegmentedControl
+                            style={{
+                                width: hasPiano ? 300 : 100,
+                                height: 32,
+                            }}
+                            appearance={theme}
+                            selectedIndex={selectedIndex}
+                            values={hasPiano ? [i18n.t('notes'), i18n.t('piano')] : [i18n.t('notes')]}
+                            onChange={(event) => {
+                                setSelectedIndex(event.nativeEvent.selectedSegmentIndex);
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            }}
+                        />
+                        {selectedIndex === 0 && (
+                            NotesTab()
+                        )}
+                        {selectedIndex === 1 && (
+                            PianoTab()
+                        )}
 
-                        </BottomSheetView>
-                    </BottomSheetModal>
-                </BottomSheetModalProvider>
-            )}
+                    </BottomSheetView>
+                </BottomSheetModal>
+            </BottomSheetModalProvider>
             {imageData && (
                 <Animated.View
                     style={[styles.backToTopButtonContainer, backToTopAnimatedStyle]}
@@ -1161,11 +1097,6 @@ export default function DisplayScreen() {
                     )}
                 </Animated.View>
             )}
-            <ReportIssuePrompt
-                visible={reportIssueVisible}
-                onClose={closeReportIssuePrompt}
-                onSubmit={submitReportIssue}
-            />
         </View>
     );
 }

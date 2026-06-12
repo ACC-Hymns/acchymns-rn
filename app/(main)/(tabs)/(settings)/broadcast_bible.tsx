@@ -3,7 +3,6 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, P
 import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';

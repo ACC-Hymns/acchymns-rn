@@ -10,6 +10,8 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
+    "release": "node ./scripts/eas-release.js",
+    "ios:credentials": "eas credentials -p ios",
     "postinstall": "patch-package"
   },
   "expo": {
@@ -29,11 +31,13 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.828.0",
     "@aws-sdk/credential-providers": "^3.828.0",
+    "@blazejkustra/react-native-alert": "^1.0.0",
     "@expo/ui": "~56.0.13",
     "@futurejj/react-native-checkbox": "^1.0.4",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "^5.2.0",
+    "@react-native-vector-icons/ionicons": "^13.1.1",
     "@rneui/themed": "^4.0.0-rc.8",
     "@rnrepo/expo-config-plugin": "^0.3.1",
     "@rntp/player": "^5.0.0",
@@ -98,7 +102,6 @@
     "react-native-svg": "15.15.4",
     "react-native-swipeable-item": "^2.0.9",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0",
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.8.3",

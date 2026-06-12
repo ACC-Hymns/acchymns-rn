@@ -4,7 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useContext, useState } from 'react';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { HymnalContext } from '@/constants/context';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 import { Pressable } from 'react-native-gesture-handler';
 import { request_client, set } from '@/scripts/broadcast';
 import { useBookData } from '@/hooks/useBookData';

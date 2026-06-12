@@ -3,13 +3,13 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, T
 import { TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function SettingsScreen() {
 
@@ -47,7 +47,7 @@ export default function SettingsScreen() {
                     >
                         <View style={styles.settingsItem}>
                             <StyledText style={styles.settingsText}>{i18n.t('help')}</StyledText>
-                            <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                            <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                         </View>
                     </TouchableHighlight>
                 </View>
@@ -77,7 +77,7 @@ export default function SettingsScreen() {
                     >
                         <View style={styles.settingsItem}>
                             <StyledText style={styles.settingsText}>{i18n.t('preferences')}</StyledText>
-                            <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                            <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                         </View>
                     </TouchableHighlight>
                 </View>

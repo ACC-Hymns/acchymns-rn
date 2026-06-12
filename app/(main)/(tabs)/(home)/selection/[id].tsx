@@ -8,13 +8,12 @@ import { getBookIndex, getSongData } from '@/scripts/hymnals';
 import { Gesture, GestureHandlerRootView, Pressable, ScrollView } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { HymnalMoreMenu } from '@/components/HymnalMoreMenu';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import StyledText from '@/components/StyledText';
 import { useSongListData } from '@/hooks/useSongListData';
 import { useBookData } from '@/hooks/useBookData';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();

@@ -4,7 +4,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Asset } from "expo-asset";
 import { Clef, getNotePng, Note } from "@/constants/assets";
 import { Colors } from "@/constants/Colors";
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 import { isIOS26DesignEnabled } from "@/constants/iosDesign";
 
 const NoteButton = ({ note, clef, onClick }: { note: Note, clef: Clef, onClick: () => void }) => {

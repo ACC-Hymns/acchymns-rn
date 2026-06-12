@@ -4,9 +4,8 @@ import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constan
 import { getSongData } from '@/scripts/hymnals';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, TouchableWithoutFeedback, Keyboard, Pressable } from 'react-native';
+import { Text, StyleSheet, SafeAreaView, ScrollView, View, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, TouchableWithoutFeedback, Keyboard, Pressable, TextInput } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import { Divider, Icon } from 'react-native-elements'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import React from 'react';
@@ -14,12 +13,10 @@ import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import GenericGradientButton from '@/components/GenericGradientButton';
-import { SearchBar } from '@rneui/themed';
 import { fontFamily } from '@/constants/assets';
 import * as ContextMenu from 'zeego/context-menu'
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { BottomSheetModal } from '@expo/ui/community/bottom-sheet';
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
 
 interface SongItemWithMenuProps {
@@ -72,7 +69,7 @@ const SongItemWithMenu = ({ item, isBookmarked, onBookmarkToggle, theme }: SongI
                 >
                     <ContextMenu.ItemTitle>{isBookmarked ? 'Remove Bookmark' : 'Add Bookmark'}</ContextMenu.ItemTitle>
                     <ContextMenu.ItemIcon ios={{ name: 'bookmark' }}>
-                        <IconSymbol name='bookmark' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                        <Ionicons name='bookmark-outline' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
                     </ContextMenu.ItemIcon>
                 </ContextMenu.Item>
             </ContextMenu.Content>
@@ -89,7 +86,6 @@ export default function SearchScreen() {
     const [loading, setLoading] = useState(true);
     const context = useContext(HymnalContext);
     const [songList, setSongList] = useState<SongSearchInfo[]>([]);
-    const [searchBarFocused, setSearchBarFocused] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
     const i18n = useI18n();
 
@@ -356,34 +352,44 @@ export default function SearchScreen() {
                                 <View style={styles.titleContainer}>
                                     <StyledText style={styles.textStyle}>{i18n.t('search')}</StyledText>
                                 </View>
-                                <SearchBar
-                                    value={search}
-                                    onChangeText={setSearch}
-                                    onFocus={() => {
-                                        setSearchBarFocused(true);
-                                    }}
-                                    onCancel={() => {
-                                        setSearchBarFocused(false);
-                                    }}
-                                    onEndEditing={() => {
-                                        // when user searches, add to search history
-                                        if (search.trim().length > 0) {
-                                            addToSearchHistory(search);
-                                        } else {
-                                            // cancel the search
-                                            Keyboard.dismiss();
-                                        }
-                                    }}
-                                    inputStyle={styles.searchBarInput}
-                                    containerStyle={styles.searchBarContainer}
-                                    inputContainerStyle={styles.searchBarInnerContainer}
-                                    placeholder={i18n.t('search')}
-                                    placeholderTextColor={Colors[theme].fadedText}
-                                    searchIcon={<Icon name="search" type="ionicon" color={Colors[theme].fadedText} size={18} />} // Custom search icon
-                                    cancelIcon={<Icon name="close" type="ionicon" color={Colors[theme].fadedText} size={18} />} // Custom search icon
-                                    round={true}
-                                    showCancel={true}
-                                />
+                                <View style={styles.searchBarContainer}>
+                                    <View style={styles.searchBarInnerContainer}>
+                                        <Ionicons
+                                            name="search"
+                                            size={18}
+                                            color={Colors[theme].fadedText}
+                                        />
+                                        <TextInput
+                                            value={search}
+                                            onChangeText={setSearch}
+                                            onEndEditing={() => {
+                                                if (search.trim().length > 0) {
+                                                    addToSearchHistory(search);
+                                                } else {
+                                                    Keyboard.dismiss();
+                                                }
+                                            }}
+                                            style={styles.searchBarInput}
+                                            placeholder={i18n.t('search')}
+                                            placeholderTextColor={Colors[theme].fadedText}
+                                            returnKeyType="search"
+                                            clearButtonMode="never"
+                                        />
+                                        {search.length > 0 && (
+                                            <Pressable
+                                                hitSlop={8}
+                                                onPress={() => setSearch('')}
+                                                accessibilityLabel={i18n.t('clear')}
+                                            >
+                                                <Ionicons
+                                                    name="close-circle"
+                                                    size={18}
+                                                    color={Colors[theme].fadedText}
+                                                />
+                                            </Pressable>
+                                        )}
+                                    </View>
+                                </View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
 
                                     <TouchableOpacity
@@ -446,7 +452,7 @@ export default function SearchScreen() {
                                                     <StyledText style={[styles.clearButton, { color: clearPressed ? Colors[theme].primaryFaded : Colors[theme].primary }]}>{i18n.t('clear')}</StyledText>
                                                 </Pressable>
                                             </View>
-                                            <Divider />
+                                            <View style={styles.searchHistoryDivider} />
                                             <FlatList
                                                 style={{ maxHeight: 300 }}
                                                 scrollEnabled={scrollEnabled}
@@ -524,24 +530,31 @@ function makeStyles(theme: "light" | "dark") {
             borderRadius: 16,
         },
         searchBarContainer: {
-            backgroundColor: Colors[theme].background,
-            marginHorizontal: -8,
-            borderBottomColor: 'transparent',
-            borderTopColor: 'transparent',
+            marginBottom: 8,
         },
         searchBarInnerContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
             backgroundColor: Colors[theme].searchBarBackground,
             height: 38,
-            padding: Platform.OS === 'ios' ? 2 : 0,
+            borderRadius: 19,
+            paddingHorizontal: 10,
+            paddingVertical: Platform.OS === 'ios' ? 2 : 0,
         },
         searchBarInput: {
+            flex: 1,
             color: Colors[theme].text,
             fontFamily: fontFamily.regular,
             fontSize: 18,
             minHeight: 38,
             padding: 0,
             margin: 0,
-            borderWidth: 0
+        },
+        searchHistoryDivider: {
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: Colors[theme].divider,
+            marginVertical: 4,
         },
         rowItem: {
             height: 100,

@@ -5,13 +5,23 @@
     "version": "5.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
-    "scheme": "myapp",
+    "scheme": "acchymns",
     "userInterfaceStyle": "automatic",
     "owner": "acc-hymns",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ChristopherW.acchmns",
       "appleTeamId": "AVS62V4S24",
+      "associatedDomains": [
+        "applinks:acchymns.app",
+        "applinks:www.acchymns.app"
+      ],
+      "entitlements": {
+        "com.apple.developer.associated-domains": [
+          "applinks:acchymns.app",
+          "applinks:www.acchymns.app"
+        ]
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAllowsArbitraryLoads": true,
@@ -25,8 +35,6 @@
         "light": "./assets/icons/ios-light.png",
         "tinted": "./assets/icons/ios-tinted.png"
       },
-      "usesAppleSignIn": true,
-      "googleServicesFile": "./GoogleService-Info.plist",
       "deploymentTarget": "16.4"
     },
     "android": {
@@ -34,14 +42,35 @@
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "acchymns.app",
+              "pathPrefix": "/"
+            },
+            {
+              "scheme": "https",
+              "host": "www.acchymns.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "package": "com.ChristopherW.acchmns",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.ChristopherW.acchmns"
     },
     "web": {
       "bundler": "metro",
@@ -134,13 +163,16 @@
       "expo-image",
       "expo-sharing",
       "expo-status-bar",
-      "@rnrepo/expo-config-plugin"
+      "@rnrepo/expo-config-plugin",
+      "@react-native-vector-icons/ionicons"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "origin": "https://acchymns.app"
+      },
       "eas": {
         "projectId": "dce778e0-a059-408f-a380-56d56a777daf"
       }

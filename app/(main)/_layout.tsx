@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { useI18n } from "@/hooks/useI18n";
-import Ionicons from 'react-native-vector-icons/ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons'
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { router, Stack } from "expo-router";
 import React from "react";

@@ -4,7 +4,6 @@ import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useLayoutEffect } from 'react';
 import { Divider } from 'react-native-elements';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
 import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
 import PostHog, { usePostHog } from 'posthog-react-native';
@@ -13,6 +12,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function HelpScreen() {
 
@@ -66,7 +66,7 @@ export default function HelpScreen() {
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('reportBug')}</StyledText>
-                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                <Ionicons name="link" size={14} color={Colors[theme].fadedIcon} />
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
@@ -78,7 +78,7 @@ export default function HelpScreen() {
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('requestBook')}</StyledText>
-                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                <Ionicons name="link" size={14} color={Colors[theme].fadedIcon} />
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
@@ -90,7 +90,7 @@ export default function HelpScreen() {
                         >
                             <View style={styles.settingsItem}>
                                 <StyledText style={styles.settingsText}>{i18n.t('privacyPolicy')}</StyledText>
-                                <IconSymbol name="link" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                <Ionicons name="link" size={14} color={Colors[theme].fadedIcon} />
                             </View>
                         </TouchableHighlight>
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />

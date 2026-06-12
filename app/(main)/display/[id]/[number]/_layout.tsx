@@ -2,9 +2,9 @@ import { Colors } from "@/constants/Colors";
 import { router, Stack } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { useI18n } from "@/hooks/useI18n";
-import { IconSymbol } from "@/components/ui/IconSymbol.ios";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { isIOS26DesignEnabled } from "@/constants/iosDesign";
+import Ionicons from "@react-native-vector-icons/ionicons";
 
 export default function DisplayLayout() {
     const theme = useColorScheme();
@@ -57,10 +57,9 @@ export default function DisplayLayout() {
 
                         headerLeft: () => (
                             <TouchableOpacity hitSlop={10} onPress={() => router.back()} style={{ padding: 10 }}>
-                                <IconSymbol
-                                    name="chevron.left"
+                                <Ionicons
+                                    name="chevron-back-outline"
                                     size={24}
-                                    weight="medium"
                                     color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                                 />
                             </TouchableOpacity>

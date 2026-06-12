@@ -4,13 +4,13 @@ import { TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import React, { useContext, useCallback, useEffect, useLayoutEffect } from 'react';
 import { Divider } from 'react-native-elements';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { HymnalContext } from '@/constants/context';
 import { getLanguageName } from '@/constants/localization';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function PreferencesScreen() {
 
@@ -82,7 +82,7 @@ export default function PreferencesScreen() {
                                 <StyledText style={styles.settingsText}>{i18n.t('language')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                     <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{languageName(context?.languageOverride ?? 'en')}</StyledText>
-                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
@@ -99,7 +99,7 @@ export default function PreferencesScreen() {
                                 <StyledText style={styles.settingsText}>{i18n.t('theme')}</StyledText>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                     <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{themeName(context?.themeOverride ?? 'system')}</StyledText>
-                                    <IconSymbol name="chevron.right" size={14} weight='bold' color={Colors[theme].fadedIcon} />
+                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
                                 </View>
                             </View>
                         </TouchableHighlight>
