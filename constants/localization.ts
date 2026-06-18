@@ -38,6 +38,7 @@ const translations = {
         topResults: 'Top Results',
         filters: 'Filters',
         allHymnals: 'All Hymnals',
+        discoverEnglishOnlyNotice: 'The discover feature is currently only supported in English.',
 
         // Broadcast screen
         broadcast: 'Broadcast',
@@ -174,6 +175,7 @@ const translations = {
         topResults: 'Mejores Resultados',
         filters: 'Filtros',
         allHymnals: 'Todos los Himnarios',
+        discoverEnglishOnlyNotice: 'La función de descubrir actualmente solo está disponible en inglés.',
 
         home: 'Inicio',
         noHymnals: 'No hay Himnarios',
@@ -284,6 +286,7 @@ const translations = {
         topResults: 'Meilleurs Résultats',
         filters: 'Filtres',
         allHymnals: 'Tous les Hymnaires',
+        discoverEnglishOnlyNotice: 'La fonctionnalité Découvrir est actuellement disponible uniquement en anglais.',
 
         home: 'Accueil',
         noHymnals: 'Aucun Livre de Hymnes',
@@ -395,6 +398,7 @@ const translations = {
         topResults: 'Top-Ergebnisse',
         filters: 'Filter',
         allHymnals: 'Alle Gesangbücher',
+        discoverEnglishOnlyNotice: 'Die Entdecken-Funktion wird derzeit nur auf Englisch unterstützt.',
 
         home: 'Startseite',
         noHymnals: 'Keine Gesangbücher',
@@ -505,6 +509,7 @@ const translations = {
         topResults: 'Najbolji Rezultati',
         filters: 'Filtri',
         allHymnals: 'Svi Himnari',
+        discoverEnglishOnlyNotice: 'Funkcija otkrivanja je trenutno podržana samo na engleskom jeziku.',
 
         home: 'Početna',
         noHymnals: 'Nema pesmarica',
@@ -615,6 +620,7 @@ const translations = {
         topResults: 'Legjobb találatok',
         filters: 'Szűrők',
         allHymnals: 'Összes énekeskönyv',
+        discoverEnglishOnlyNotice: 'A felfedezés funkció jelenleg csak angol nyelven támogatott.',
 
         home: 'Kezdőlap',
         noHymnals: 'Nincsenek énekeskönyvek',
@@ -725,6 +731,7 @@ const translations = {
         topResults: 'トップ結果',
         filters: '聖歌集を絞り込む',
         allHymnals: 'すべての聖歌集',
+        discoverEnglishOnlyNotice: 'Discover機能は現在、英語のみサポートされています。',
 
         home: 'ホーム',
         noHymnals: '賛美歌集なし',
@@ -835,6 +842,7 @@ const translations = {
         topResults: 'Principais Resultados',
         filters: 'Filtros',
         allHymnals: 'Todos os Hinários',
+        discoverEnglishOnlyNotice: 'O recurso Descobrir atualmente é compatível apenas com inglês.',
 
         home: 'Início',
         noHymnals: 'Sem hinários',

@@ -781,6 +781,9 @@ export default function DisplayScreen() {
 
     const applyWebViewHeaderCompensation = useCallback(() => {
         const topPadding = !isIos26OrNewer ? visibleHeaderBarHeight : 0;
+        // Keep the last lines of the song from sitting under the floating "back to top" button.
+        // Button is 48px tall and sits 24px from bottom; add a little extra breathing room.
+        const bottomPadding = 40;
         const js = `
         (function() {
             const id = '__acchymns_header_compensation';
@@ -790,7 +793,7 @@ export default function DisplayScreen() {
                 styleTag.id = id;
                 document.head.appendChild(styleTag);
             }
-            styleTag.textContent = 'html, body { padding-top: ${topPadding}px !important; box-sizing: border-box; }';
+            styleTag.textContent = 'html, body { padding-top: ${topPadding}px !important; padding-bottom: ${bottomPadding}px !important; box-sizing: border-box; }';
         })();
         true;
         `;

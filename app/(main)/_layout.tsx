@@ -4,7 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons'
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { router, Stack } from "expo-router";
 import React from "react";
-import { Pressable, useColorScheme } from "react-native";
+import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function MainStackLayout() {
     const effectiveTheme: 'light' | 'dark' = useColorScheme() === 'dark' ? 'dark' : 'light';

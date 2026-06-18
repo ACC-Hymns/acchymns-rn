@@ -123,6 +123,14 @@ export default function BroadcastOptionsScreen() {
         await set(request_client(), context?.broadcastingChurch, number, book.name?.medium || "", selectedVerses, book.primaryColor || "#000000");
     }
 
+    async function clearScreen() {
+        if (!context?.broadcastingChurch) {
+            return;
+        }
+
+        await set(request_client(), context.broadcastingChurch, "", "", [-1], "");
+    }
+
     const renderItem = ({ item }: ListRenderItemInfo<string>) => (
         <TouchableOpacity
             style={{
@@ -248,24 +256,37 @@ export default function BroadcastOptionsScreen() {
                             ))}
                         </View>
 
-                        <TouchableOpacity
-                            style={styles.sendButton}
-                            onPress={() => {
-                                if(selectedHymnal.length < 1)
-                                    return;
-                                if(songInput.length < 1)
-                                    return;
+                        <View style={styles.actionButtonRow}>
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={() => {
+                                    if(selectedHymnal.length < 1)
+                                        return;
+                                    if(songInput.length < 1)
+                                        return;
 
-                                broadcast_song_number()
-                            }}
-                            disabled={selectedHymnal.length < 1 || songInput.length < 1}
-                        >
-                            <Ionicons
-                                name='send'
-                                size={18}
-                                color='white'
-                            />
-                        </TouchableOpacity>
+                                    broadcast_song_number()
+                                }}
+                                disabled={selectedHymnal.length < 1 || songInput.length < 1}
+                            >
+                                <Ionicons
+                                    name='send'
+                                    size={18}
+                                    color='white'
+                                />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.clearButton}
+                                onPress={clearScreen}
+                            >
+                                <Ionicons
+                                    name='trash-outline'
+                                    size={18}
+                                    color='white'
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </KeyboardAvoidingView >
             </TouchableWithoutFeedback>
@@ -276,6 +297,29 @@ export default function BroadcastOptionsScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        actionButtonRow: {
+            flexDirection: 'column',
+            gap: 12,
+            marginTop: 40,
+            alignItems: 'center',
+            width: '100%',
+        },
+        clearButton: {
+            backgroundColor: Colors[theme].destructive,
+            padding: 15,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '25%',
+        },
+        actionButton: {
+            backgroundColor: Colors[theme]['primary'],
+            padding: 15,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '25%',
+        },
         sendButton: {
             backgroundColor: Colors[theme]['primary'],
             padding: 15,

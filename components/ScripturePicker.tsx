@@ -1,5 +1,5 @@
 import { BIBLE_BOOKS, BibleBook, Reading } from '@/constants/bible';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -15,10 +15,34 @@ import { useI18n } from '@/hooks/useI18n';
 import { Colors } from '@/constants/Colors';
 import Ionicons from '@react-native-vector-icons/ionicons'
 
+export type ScriptureSelection = {
+    bookName: string;
+    chapter: number;
+    rangeStart: number;
+    rangeEnd: number | null;
+};
+
 interface ScripturePickerProps {
     send: (input: Reading) => void;
+    value?: ScriptureSelection | null;
+    onValueChange?: (value: ScriptureSelection | null) => void;
 }
-export default function ScripturePicker({ send }: ScripturePickerProps) {
+
+function findBookByName(name: string): BibleBook | undefined {
+    return BIBLE_BOOKS.find((book) => book.name === name);
+}
+
+function selectionToReading(selection: ScriptureSelection): Reading {
+    return {
+        book: selection.bookName,
+        chapter_start: String(selection.chapter),
+        chapter_end: String(selection.chapter),
+        verse_start: String(selection.rangeStart),
+        verse_end: selection.rangeEnd != null ? String(selection.rangeEnd) : undefined,
+    };
+}
+
+export default function ScripturePicker({ send, value, onValueChange }: ScripturePickerProps) {
 
     const context = useContext(HymnalContext);
 
@@ -26,26 +50,72 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
     const styles = makeStyles(theme as any);
     const i18n = useI18n();
 
+    const isControlled = onValueChange !== undefined;
+
+    useEffect(() => {
+        if (!isControlled) {
+            return;
+        }
+
+        if (!value) {
+            setSelectedBook(null);
+            setSelectedChapter(null);
+            setRangeStart(null);
+            setRangeEnd(null);
+            return;
+        }
+
+        setSelectedBook(findBookByName(value.bookName) ?? null);
+        setSelectedChapter(value.chapter);
+        setRangeStart(value.rangeStart);
+        setRangeEnd(value.rangeEnd);
+    }, [isControlled, value]);
+
     const [modalVisible, setModalVisible] = useState(false);
 
     const [step, setStep] = useState<'books' | 'chapters' | 'verses'>('books');
-    const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
-    const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+    const [selectedBook, setSelectedBook] = useState<BibleBook | null>(
+        value ? findBookByName(value.bookName) ?? null : null,
+    );
+    const [selectedChapter, setSelectedChapter] = useState<number | null>(value?.chapter ?? null);
 
-    const [rangeStart, setRangeStart] = useState<number | null>(null);
-    const [rangeEnd, setRangeEnd] = useState<number | null>(null);
+    const [rangeStart, setRangeStart] = useState<number | null>(value?.rangeStart ?? null);
+    const [rangeEnd, setRangeEnd] = useState<number | null>(value?.rangeEnd ?? null);
+
+    const updateSelection = (
+        book: BibleBook | null,
+        chapter: number | null,
+        start: number | null,
+        end: number | null,
+    ) => {
+        setSelectedBook(book);
+        setSelectedChapter(chapter);
+        setRangeStart(start);
+        setRangeEnd(end);
+
+        if (!onValueChange) {
+            return;
+        }
+
+        if (book && chapter != null && start != null) {
+            onValueChange({
+                bookName: book.name,
+                chapter,
+                rangeStart: start,
+                rangeEnd: end,
+            });
+        } else if (!book && chapter == null && start == null && end == null) {
+            onValueChange(null);
+        }
+    };
 
     const handleVersePress = (verse: number) => {
         if (rangeStart === null || (rangeStart !== null && rangeEnd !== null)) {
-            setRangeStart(verse);
-            setRangeEnd(null);
+            updateSelection(selectedBook, selectedChapter, verse, null);
+        } else if (verse < rangeStart) {
+            updateSelection(selectedBook, selectedChapter, verse, rangeStart);
         } else {
-            if (verse < rangeStart) {
-                setRangeStart(verse);
-                setRangeEnd(rangeStart);
-            } else {
-                setRangeEnd(verse);
-            }
+            updateSelection(selectedBook, selectedChapter, rangeStart, verse);
         }
     };
 
@@ -79,11 +149,25 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
                 <TouchableOpacity
                     style={styles.input}
                     onPress={() => {
+                        if (isControlled) {
+                            if (value) {
+                                setSelectedBook(findBookByName(value.bookName) ?? null);
+                                setSelectedChapter(value.chapter);
+                                setRangeStart(value.rangeStart);
+                                setRangeEnd(value.rangeEnd);
+                            } else {
+                                setSelectedBook(null);
+                                setSelectedChapter(null);
+                                setRangeStart(null);
+                                setRangeEnd(null);
+                            }
+                        }
+
                         setModalVisible(true);
 
-                        if (rangeStart) {
+                        if (value?.rangeStart ?? rangeStart) {
                             setStep('verses')
-                        } else if (selectedChapter) {
+                        } else if (value?.chapter ?? selectedChapter) {
                             setStep('chapters')
                         } else {
                             setStep('books')
@@ -96,13 +180,16 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
                     <TouchableOpacity
                         style={styles.sendButton}
                         onPress={() => {
-                            send({
-                                book: selectedBook?.name,
-                                chapter_start: selectedChapter || "",
-                                chapter_end: selectedChapter || "",
-                                verse_start: rangeStart || "",
-                                verse_end: rangeEnd || undefined
-                            } as Reading);
+                            if (!selectedBook || selectedChapter == null || rangeStart == null) {
+                                return;
+                            }
+
+                            send(selectionToReading({
+                                bookName: selectedBook.name,
+                                chapter: selectedChapter,
+                                rangeStart,
+                                rangeEnd,
+                            }));
                         }}
                     >
                         <Ionicons
@@ -124,8 +211,9 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
                                 if (step === 'chapters') setStep('books');
                                 else if (step === 'verses') setStep('chapters');
                                 else if (step === 'books') setModalVisible(false);
-                                setRangeStart(null);
-                                setRangeEnd(null);
+                                if (step === 'verses') {
+                                    updateSelection(selectedBook, selectedChapter, null, null);
+                                }
                             }}
                             hitSlop={10}>
                             <Ionicons
@@ -167,7 +255,7 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
                                 <TouchableOpacity
                                     style={styles.bookTile}
                                     onPress={() => {
-                                        setSelectedBook(item);
+                                        updateSelection(item, null, null, null);
                                         setStep('chapters');
                                     }}
                                 >
@@ -194,7 +282,7 @@ export default function ScripturePicker({ send }: ScripturePickerProps) {
                                     <TouchableOpacity
                                         style={styles.tile}
                                         onPress={() => {
-                                            setSelectedChapter(chapter);
+                                            updateSelection(selectedBook, chapter, null, null);
                                             setStep('verses');
                                         }}
                                     >

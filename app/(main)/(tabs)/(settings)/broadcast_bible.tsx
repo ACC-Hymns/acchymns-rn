@@ -1,20 +1,57 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, Platform } from 'react-native';
+import { StyleSheet, ScrollView, View } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { router, useNavigation, useRouter } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
-import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
-import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import StyledText from '@/components/StyledText';
-import axios from 'axios';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
-import ScripturePicker from '@/components/ScripturePicker';
+import ScripturePicker, { ScriptureSelection } from '@/components/ScripturePicker';
 import { Reading } from '@/constants/bible';
 import { request_client, set } from '@/scripts/broadcast';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from '@react-native-vector-icons/ionicons';
+
+const BIBLE_REFERENCES_KEY = 'broadcast_bible_references';
+const PICKER_COUNT = 5;
+
+function parseStoredReferences(raw: string | null): (ScriptureSelection | null)[] {
+    const empty = Array.from({ length: PICKER_COUNT }, () => null);
+
+    if (!raw) {
+        return empty;
+    }
+
+    try {
+        const parsed: unknown = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+            return empty;
+        }
+
+        return Array.from({ length: PICKER_COUNT }, (_, index) => {
+            const item = parsed[index];
+            if (
+                !item
+                || typeof item !== 'object'
+                || typeof item.bookName !== 'string'
+                || typeof item.chapter !== 'number'
+                || typeof item.rangeStart !== 'number'
+                || (item.rangeEnd !== null && typeof item.rangeEnd !== 'number')
+            ) {
+                return null;
+            }
+
+            return {
+                bookName: item.bookName,
+                chapter: item.chapter,
+                rangeStart: item.rangeStart,
+                rangeEnd: item.rangeEnd,
+            } satisfies ScriptureSelection;
+        });
+    } catch {
+        return empty;
+    }
+}
 
 export default function BroadcastBibleScreen() {
 
@@ -44,7 +81,26 @@ export default function BroadcastBibleScreen() {
     }, []);
     const context = useContext(HymnalContext);
 
-    const i18n = useI18n();
+    const [references, setReferences] = useState<(ScriptureSelection | null)[]>(
+        Array.from({ length: PICKER_COUNT }, () => null),
+    );
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        AsyncStorage.getItem(BIBLE_REFERENCES_KEY)
+            .then((stored) => setReferences(parseStoredReferences(stored)))
+            .catch((error) => console.error('Error loading bible references:', error))
+            .finally(() => setIsLoaded(true));
+    }, []);
+
+    useEffect(() => {
+        if (!isLoaded) {
+            return;
+        }
+
+        AsyncStorage.setItem(BIBLE_REFERENCES_KEY, JSON.stringify(references))
+            .catch((error) => console.error('Error saving bible references:', error));
+    }, [references, isLoaded]);
 
     async function handle_send(data: Reading) {
         if(!context)
@@ -64,16 +120,44 @@ export default function BroadcastBibleScreen() {
         await set(request_client(), context?.broadcastingChurch, top_text, "BIBLE", [], bottom_text);
     }
 
+    async function clearScreen() {
+        if (!context?.broadcastingChurch) {
+            return;
+        }
+
+        await set(request_client(), context.broadcastingChurch, "", "", [-1], "");
+    }
+
     return (
         <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
                 <ScrollView style={styles.scrollView}>
                     <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <ScripturePicker send={handle_send} />
-                        <ScripturePicker send={handle_send} />
-                        <ScripturePicker send={handle_send} />
-                        <ScripturePicker send={handle_send} />
-                        <ScripturePicker send={handle_send} />
+                        {references.map((reference, index) => (
+                            <ScripturePicker
+                                key={index}
+                                send={handle_send}
+                                value={reference}
+                                onValueChange={(value) => {
+                                    setReferences((current) => {
+                                        const next = [...current];
+                                        next[index] = value;
+                                        return next;
+                                    });
+                                }}
+                            />
+                        ))}
+
+                        <TouchableOpacity
+                            style={styles.clearButton}
+                            onPress={clearScreen}
+                        >
+                            <Ionicons
+                                name='trash-outline'
+                                size={18}
+                                color='white'
+                            />
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </View>
@@ -83,6 +167,15 @@ export default function BroadcastBibleScreen() {
 
 function makeStyles(theme: "light" | "dark") {
     return StyleSheet.create({
+        clearButton: {
+            backgroundColor: Colors[theme].destructive,
+            padding: 15,
+            marginTop: 20,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '25%',
+        },
         destructiveSettingsText: {
             fontSize: 18,
             fontWeight: '400',
@@ -140,8 +233,8 @@ function makeStyles(theme: "light" | "dark") {
             textAlign: 'center'
         },
         screenContainer: {
-            flex: 1, // Ensures the container takes up the full screen
-            backgroundColor: Colors[theme]['background'] // Dynamically set background color using useThemeColor
+            flex: 1,
+            backgroundColor: Colors[theme]['background']
         },
         titleContainer: {
             marginTop: 80,
@@ -162,7 +255,7 @@ function makeStyles(theme: "light" | "dark") {
         textStyle: {
             fontSize: 32,
             fontWeight: '500',
-            color: Colors[theme]['text'], // Dynamically set text color using useThemeColor
+            color: Colors[theme]['text'],
             fontFamily: 'Lato'
         },
     });

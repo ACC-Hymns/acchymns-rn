@@ -3,7 +3,7 @@ import { getLoadedFonts, useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import 'react-native-reanimated';
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { setBackgroundColorAsync } from 'expo-system-ui';
@@ -15,7 +15,6 @@ import { View } from 'react-native';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Colors } from '@/constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostHogProvider } from 'posthog-react-native'
 import { PostHogIdentity } from '@/components/PostHogIdentity';
 import { getOrCreateStableUserId } from '@/scripts/userIdentity';
@@ -28,7 +27,7 @@ import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
 import TrackPlayer from '@rntp/player';
 import { PlayerCommand } from '@rntp/player';
 import { BackgroundEvent, Event } from '@rntp/player';
-import { validate_token } from '@/scripts/broadcast';
+import { usePreferences } from '@/hooks/usePreferences';
 
 
 global.Buffer = Buffer;
@@ -114,75 +113,30 @@ export default function RootLayout() {
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
 
-    const [discoverPageVisited, setDiscoverPageVisited] = useState<boolean | null>(null);
-    const [legacyNumberGrouping, setLegacyNumberGrouping] = useState<boolean | null>(null);
-    const [languageOverride, setLanguageOverride] = useState<string | null>(null);
-    const [postHogOptedIn, setPostHogOptedIn] = useState<boolean | null>(null);
-    const [themeOverride, setThemeOverride] = useState<string | null>(null);
-    const [invertSheetMusic, setInvertSheetMusic] = useState<boolean | null>(null);
-    const [broadcastingToken, setBroadcastingToken] = useState<string | null>(null);
-    const [broadcastingChurch, setBroadcastingChurch] = useState<string | null>(null);
+    const {
+        discoverPageVisited,
+        setDiscoverPageVisited,
+        legacyNumberGrouping,
+        setLegacyNumberGrouping,
+        languageOverride,
+        setLanguageOverride,
+        postHogOptedIn,
+        setPostHogOptedIn,
+        themeOverride,
+        setThemeOverride,
+        invertSheetMusic,
+        setInvertSheetMusic,
+        broadcastingToken,
+        setBroadcastingToken,
+        broadcastingChurch,
+        setBroadcastingChurch,
+        resetPreferences,
+    } = usePreferences();
+
     const effectiveTheme: 'light' | 'dark' =
         themeOverride === 'light' || themeOverride === 'dark'
             ? themeOverride
             : (systemColorScheme ?? 'light');
-
-
-    const savePreferences = async () => {
-        try {
-            if (discoverPageVisited !== null)
-                await AsyncStorage.setItem('discoverPageVisited', discoverPageVisited.toString());
-
-            if (legacyNumberGrouping !== null)
-                await AsyncStorage.setItem('legacyNumberGrouping', legacyNumberGrouping.toString());
-
-            if (languageOverride !== null)
-                await AsyncStorage.setItem('languageOverride', languageOverride);
-
-            if (postHogOptedIn !== null)
-                await AsyncStorage.setItem('postHogOptedIn', postHogOptedIn.toString());
-
-            if (themeOverride !== null)
-                await AsyncStorage.setItem('themeOverride', themeOverride);
-
-            if (invertSheetMusic !== null)
-                await AsyncStorage.setItem('invertSheetMusic', invertSheetMusic.toString());
-
-            if (broadcastingToken !== null)
-                await AsyncStorage.setItem('broadcastingToken', broadcastingToken);
-
-            if (broadcastingChurch !== null)
-                await AsyncStorage.setItem('broadcastingChurch', broadcastingChurch);
-
-        } catch (error) {
-            console.error('Error saving preferences:', error);
-        }
-    }
-
-    const resetPreferences = async () => {
-        try {
-            await AsyncStorage.setItem('discoverPageVisited', "");
-            await AsyncStorage.setItem('legacyNumberGrouping', "");
-            await AsyncStorage.setItem('languageOverride', "");
-            await AsyncStorage.setItem('postHogOptedIn', "");
-            await AsyncStorage.setItem('themeOverride', "");
-            await AsyncStorage.setItem('invertSheetMusic', "");
-            await AsyncStorage.setItem('broadcastingToken', "");
-            await AsyncStorage.setItem('broadcastingChurch', "");
-
-            setDiscoverPageVisited(null);
-            setLegacyNumberGrouping(null);
-            setLanguageOverride(null);
-            setPostHogOptedIn(null);
-            setThemeOverride(null);
-            setInvertSheetMusic(null);
-            setBroadcastingToken(null);
-            setBroadcastingChurch(null);
-
-        } catch (error) {
-            console.error('Error saving preferences:', error);
-        }
-    }
 
     const deleteHymnal = async (book: string) => {
 
@@ -205,14 +159,6 @@ export default function RootLayout() {
             console.error("Failed to delete hymnal:", error);
         }
     }
-
-    // save preferences to async storage
-    useEffect(() => {
-
-
-
-        savePreferences();
-    }, [legacyNumberGrouping, languageOverride, postHogOptedIn, themeOverride, invertSheetMusic, discoverPageVisited, broadcastingToken, broadcastingChurch]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -246,7 +192,31 @@ export default function RootLayout() {
             resetPreferences,
             deleteHymnal
         };
-    }, [BOOK_DATA, SET_BOOK_DATA, onLayoutRootView, downloadProgressValues, setDownloadProgressValues, legacyNumberGrouping, setLegacyNumberGrouping, languageOverride, setLanguageOverride, postHogOptedIn, setPostHogOptedIn, invertSheetMusic, setInvertSheetMusic, themeOverride, setThemeOverride, discoverPageVisited, setDiscoverPageVisited, broadcastingToken, setBroadcastingToken, broadcastingChurch, setBroadcastingChurch]);
+    }, [
+        BOOK_DATA,
+        SET_BOOK_DATA,
+        onLayoutRootView,
+        downloadProgressValues,
+        setDownloadProgressValues,
+        discoverPageVisited,
+        setDiscoverPageVisited,
+        legacyNumberGrouping,
+        setLegacyNumberGrouping,
+        languageOverride,
+        setLanguageOverride,
+        postHogOptedIn,
+        setPostHogOptedIn,
+        themeOverride,
+        setThemeOverride,
+        invertSheetMusic,
+        setInvertSheetMusic,
+        broadcastingToken,
+        setBroadcastingToken,
+        broadcastingChurch,
+        setBroadcastingChurch,
+        resetPreferences,
+        deleteHymnal,
+    ]);
 
     // Use shared I18n hook
     const i18n = useI18n();
@@ -254,70 +224,11 @@ export default function RootLayout() {
 
     useEffect(() => {
 
-        // Load preferences from async storage - batch operations
         getOrCreateStableUserId()
             .then(setStableUserId)
             .catch((error) => {
                 console.error('Error loading stable user id:', error);
             });
-
-        const loadPreferences = async () => {
-            try {
-                const [
-                    discoverPageVisited,
-                    legacyNumberGrouping,
-                    languageOverride,
-                    postHogOptedIn,
-                    themeOverride,
-                    invertSheetMusic,
-                    broadcastingToken,
-                    broadcastingChurch
-                ] = await Promise.all([
-                    AsyncStorage.getItem('discoverPageVisited'),
-                    AsyncStorage.getItem('legacyNumberGrouping'),
-                    AsyncStorage.getItem('languageOverride'),
-                    AsyncStorage.getItem('postHogOptedIn'),
-                    AsyncStorage.getItem('themeOverride'),
-                    AsyncStorage.getItem('invertSheetMusic'),
-                    AsyncStorage.getItem('broadcastingToken'),
-                    AsyncStorage.getItem('broadcastingChurch')
-                ]);
-
-                if (discoverPageVisited !== null)
-                    setDiscoverPageVisited(discoverPageVisited === 'true');
-                if (legacyNumberGrouping !== null)
-                    setLegacyNumberGrouping(legacyNumberGrouping === 'true');
-                if (languageOverride !== null)
-                    setLanguageOverride(languageOverride);
-                if (postHogOptedIn !== null)
-                    setPostHogOptedIn(postHogOptedIn === 'true');
-                if (themeOverride !== null)
-                    setThemeOverride(themeOverride);
-                if (invertSheetMusic !== null)
-                    setInvertSheetMusic(invertSheetMusic === 'true');
-                if (broadcastingChurch !== null)
-                    setBroadcastingChurch(broadcastingChurch);
-
-                // Validate broadcasting token
-                if (broadcastingToken !== null) {
-                    try {
-                        const response = await validate_token(broadcastingToken);
-                        if (response.status == 200) {
-                            setBroadcastingToken(broadcastingToken);
-                        } else {
-                            setBroadcastingToken(null);
-                        }
-                    } catch (error) {
-                        console.error('Error validating token:', error);
-                        setBroadcastingToken(null);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading preferences:', error);
-            }
-        };
-
-        loadPreferences();
 
         const data = loadHymnals();
         data.then((data) => {

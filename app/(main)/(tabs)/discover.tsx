@@ -57,6 +57,8 @@ export default function DiscoverScreen() {
     const [isNavigating, setIsNavigating] = useState(false);
 
     const i18n = useI18n();
+    const selectedLanguageCode = (i18n.locale ?? 'en').split('-')[0].toLowerCase();
+    const showEnglishOnlyNotice = selectedLanguageCode !== 'en';
 
     function stripSearchText(text: string) {
         return text
@@ -257,12 +259,12 @@ export default function DiscoverScreen() {
                                 enabled={prompt.trim().length > 0 || loading}
                             >
                                 <View style={styles.promptBox}>
+                                    {showEnglishOnlyNotice && (
+                                        <StyledText style={styles.discoverEnglishNotice}>
+                                            {i18n.t('discoverEnglishOnlyNotice')}
+                                        </StyledText>
+                                    )}
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Ionicons
-                                            name="sparkles"
-                                            size={18}
-                                            color={Colors[theme]['fadedText']}
-                                        />
                                         <TextInput
                                             style={styles.promptInput}
                                             placeholderTextColor={Colors[theme].fadedText}
@@ -509,6 +511,17 @@ function makeStyles(theme: "light" | "dark") {
             fontFamily: 'Lato',
             textAlign: 'center'
         },
+        discoverEnglishNotice: {
+            fontSize: 13,
+            color: Colors[theme]['fadedText'],
+            textAlign: 'center',
+            marginTop: 10,
+            marginBottom: 2,
+            opacity: 0.85,
+            fontFamily: fontFamily.regular,
+            width: '80%',
+            alignSelf: 'center',
+        },
         promptBox: {
             backgroundColor: Colors[theme]['settingsButton'],
             borderRadius: 16,
@@ -556,8 +569,7 @@ function makeStyles(theme: "light" | "dark") {
         promptInput: {
             height: 40,
             borderColor: Colors[theme]['text'],
-            margin: 12,
-            paddingLeft: 10,
+            marginVertical: 12,
             color: Colors[theme]['text'],
             width: '100%',
             fontSize: 16,
