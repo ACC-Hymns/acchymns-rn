@@ -19,6 +19,7 @@ export default function StyledText({
         <Text
             style={[styles.text, { fontFamily: font_family }, style]}
             {...props}
+            maxFontSizeMultiplier={1.15}
         >
             {children}
         </Text>

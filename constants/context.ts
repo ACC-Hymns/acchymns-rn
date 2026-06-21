@@ -28,9 +28,12 @@ interface HymnalContextType {
     deleteHymnal?: (book: string) => Promise<void>;
     resetPreferences: () => Promise<void>;
 
-    downloadProgressValues: Record<string, number>;
     setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>
 }
 
 export const HymnalContext = createContext<HymnalContextType | undefined>(undefined);
+
+/** Separate from HymnalContext so frequent progress updates don't re-render the whole app. */
+export const DownloadProgressContext = createContext<Record<string, number>>({});
+
 export type { HymnalContextType };

@@ -1,8 +1,7 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useContext, useState } from 'react';
-import * as ScreenOrientation from 'expo-screen-orientation';
+import { Text, StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useContext, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { Pressable } from 'react-native-gesture-handler';
@@ -11,26 +10,21 @@ import { useBookData } from '@/hooks/useBookData';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
 
+const VERSE_GRID_COLUMNS = 8;
+
 export default function BroadcastPanel() {
 
     const params = useLocalSearchParams<{ id: string, number: string }>();
     const theme = useColorScheme() ?? 'light';
-    const styles = makeStyles(theme as any);
+    const { width, height } = useWindowDimensions();
+    const isHorizontal = width > height;
+    const styles = makeStyles(theme as any, isHorizontal);
     const router = useRouter();
     const context = useContext(HymnalContext);
     const book = useBookData(params.id, context);
     const isLiquidGlass = isIOS26DesignEnabled();
 
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
-
-    useFocusEffect(
-        useCallback(() => {
-            void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-            return () => {
-                void ScreenOrientation.unlockAsync();
-            };
-        }, []),
-    );
 
     async function broadcast_song_number() {
         if (!book)
@@ -51,6 +45,18 @@ export default function BroadcastPanel() {
             flex: 1,
             backgroundColor: isLiquidGlass ? 'transparent' : Colors[theme]['background'],
         }}>
+            {isHorizontal && (
+                <View style={styles.sheetCloseButtonContainer} pointerEvents="box-none">
+                    <TouchableOpacity
+                        style={styles.sheetCloseButton}
+                        onPress={() => router.back()}
+                        activeOpacity={0.9}
+                        hitSlop={8}
+                    >
+                        <Ionicons name="close" size={22} color={Colors[theme].icon} />
+                    </TouchableOpacity>
+                </View>
+            )}
             <Pressable
                 key="all"
                 style={[styles.verseBubble, styles.topVerseBubble, selectedVerses[0] === -2 && styles.selectedVerseBubble]}
@@ -66,7 +72,7 @@ export default function BroadcastPanel() {
                     All Verses
                 </Text>
             </Pressable>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <View style={styles.verseGrid}>
                 {Array.from({ length: 15 }, (_, i) => (
                     <Pressable
                         key={i + 1}
@@ -90,7 +96,7 @@ export default function BroadcastPanel() {
             </View>
 
             <TouchableOpacity
-                style={styles.sendButton}
+                style={[styles.sendButton, isHorizontal && styles.sendButtonHorizontal]}
                 onPress={() => {
                     broadcast_song_number();
                 }}
@@ -105,8 +111,23 @@ export default function BroadcastPanel() {
     );
 }
 
-function makeStyles(theme: "light" | "dark") {
+function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
+    const verseSize = isHorizontal ? 48 : 56;
+    const verseMargin = isHorizontal ? 4 : 8;
+
     return StyleSheet.create({
+        sheetCloseButtonContainer: {
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 1,
+        },
+        sheetCloseButton: {
+            width: 48,
+            height: 48,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
         sendButton: {
             backgroundColor: Colors[theme]['primary'],
             padding: 15,
@@ -116,11 +137,24 @@ function makeStyles(theme: "light" | "dark") {
             alignItems: 'center',
             width: '25%'
         },
+        sendButtonHorizontal: {
+            margin: 16,
+        },
+        verseGrid: isHorizontal ? {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            width: VERSE_GRID_COLUMNS * (verseSize + verseMargin * 2),
+            justifyContent: 'center',
+        } : {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+        },
         verseBubble: {
-            width: 56,
-            height: 56,
-            margin: 8,
-            borderRadius: 28,
+            width: verseSize,
+            height: verseSize,
+            margin: verseMargin,
+            borderRadius: verseSize / 2,
             backgroundColor: Colors[theme]['settingsButton'],
             alignItems: 'center',
             justifyContent: 'center',
@@ -129,8 +163,8 @@ function makeStyles(theme: "light" | "dark") {
             overflow: 'hidden',
         },
         topVerseBubble: {
-            width: 128,
-            marginTop: 24,
+            width: isHorizontal ? 112 : 128,
+            marginTop: isHorizontal ? 8 : 24,
         },
         selectedVerseBubble: {
             borderColor: Colors[theme]['primary'],

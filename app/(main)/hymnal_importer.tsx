@@ -1,6 +1,6 @@
 import GradientButton from '@/components/GradientButton';
 import { Colors } from '@/constants/Colors';
-import { HymnalContext } from '@/constants/context';
+import { DownloadProgressContext, HymnalContext } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { downloadHymnal, loadHymnals } from '@/scripts/hymnals';
@@ -200,6 +200,7 @@ export default function HymnalImporter() {
     const styles = makeStyles(theme as any);
     const isPresented = router.canGoBack();
     const context = useContext(HymnalContext);
+    const downloadProgressValues = useContext(DownloadProgressContext);
     const posthog = usePostHog()
 
     const i18n = useI18n();
@@ -465,7 +466,7 @@ export default function HymnalImporter() {
                                     <TouchableOpacity
                                         onPress={async () => {
                                             // if already downloading don't do anything
-                                            if ((context?.downloadProgressValues?.[hymnalId] ?? 0) === -1 || (context?.downloadProgressValues?.[hymnalId] ?? 0) > 0) return;
+                                            if ((downloadProgressValues[hymnalId] ?? 0) === -1 || (downloadProgressValues[hymnalId] ?? 0) > 0) return;
 
 
                                             context?.setDownloadProgressValues((prev) => ({ ...prev, [hymnalId]: 0 }));
@@ -520,29 +521,29 @@ export default function HymnalImporter() {
                                                 style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
                                             />
                                             {/* Progress line at the bottom */}
-                                            {((context?.downloadProgressValues[hymnalId] ?? 0) > 0 || (context?.downloadProgressValues[hymnalId] ?? 0) === -1 || (context?.downloadProgressValues[hymnalId] ?? 0) > 100) && (
+                                            {((downloadProgressValues[hymnalId] ?? 0) > 0 || (downloadProgressValues[hymnalId] ?? 0) === -1 || (downloadProgressValues[hymnalId] ?? 0) > 100) && (
                                                 <ProgressLine 
                                                     progress={
-                                                        (context?.downloadProgressValues[hymnalId] ?? 0) === -1 ? 0 : 
-                                                        (context?.downloadProgressValues[hymnalId] ?? 0) > 100 ? 100 : 
-                                                        Math.min(Math.max((context?.downloadProgressValues[hymnalId] ?? 0), 0), 100)
+                                                        (downloadProgressValues[hymnalId] ?? 0) === -1 ? 0 : 
+                                                        (downloadProgressValues[hymnalId] ?? 0) > 100 ? 100 : 
+                                                        Math.min(Math.max((downloadProgressValues[hymnalId] ?? 0), 0), 100)
                                                     }
-                                                    isIntermediate={(context?.downloadProgressValues[hymnalId] ?? 0) === -1 || (context?.downloadProgressValues[hymnalId] ?? 0) > 100}
+                                                    isIntermediate={(downloadProgressValues[hymnalId] ?? 0) === -1 || (downloadProgressValues[hymnalId] ?? 0) > 100}
                                                 />
                                             )}
                                             <View style={{ zIndex: 1 }}>
                                                 <StyledText style={styles.buttonText}>{displayName}</StyledText>
-                                                {context?.downloadProgressValues[hymnalId] === -1 ? (
+                                                {downloadProgressValues[hymnalId] === -1 ? (
                                                     <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('startingDownload')}</StyledText>
-                                                ) : ((context?.downloadProgressValues[hymnalId] ?? 0) > 100) ? (
+                                                ) : ((downloadProgressValues[hymnalId] ?? 0) > 100) ? (
                                                     <StyledText style={{ color: 'white', marginTop: 5 }}>{i18n.t('verifying')}</StyledText>
-                                                ) : (context?.downloadProgressValues[hymnalId] ?? 0) > 0 ? (
-                                                    <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${Math.min((context?.downloadProgressValues[hymnalId] ?? 0), 100).toFixed(1)}%`}</StyledText>
+                                                ) : (downloadProgressValues[hymnalId] ?? 0) > 0 ? (
+                                                    <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('progress')}: ${Math.min((downloadProgressValues[hymnalId] ?? 0), 100).toFixed(1)}%`}</StyledText>
                                                 ) : (
                                                     <StyledText style={{ color: 'white', marginTop: 5 }}>{`${i18n.t('size')}: ${((item.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`}</StyledText>
                                                 )}
                                             </View>
-                                            {(context?.downloadProgressValues[hymnalId] ?? 0) === 0 && (
+                                            {(downloadProgressValues[hymnalId] ?? 0) === 0 && (
                                                 <View style={{ position: 'absolute', right: 20, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
                                                     <Ionicons name="add-circle-outline" size={32} color="white" />
                                                 </View>

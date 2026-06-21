@@ -9,7 +9,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
-import { HymnalContext, HymnalContextType } from '@/constants/context';
+import { DownloadProgressContext, HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { View } from 'react-native';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -138,27 +138,21 @@ export default function RootLayout() {
             ? themeOverride
             : (systemColorScheme ?? 'light');
 
-    const deleteHymnal = async (book: string) => {
-
+    const deleteHymnal = useCallback(async (book: string) => {
         try {
-            // Run deletions
             await removeHymnal(book);
 
-            // Batch state updates:
-            // Update progress and book data simultaneously
-            context?.setDownloadProgressValues((prev) => {
-                const { [book]: _, ...rest } = prev; // Clean way to delete key
+            setDownloadProgressValues((prev) => {
+                const { [book]: _, ...rest } = prev;
                 return rest;
             });
 
-            // Reload the master list
             const updatedBooks = await loadHymnals();
-            context?.SET_BOOK_DATA(updatedBooks);
-
+            SET_BOOK_DATA(updatedBooks);
         } catch (error) {
             console.error("Failed to delete hymnal:", error);
         }
-    }
+    }, []);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -171,7 +165,6 @@ export default function RootLayout() {
             BOOK_DATA,
             SET_BOOK_DATA,
             onLayoutHomeView: onLayoutRootView,
-            downloadProgressValues,
             setDownloadProgressValues,
             discoverPageVisited,
             setDiscoverPageVisited,
@@ -196,7 +189,6 @@ export default function RootLayout() {
         BOOK_DATA,
         SET_BOOK_DATA,
         onLayoutRootView,
-        downloadProgressValues,
         setDownloadProgressValues,
         discoverPageVisited,
         setDiscoverPageVisited,
@@ -262,6 +254,7 @@ export default function RootLayout() {
             <PostHogIdentity stableUserId={stableUserId} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <HymnalContext.Provider value={context}>
+                    <DownloadProgressContext.Provider value={downloadProgressValues}>
                     <QueryClientProvider client={queryClient}>
                         <KeyboardProvider>
                             <BottomSheetModalProvider>
@@ -281,6 +274,7 @@ export default function RootLayout() {
                             </BottomSheetModalProvider>
                         </KeyboardProvider>
                     </QueryClientProvider>
+                    </DownloadProgressContext.Provider>
                 </HymnalContext.Provider>
             </GestureHandlerRootView>
         </PostHogProvider>

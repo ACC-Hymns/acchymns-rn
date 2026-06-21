@@ -285,6 +285,9 @@ async function getHTMLStringFromSong(
                 for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
                     await renderPage(pageNumber);
                 }
+                if (window.__acchymnsPostBackToTopSurface) {
+                    window.__acchymnsPostBackToTopSurface(true);
+                }
             }
             
             renderAllPages();
@@ -327,6 +330,21 @@ async function getHTMLStringFromSong(
     <div class="content-container">
         <img id="songImage" class="fit-width-image" src="${dataUri}" alt="Hymn ${songId}">
     </div>
+    <script>
+        const songImage = document.getElementById('songImage');
+        if (songImage) {
+            const notifyBackToTopSurface = () => {
+                if (window.__acchymnsPostBackToTopSurface) {
+                    window.__acchymnsPostBackToTopSurface(true);
+                }
+            };
+            if (songImage.complete) {
+                notifyBackToTopSurface();
+            } else {
+                songImage.addEventListener('load', notifyBackToTopSurface, { once: true });
+            }
+        }
+    </script>
     ${androidRnBridgeScript}
 </body>
 </html>`;

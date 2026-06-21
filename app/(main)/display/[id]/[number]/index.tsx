@@ -42,9 +42,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleOnRN } from 'react-native-worklets';
 import { ScreenHeight } from 'react-native-elements/dist/helpers';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as SwiftUI from '@expo/ui/swift-ui';
 import { presentationDetents } from '@expo/ui/swift-ui/modifiers';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
+
+const MUSIC_SHEET_BASE_HEIGHT = 280;
+
+function isLandscapeOrientation(orientation: ScreenOrientation.Orientation) {
+    return orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT
+        || orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
+}
+
+function getDisplayOverlayTheme(theme: 'light' | 'dark', invertSheetMusic: boolean): 'light' | 'dark' {
+    if (theme === 'light') {
+        return 'light';
+    }
+    return invertSheetMusic ? 'dark' : 'light';
+}
+
+function getBackToTopTheme(isLightSurface: boolean): 'light' | 'dark' {
+    return isLightSurface ? 'light' : 'dark';
+}
+
+const BACK_TO_TOP_BUTTON_SIZE = 48;
+const BACK_TO_TOP_BUTTON_MARGIN_RIGHT = 20;
+const BACK_TO_TOP_BUTTON_MARGIN_BOTTOM = 24;
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string, openSheet?: string, openPiano?: string }>();
@@ -52,6 +75,10 @@ export default function DisplayScreen() {
     const headerHeight = useHeaderHeight();
     const { height: windowHeight } = useWindowDimensions();
     const headerHeightRatio = headerHeight / windowHeight;
+    const musicSheetSnapPoints = useMemo(
+        () => [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))],
+        [windowHeight],
+    );
     const ios26DesignEnabled = isIOS26DesignEnabled();
     const isLiquidGlass = ios26DesignEnabled
         && isLiquidGlassAvailable()
@@ -142,7 +169,15 @@ export default function DisplayScreen() {
 
 
     const inverted = context?.invertSheetMusic ?? false;
-    const styles = makeStyles(theme as any, useSwiftUIBottomSheet, inverted);
+    const styles = makeStyles(theme as any, useSwiftUIBottomSheet);
+    const [backToTopOnLightSurface, setBackToTopOnLightSurface] = useState<boolean | null>(null);
+    const backToTopTheme = useMemo(() => {
+        if (backToTopOnLightSurface === null) {
+            return getDisplayOverlayTheme(theme as 'light' | 'dark', inverted);
+        }
+        return getBackToTopTheme(backToTopOnLightSurface);
+    }, [backToTopOnLightSurface, inverted, theme]);
+    const backToTopColors = Colors[backToTopTheme];
     const scrollRef = useRef<ScrollView | null>(null);
     const webViewRef = useRef<WebView>(null);
     const [isSwiping, setIsSwiping] = useState(false);
@@ -178,6 +213,15 @@ export default function DisplayScreen() {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const isModalOpenRef = useRef(false);
     const [musicSheetOpen, setMusicSheetOpen] = useState(false);
+    const [isHorizontal, setIsHorizontal] = useState(false);
+    const sheetCloseButtonPosition = useMemo(
+        () => ({
+            // @expo/ui BottomSheet.ios already adds paddingTop: 16 for the drag indicator.
+            top: 0,
+            right: isHorizontal ? 0 : 16,
+        }),
+        [isHorizontal],
+    );
     const lastHandledOpenSheetTokenRef = useRef<string | null>(null);
     const [pendingOpenSheetToken, setPendingOpenSheetToken] = useState<string | null>(null);
     const isDisplayFullyLoaded = isDisplayScreenFocused
@@ -186,70 +230,26 @@ export default function DisplayScreen() {
         && !!songs
         && !!imageData;
 
-
-    useEffect(() => {
-        if (!isDisplayScreenFocused) {
-            return;
-        }
-        if (musicSheetOpen) {
-            void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-        } else {
-            void ScreenOrientation.unlockAsync();
-        }
-    }, [isDisplayScreenFocused, musicSheetOpen]);
-
-    const lockToPortraitBeforeSheetOpen = useCallback(async () => {
-        const isPortraitOrientation = (orientation: ScreenOrientation.Orientation) => {
-            return orientation === ScreenOrientation.Orientation.PORTRAIT_UP
-                || orientation === ScreenOrientation.Orientation.PORTRAIT_DOWN;
-        };
-
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-
-        const currentOrientation = await ScreenOrientation.getOrientationAsync();
-        if (isPortraitOrientation(currentOrientation)) {
-            return;
-        }
-
-        await new Promise<void>((resolve) => {
-            let resolved = false;
-            const finish = () => {
-                if (resolved) return;
-                resolved = true;
-                ScreenOrientation.removeOrientationChangeListener(subscription);
-                clearTimeout(timeoutId);
-                resolve();
-            };
-
-            const subscription = ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
-                if (isPortraitOrientation(orientationInfo.orientation)) {
-                    finish();
-                }
-            });
-
-            // Avoid hanging the open action if orientation event is delayed.
-            const timeoutId = setTimeout(finish, 450);
-        });
-    }, []);
-
     const handlePress = useCallback(async () => {
         if (!bottomSheetModalRef.current) return;
 
         if (isModalOpenRef.current) {
             bottomSheetModalRef.current.dismiss();
         } else {
-            await lockToPortraitBeforeSheetOpen();
             bottomSheetModalRef.current.present();
         }
-    }, [lockToPortraitBeforeSheetOpen, useSwiftUIBottomSheet]);
+    }, [useSwiftUIBottomSheet]);
 
     const handleSheetChanges = useCallback((index: number) => {
         isModalOpenRef.current = index === 0;
         setMusicSheetOpen(index >= 0);
     }, []);
 
+    const handleCloseSheet = useCallback(() => {
+        bottomSheetModalRef.current?.dismiss();
+    }, []);
+
     async function broadcastSong() {
-        await lockToPortraitBeforeSheetOpen();
         router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: params.id, number: params.number || "" } });
     }
 
@@ -354,7 +354,6 @@ export default function DisplayScreen() {
         let cancelled = false;
         const openSheetWhenReady = async () => {
             const shouldOpenPiano = params.openPiano === '1' && hasPiano;
-            await lockToPortraitBeforeSheetOpen();
             await new Promise<void>((resolve) => {
                 InteractionManager.runAfterInteractions(() => resolve());
             });
@@ -383,7 +382,6 @@ export default function DisplayScreen() {
         };
     }, [
         isDisplayFullyLoaded,
-        lockToPortraitBeforeSheetOpen,
         hasPiano,
         params.id,
         params.number,
@@ -401,11 +399,15 @@ export default function DisplayScreen() {
 
             // Unlock orientation on page load
             ScreenOrientation.unlockAsync();
-            const handleOrientationChange = async () => {
-                setIsHorizontal(await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_LEFT || await ScreenOrientation.getOrientationAsync() === ScreenOrientation.Orientation.LANDSCAPE_RIGHT);
-            }
+            const updateIsHorizontal = async () => {
+                const orientation = await ScreenOrientation.getOrientationAsync();
+                setIsHorizontal(isLandscapeOrientation(orientation));
+            };
 
-            const subscription = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
+            void updateIsHorizontal();
+            const subscription = ScreenOrientation.addOrientationChangeListener(() => {
+                void updateIsHorizontal();
+            });
 
             // prefetch
 
@@ -529,7 +531,6 @@ export default function DisplayScreen() {
         };
     }, [context?.invertSheetMusic, songs, theme]);
 
-    const [isHorizontal, setIsHorizontal] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
     function getClef(note: string) {
@@ -673,6 +674,27 @@ export default function DisplayScreen() {
     const [isZoomedOut, setIsZoomedOut] = useState(true);
     const [showBackToTop, setShowBackToTop] = useState(false);
     const backToTopVisibility = useSharedValue(0);
+    const backToTopGlassProps = useMemo(() => ({
+        glassEffectStyle: {
+            style: (showBackToTop
+                ? (backToTopTheme === 'dark' ? 'regular' : 'clear')
+                : 'none') as 'regular' | 'clear' | 'none',
+            animate: true,
+            animationDuration: 0.2,
+        },
+        isInteractive: true,
+        colorScheme: backToTopTheme as 'light' | 'dark',
+        ...(backToTopTheme === 'dark'
+            ? { tintColor: 'rgba(255, 255, 255, 0.05)' }
+            : {}),
+    }), [backToTopTheme, showBackToTop]);
+    const backToTopLiquidGlassBackground = backToTopTheme === 'dark'
+        ? 'transparent'
+        : backToTopColors.liquidGlassFrosted;
+
+    useEffect(() => {
+        setBackToTopOnLightSurface(null);
+    }, [imageData]);
 
     useEffect(() => {
         backToTopVisibility.value = withTiming(showBackToTop ? 1 : 0, {
@@ -690,6 +712,10 @@ export default function DisplayScreen() {
             }
             if (data.type === 'scrollPosition') {
                 setShowBackToTop(!data.atTop);
+                return;
+            }
+            if (data.type === 'backToTopSurface') {
+                setBackToTopOnLightSurface(!!data.isLight);
                 return;
             }
             if (Platform.OS === 'android' && data.type === 'horizontalSongSwipe') {
@@ -722,6 +748,172 @@ export default function DisplayScreen() {
         let tapStartTime = 0;
         const MAX_TAP_DISTANCE = 10;
         const MAX_TAP_DURATION = 300;
+        const BACK_TO_TOP = {
+            size: ${BACK_TO_TOP_BUTTON_SIZE},
+            marginRight: ${BACK_TO_TOP_BUTTON_MARGIN_RIGHT},
+            marginBottom: ${BACK_TO_TOP_BUTTON_MARGIN_BOTTOM},
+        };
+        let lastPostedBackToTopIsLight = null;
+        let backToTopSampleScheduled = false;
+
+        const getLuminance = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+        const parseRgb = (color) => {
+            const match = color && color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+            if (!match) return null;
+            return [Number(match[1]), Number(match[2]), Number(match[3])];
+        };
+
+        const isVisuallyInverted = (el) => {
+            let node = el;
+            while (node) {
+                const filter = window.getComputedStyle(node).filter;
+                if (filter && filter !== 'none' && filter.includes('invert')) {
+                    return true;
+                }
+                node = node.parentElement;
+            }
+            return false;
+        };
+
+        const getBackgroundLuminance = (el) => {
+            let node = el;
+            while (node && node !== document.documentElement) {
+                const bg = window.getComputedStyle(node).backgroundColor;
+                const rgb = parseRgb(bg);
+                if (rgb && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                    return getLuminance(rgb[0], rgb[1], rgb[2]);
+                }
+                node = node.parentElement;
+            }
+            const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+            const rgb = parseRgb(bodyBg);
+            return rgb ? getLuminance(rgb[0], rgb[1], rgb[2]) : null;
+        };
+
+        const sampleImagePointLuminance = (img, x, y) => {
+            const rect = img.getBoundingClientRect();
+            if (!img.complete || !img.naturalWidth || rect.width === 0 || rect.height === 0) {
+                return null;
+            }
+            if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                return null;
+            }
+            if (!window.__acchymnsSampleCanvas) {
+                window.__acchymnsSampleCanvas = document.createElement('canvas');
+                window.__acchymnsSampleCtx = window.__acchymnsSampleCanvas.getContext('2d', { willReadFrequently: true });
+            }
+            const relX = (x - rect.left) / rect.width;
+            const relY = (y - rect.top) / rect.height;
+            const canvas = window.__acchymnsSampleCanvas;
+            const ctx = window.__acchymnsSampleCtx;
+            canvas.width = 1;
+            canvas.height = 1;
+            const sx = Math.min(img.naturalWidth - 1, Math.max(0, relX * img.naturalWidth));
+            const sy = Math.min(img.naturalHeight - 1, Math.max(0, relY * img.naturalHeight));
+            ctx.drawImage(img, sx, sy, 1, 1, 0, 0, 1, 1);
+            const pixel = ctx.getImageData(0, 0, 1, 1).data;
+            let lum = getLuminance(pixel[0], pixel[1], pixel[2]);
+            if (isVisuallyInverted(img)) {
+                lum = 255 - lum;
+            }
+            return lum;
+        };
+
+        const samplePointLuminance = (x, y) => {
+            const el = document.elementFromPoint(x, y);
+            if (!el) return null;
+
+            if (el.tagName === 'CANVAS') {
+                const canvas = el;
+                const rect = canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return null;
+                const cx = Math.min(canvas.width - 1, Math.max(0, Math.floor((x - rect.left) * (canvas.width / rect.width))));
+                const cy = Math.min(canvas.height - 1, Math.max(0, Math.floor((y - rect.top) * (canvas.height / rect.height))));
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+                try {
+                    const pixel = ctx.getImageData(cx, cy, 1, 1).data;
+                    let lum = getLuminance(pixel[0], pixel[1], pixel[2]);
+                    if (isVisuallyInverted(canvas)) {
+                        lum = 255 - lum;
+                    }
+                    return lum;
+                } catch (e) {
+                    return getBackgroundLuminance(el);
+                }
+            }
+
+            if (el.tagName === 'IMG') {
+                return sampleImagePointLuminance(el, x, y);
+            }
+
+            return getBackgroundLuminance(el);
+        };
+
+        const sampleBackToTopSurfaceLuminance = () => {
+            const rect = {
+                left: window.innerWidth - BACK_TO_TOP.marginRight - BACK_TO_TOP.size,
+                top: window.innerHeight - BACK_TO_TOP.marginBottom - BACK_TO_TOP.size,
+                width: BACK_TO_TOP.size,
+                height: BACK_TO_TOP.size,
+            };
+            const samplePoints = [
+                [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
+                [rect.left + rect.width * 0.3, rect.top + rect.height * 0.3],
+                [rect.left + rect.width * 0.7, rect.top + rect.height * 0.7],
+                [rect.left + rect.width * 0.3, rect.top + rect.height * 0.7],
+                [rect.left + rect.width * 0.7, rect.top + rect.height * 0.3],
+            ];
+            let total = 0;
+            let count = 0;
+            for (let i = 0; i < samplePoints.length; i++) {
+                const lum = samplePointLuminance(samplePoints[i][0], samplePoints[i][1]);
+                if (lum !== null) {
+                    total += lum;
+                    count++;
+                }
+            }
+            return count ? total / count : null;
+        };
+
+        const postBackToTopSurface = (force) => {
+            if (!window.ReactNativeWebView) return;
+            const luminance = sampleBackToTopSurfaceLuminance();
+            if (luminance === null) return;
+
+            let isLight;
+            if (lastPostedBackToTopIsLight === null) {
+                isLight = luminance >= 128;
+            } else if (lastPostedBackToTopIsLight) {
+                isLight = luminance >= 112;
+            } else {
+                isLight = luminance >= 144;
+            }
+
+            if (!force && isLight === lastPostedBackToTopIsLight) {
+                return;
+            }
+
+            lastPostedBackToTopIsLight = isLight;
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'backToTopSurface',
+                isLight: isLight,
+            }));
+        };
+
+        const scheduleBackToTopSurfaceSample = (force) => {
+            if (backToTopSampleScheduled) return;
+            backToTopSampleScheduled = true;
+            requestAnimationFrame(function() {
+                backToTopSampleScheduled = false;
+                postBackToTopSurface(force);
+            });
+        };
+
+        window.__acchymnsPostBackToTopSurface = function(force) {
+            scheduleBackToTopSurfaceSample(!!force);
+        };
 
         const postScrollState = () => {
         const atTop = (window.scrollY || document.documentElement.scrollTop || 0) <= 4;
@@ -729,10 +921,15 @@ export default function DisplayScreen() {
             type: 'scrollPosition',
             atTop: atTop
         }));
+        scheduleBackToTopSurfaceSample(false);
         };
 
         window.addEventListener('scroll', postScrollState, { passive: true });
+        window.addEventListener('resize', function() {
+            scheduleBackToTopSurfaceSample(true);
+        }, { passive: true });
         postScrollState();
+        scheduleBackToTopSurfaceSample(true);
 
         document.addEventListener('touchstart', (event) => {
             const touch = event.changedTouches && event.changedTouches[0];
@@ -763,6 +960,9 @@ export default function DisplayScreen() {
         };
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', handleScroll);
+            window.visualViewport.addEventListener('scroll', function() {
+                scheduleBackToTopSurfaceSample(false);
+            });
             handleScroll();
         }
     })();
@@ -794,6 +994,9 @@ export default function DisplayScreen() {
                 document.head.appendChild(styleTag);
             }
             styleTag.textContent = 'html, body { padding-top: ${topPadding}px !important; padding-bottom: ${bottomPadding}px !important; box-sizing: border-box; }';
+            if (window.__acchymnsPostBackToTopSurface) {
+                window.__acchymnsPostBackToTopSurface(true);
+            }
         })();
         true;
         `;
@@ -1035,13 +1238,30 @@ export default function DisplayScreen() {
                 <BottomSheetModal
                     ref={bottomSheetModalRef}
                     onChange={handleSheetChanges}
-                    style={styles.bottomSheet}
-                    backgroundStyle={styles.bottomSheet}
+                    style={isLiquidGlass ? undefined : styles.bottomSheet}
+                    backgroundStyle={isLiquidGlass ? undefined : styles.bottomSheet}
                     handleIndicatorStyle={styles.handleIndicator}
                     enablePanDownToClose={true}
                     enableContentPanningGesture={false}
+                    enableDynamicSizing={false}
+                    snapPoints={musicSheetSnapPoints}
                 >
                     <BottomSheetView style={styles.contentContainer}>
+                        {isHorizontal && (
+                            <View
+                                style={[styles.sheetCloseButtonContainer, sheetCloseButtonPosition]}
+                                pointerEvents="box-none"
+                            >
+                                <TouchableOpacity
+                                    onPress={handleCloseSheet}
+                                    activeOpacity={0.9}
+                                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                                >
+                                    <Ionicons name="close" size={22} color={Colors[theme].icon} />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        <View style={styles.sheetContent}>
                         <SegmentedControl
                             style={{
                                 width: hasPiano ? 300 : 100,
@@ -1061,7 +1281,7 @@ export default function DisplayScreen() {
                         {selectedIndex === 1 && (
                             PianoTab()
                         )}
-
+                        </View>
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
@@ -1072,30 +1292,42 @@ export default function DisplayScreen() {
                 >
                     {isLiquidGlass ? (
                         <GlassView
+                            {...backToTopGlassProps}
                             style={styles.liquidGlassButton}
-                            glassEffectStyle={{
-                                style: showBackToTop ? 'clear' : 'none',
-                                animate: true,
-                                animationDuration: 0.2,
-                            }}
                         >
                             <Animated.View style={[styles.liquidGlassContent, backToTopContentAnimatedStyle]}>
+                                {backToTopTheme === 'dark' && (
+                                    <LinearGradient
+                                        colors={[
+                                            'rgba(255, 255, 255, 0.1)',
+                                            'rgba(255, 255, 255, 0.05)'
+                                        ]}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={styles.backToTopDarkShimmer}
+                                        pointerEvents="none"
+                                    />
+                                )}
                                 <TouchableOpacity
-                                    style={styles.liquidGlassTouchTarget}
+                                    style={[styles.liquidGlassTouchTarget, { backgroundColor: backToTopLiquidGlassBackground }]}
                                     onPress={handleScrollToTop}
                                     activeOpacity={0.9}
                                 >
-                                    <Ionicons name="chevron-up" size={22} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                                    <Ionicons name="chevron-up" size={22} color={backToTopColors.icon} />
                                 </TouchableOpacity>
                             </Animated.View>
                         </GlassView>
                     ) : (
                         <TouchableOpacity
-                            style={styles.backToTopButton}
+                            style={[
+                                styles.backToTopButton,
+                                { backgroundColor: backToTopColors.settingsButton },
+                                backToTopTheme === 'dark' && styles.backToTopButtonDark,
+                            ]}
                             onPress={handleScrollToTop}
                             activeOpacity={0.9}
                         >
-                            <Ionicons name="chevron-up" size={22} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
+                            <Ionicons name="chevron-up" size={22} color={backToTopColors.icon} />
                         </TouchableOpacity>
                     )}
                 </Animated.View>
@@ -1104,7 +1336,7 @@ export default function DisplayScreen() {
     );
 }
 
-function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean, invertSheetMusic: boolean) {
+function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean) {
     return StyleSheet.create({
         noteButton: {
             flexDirection: 'column',
@@ -1120,11 +1352,17 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean, inv
             backgroundColor: Colors[theme]['songBackground'],
         },
         contentContainer: {
-            flex: 1,
+            paddingBottom: 50,
+            overflow: 'visible',
+        },
+        sheetContent: {
             paddingTop: useSwiftUIBottomSheet ? 24 : 8,
             paddingHorizontal: 8,
-            paddingBottom: 50,
             alignItems: 'center',
+        },
+        sheetCloseButtonContainer: {
+            position: 'absolute',
+            zIndex: 1,
         },
         swiftUIBottomSheetHost: {
             width: 1,
@@ -1146,10 +1384,9 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean, inv
             borderTopRightRadius: 24,
         },
         backToTopButton: {
-            backgroundColor: Colors[theme]['settingsButton'],
-            width: 48,
-            height: 48,
-            borderRadius: 24,
+            width: BACK_TO_TOP_BUTTON_SIZE,
+            height: BACK_TO_TOP_BUTTON_SIZE,
+            borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: "#000",
@@ -1162,9 +1399,9 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean, inv
             elevation: 8,
         },
         liquidGlassButton: {
-            width: 48,
-            height: 48,
-            borderRadius: 24,
+            width: BACK_TO_TOP_BUTTON_SIZE,
+            height: BACK_TO_TOP_BUTTON_SIZE,
+            borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
             overflow: 'hidden',
             shadowColor: "#000",
             shadowOffset: {
@@ -1179,17 +1416,24 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean, inv
             width: '100%',
             height: '100%',
         },
+        backToTopDarkShimmer: {
+            ...StyleSheet.absoluteFill,
+            borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
+        },
+        backToTopButtonDark: {
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+        },
         liquidGlassTouchTarget: {
             width: '100%',
             height: '100%',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: Colors[theme === 'dark' ? (invertSheetMusic ? 'dark' : 'light') : 'light'].liquidGlassFrosted,
         },
         backToTopButtonContainer: {
             position: 'absolute',
-            right: 20,
-            bottom: 24,
+            right: BACK_TO_TOP_BUTTON_MARGIN_RIGHT,
+            bottom: BACK_TO_TOP_BUTTON_MARGIN_BOTTOM,
         }
     });
 }    
