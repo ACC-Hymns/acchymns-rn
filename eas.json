@@ -16,7 +16,8 @@
       "android": {
         "buildType": "apk",
         "ndk": "26.1.10909125"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",

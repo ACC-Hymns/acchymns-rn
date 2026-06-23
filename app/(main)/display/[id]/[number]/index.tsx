@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager } from 'react-native';
+import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager, Share } from 'react-native';
 import Alert from '@blazejkustra/react-native-alert';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { router, Stack, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -42,7 +42,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleOnRN } from 'react-native-worklets';
 import { ScreenHeight } from 'react-native-elements/dist/helpers';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as SwiftUI from '@expo/ui/swift-ui';
 import { presentationDetents } from '@expo/ui/swift-ui/modifiers';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
@@ -54,20 +53,108 @@ function isLandscapeOrientation(orientation: ScreenOrientation.Orientation) {
         || orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
 }
 
-function getDisplayOverlayTheme(theme: 'light' | 'dark', invertSheetMusic: boolean): 'light' | 'dark' {
-    if (theme === 'light') {
-        return 'light';
-    }
-    return invertSheetMusic ? 'dark' : 'light';
-}
-
-function getBackToTopTheme(isLightSurface: boolean): 'light' | 'dark' {
-    return isLightSurface ? 'light' : 'dark';
-}
-
 const BACK_TO_TOP_BUTTON_SIZE = 48;
 const BACK_TO_TOP_BUTTON_MARGIN_RIGHT = 20;
 const BACK_TO_TOP_BUTTON_MARGIN_BOTTOM = 24;
+
+type DisplayHeaderToolbarProps = {
+    isHeaderVisible: boolean;
+    theme: 'light' | 'dark';
+    songNotesCount: number;
+    hasBroadcasting: boolean;
+    isBookmarked: boolean;
+    bookId: string;
+    songId: string;
+    songTitle?: string;
+    onBack: () => void;
+    onMusicPress: () => void;
+    onBroadcast: () => void;
+    onBookmarkPress: () => void;
+    onReportIssuePress: () => void;
+};
+
+function DisplayHeaderToolbar({
+    isHeaderVisible,
+    theme,
+    songNotesCount,
+    hasBroadcasting,
+    isBookmarked,
+    bookId,
+    songId,
+    songTitle,
+    onBack,
+    onMusicPress,
+    onBroadcast,
+    onBookmarkPress,
+    onReportIssuePress,
+}: DisplayHeaderToolbarProps) {
+    const i18n = useI18n();
+    const iconColor = Colors[theme].icon;
+    const hidden = !isHeaderVisible;
+
+    const openReportIssueAfterMenuCloses = useCallback(() => {
+        InteractionManager.runAfterInteractions(() => {
+            const delay = Platform.OS === 'ios' ? 350 : 120;
+            setTimeout(() => {
+                onReportIssuePress();
+            }, delay);
+        });
+    }, [onReportIssuePress]);
+
+    return (
+        <>
+            <Stack.Toolbar placement="left">
+                <Stack.Toolbar.Button
+                    icon="chevron.left"
+                    onPress={onBack}
+                    hidden={hidden}
+                    tintColor={iconColor}
+                />
+            </Stack.Toolbar>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Button
+                    icon="music.note"
+                    onPress={onMusicPress}
+                    hidden={hidden || songNotesCount === 0}
+                    tintColor={iconColor}
+                />
+                <Stack.Toolbar.Button
+                    icon="dot.radiowaves.left.and.right"
+                    onPress={onBroadcast}
+                    hidden={hidden || !hasBroadcasting}
+                    tintColor={iconColor}
+                />
+                <Stack.Toolbar.Menu icon="ellipsis" hidden={hidden} tintColor={iconColor}>
+                    <Stack.Toolbar.MenuAction
+                        icon="bookmark"
+                        isOn={isBookmarked}
+                        onPress={onBookmarkPress}
+                    >
+                        {isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                        icon="square.and.arrow.up"
+                        onPress={async () => {
+                            await Share.share({
+                                title: songTitle,
+                                message: `https://acchymns.app/display/${bookId}/${songId}`,
+                            });
+                        }}
+                    >
+                        {i18n.t('share')}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                        icon="exclamationmark.bubble"
+                        destructive
+                        onPress={openReportIssueAfterMenuCloses}
+                    >
+                        {i18n.t('reportIssue')}
+                    </Stack.Toolbar.MenuAction>
+                </Stack.Toolbar.Menu>
+            </Stack.Toolbar>
+        </>
+    );
+}
 
 export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string, openSheet?: string, openPiano?: string }>();
@@ -170,14 +257,6 @@ export default function DisplayScreen() {
 
     const inverted = context?.invertSheetMusic ?? false;
     const styles = makeStyles(theme as any, useSwiftUIBottomSheet);
-    const [backToTopOnLightSurface, setBackToTopOnLightSurface] = useState<boolean | null>(null);
-    const backToTopTheme = useMemo(() => {
-        if (backToTopOnLightSurface === null) {
-            return getDisplayOverlayTheme(theme as 'light' | 'dark', inverted);
-        }
-        return getBackToTopTheme(backToTopOnLightSurface);
-    }, [backToTopOnLightSurface, inverted, theme]);
-    const backToTopColors = Colors[backToTopTheme];
     const scrollRef = useRef<ScrollView | null>(null);
     const webViewRef = useRef<WebView>(null);
     const [isSwiping, setIsSwiping] = useState(false);
@@ -253,15 +332,33 @@ export default function DisplayScreen() {
         router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: params.id, number: params.number || "" } });
     }
 
+    const handleBookmarkPress = useCallback(() => {
+        addBookmark({
+            book: params.id,
+            number: params.number ?? '',
+        });
+    }, [params.id, params.number]);
+
     const headerOptions = useMemo(() => {
         const keepsStaticHeaderSlot = !isIos26OrNewer;
         const shouldShowHeaderChrome = isHeaderVisible;
-        return {
+        const options = {
             title: "",
             // On iOS <26 and Android, keep header mounted to avoid content jump.
             headerShown: keepsStaticHeaderSlot ? true : isHeaderVisible,
             headerTransparent: keepsStaticHeaderSlot || isIos26OrNewer,
             headerShadowVisible: false,
+            headerStyle: keepsStaticHeaderSlot || isIos26OrNewer
+                ? { backgroundColor: 'transparent' }
+                : { backgroundColor: Colors[theme].background },
+        } as const;
+
+        if (isIos26OrNewer) {
+            return options;
+        }
+
+        return {
+            ...options,
             headerLeft: () => shouldShowHeaderChrome ? (
                 <TouchableOpacity hitSlop={10} onPress={() => router.back()}>
                     <Ionicons
@@ -304,9 +401,6 @@ export default function DisplayScreen() {
                     />
                 </View>
             ) : null,
-            headerStyle: keepsStaticHeaderSlot || isIos26OrNewer
-                ? { backgroundColor: 'transparent' }
-                : { backgroundColor: Colors[theme].background },
         };
     }, [
         isHeaderVisible,
@@ -673,35 +767,6 @@ export default function DisplayScreen() {
 
     const [isZoomedOut, setIsZoomedOut] = useState(true);
     const [showBackToTop, setShowBackToTop] = useState(false);
-    const backToTopVisibility = useSharedValue(0);
-    const backToTopGlassProps = useMemo(() => ({
-        glassEffectStyle: {
-            style: (showBackToTop
-                ? (backToTopTheme === 'dark' ? 'regular' : 'clear')
-                : 'none') as 'regular' | 'clear' | 'none',
-            animate: true,
-            animationDuration: 0.2,
-        },
-        isInteractive: true,
-        colorScheme: backToTopTheme as 'light' | 'dark',
-        ...(backToTopTheme === 'dark'
-            ? { tintColor: 'rgba(255, 255, 255, 0.05)' }
-            : {}),
-    }), [backToTopTheme, showBackToTop]);
-    const backToTopLiquidGlassBackground = backToTopTheme === 'dark'
-        ? 'transparent'
-        : backToTopColors.liquidGlassFrosted;
-
-    useEffect(() => {
-        setBackToTopOnLightSurface(null);
-    }, [imageData]);
-
-    useEffect(() => {
-        backToTopVisibility.value = withTiming(showBackToTop ? 1 : 0, {
-            duration: 180,
-            easing: Easing.linear,
-        });
-    }, [showBackToTop]);
 
     const onWebViewMessage = useCallback((event: { nativeEvent: { data: string } }) => {
         try {
@@ -712,10 +777,6 @@ export default function DisplayScreen() {
             }
             if (data.type === 'scrollPosition') {
                 setShowBackToTop(!data.atTop);
-                return;
-            }
-            if (data.type === 'backToTopSurface') {
-                setBackToTopOnLightSurface(!!data.isLight);
                 return;
             }
             if (Platform.OS === 'android' && data.type === 'horizontalSongSwipe') {
@@ -748,188 +809,17 @@ export default function DisplayScreen() {
         let tapStartTime = 0;
         const MAX_TAP_DISTANCE = 10;
         const MAX_TAP_DURATION = 300;
-        const BACK_TO_TOP = {
-            size: ${BACK_TO_TOP_BUTTON_SIZE},
-            marginRight: ${BACK_TO_TOP_BUTTON_MARGIN_RIGHT},
-            marginBottom: ${BACK_TO_TOP_BUTTON_MARGIN_BOTTOM},
-        };
-        let lastPostedBackToTopIsLight = null;
-        let backToTopSampleScheduled = false;
 
-        const getLuminance = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-        const parseRgb = (color) => {
-            const match = color && color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
-            if (!match) return null;
-            return [Number(match[1]), Number(match[2]), Number(match[3])];
-        };
-
-        const isVisuallyInverted = (el) => {
-            let node = el;
-            while (node) {
-                const filter = window.getComputedStyle(node).filter;
-                if (filter && filter !== 'none' && filter.includes('invert')) {
-                    return true;
-                }
-                node = node.parentElement;
-            }
-            return false;
-        };
-
-        const getBackgroundLuminance = (el) => {
-            let node = el;
-            while (node && node !== document.documentElement) {
-                const bg = window.getComputedStyle(node).backgroundColor;
-                const rgb = parseRgb(bg);
-                if (rgb && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-                    return getLuminance(rgb[0], rgb[1], rgb[2]);
-                }
-                node = node.parentElement;
-            }
-            const bodyBg = window.getComputedStyle(document.body).backgroundColor;
-            const rgb = parseRgb(bodyBg);
-            return rgb ? getLuminance(rgb[0], rgb[1], rgb[2]) : null;
-        };
-
-        const sampleImagePointLuminance = (img, x, y) => {
-            const rect = img.getBoundingClientRect();
-            if (!img.complete || !img.naturalWidth || rect.width === 0 || rect.height === 0) {
-                return null;
-            }
-            if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-                return null;
-            }
-            if (!window.__acchymnsSampleCanvas) {
-                window.__acchymnsSampleCanvas = document.createElement('canvas');
-                window.__acchymnsSampleCtx = window.__acchymnsSampleCanvas.getContext('2d', { willReadFrequently: true });
-            }
-            const relX = (x - rect.left) / rect.width;
-            const relY = (y - rect.top) / rect.height;
-            const canvas = window.__acchymnsSampleCanvas;
-            const ctx = window.__acchymnsSampleCtx;
-            canvas.width = 1;
-            canvas.height = 1;
-            const sx = Math.min(img.naturalWidth - 1, Math.max(0, relX * img.naturalWidth));
-            const sy = Math.min(img.naturalHeight - 1, Math.max(0, relY * img.naturalHeight));
-            ctx.drawImage(img, sx, sy, 1, 1, 0, 0, 1, 1);
-            const pixel = ctx.getImageData(0, 0, 1, 1).data;
-            let lum = getLuminance(pixel[0], pixel[1], pixel[2]);
-            if (isVisuallyInverted(img)) {
-                lum = 255 - lum;
-            }
-            return lum;
-        };
-
-        const samplePointLuminance = (x, y) => {
-            const el = document.elementFromPoint(x, y);
-            if (!el) return null;
-
-            if (el.tagName === 'CANVAS') {
-                const canvas = el;
-                const rect = canvas.getBoundingClientRect();
-                if (rect.width === 0 || rect.height === 0) return null;
-                const cx = Math.min(canvas.width - 1, Math.max(0, Math.floor((x - rect.left) * (canvas.width / rect.width))));
-                const cy = Math.min(canvas.height - 1, Math.max(0, Math.floor((y - rect.top) * (canvas.height / rect.height))));
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return null;
-                try {
-                    const pixel = ctx.getImageData(cx, cy, 1, 1).data;
-                    let lum = getLuminance(pixel[0], pixel[1], pixel[2]);
-                    if (isVisuallyInverted(canvas)) {
-                        lum = 255 - lum;
-                    }
-                    return lum;
-                } catch (e) {
-                    return getBackgroundLuminance(el);
-                }
-            }
-
-            if (el.tagName === 'IMG') {
-                return sampleImagePointLuminance(el, x, y);
-            }
-
-            return getBackgroundLuminance(el);
-        };
-
-        const sampleBackToTopSurfaceLuminance = () => {
-            const rect = {
-                left: window.innerWidth - BACK_TO_TOP.marginRight - BACK_TO_TOP.size,
-                top: window.innerHeight - BACK_TO_TOP.marginBottom - BACK_TO_TOP.size,
-                width: BACK_TO_TOP.size,
-                height: BACK_TO_TOP.size,
-            };
-            const samplePoints = [
-                [rect.left + rect.width * 0.5, rect.top + rect.height * 0.5],
-                [rect.left + rect.width * 0.3, rect.top + rect.height * 0.3],
-                [rect.left + rect.width * 0.7, rect.top + rect.height * 0.7],
-                [rect.left + rect.width * 0.3, rect.top + rect.height * 0.7],
-                [rect.left + rect.width * 0.7, rect.top + rect.height * 0.3],
-            ];
-            let total = 0;
-            let count = 0;
-            for (let i = 0; i < samplePoints.length; i++) {
-                const lum = samplePointLuminance(samplePoints[i][0], samplePoints[i][1]);
-                if (lum !== null) {
-                    total += lum;
-                    count++;
-                }
-            }
-            return count ? total / count : null;
-        };
-
-        const postBackToTopSurface = (force) => {
-            if (!window.ReactNativeWebView) return;
-            const luminance = sampleBackToTopSurfaceLuminance();
-            if (luminance === null) return;
-
-            let isLight;
-            if (lastPostedBackToTopIsLight === null) {
-                isLight = luminance >= 128;
-            } else if (lastPostedBackToTopIsLight) {
-                isLight = luminance >= 112;
-            } else {
-                isLight = luminance >= 144;
-            }
-
-            if (!force && isLight === lastPostedBackToTopIsLight) {
-                return;
-            }
-
-            lastPostedBackToTopIsLight = isLight;
+        const postScrollState = () => {
+            const atTop = (window.scrollY || document.documentElement.scrollTop || 0) <= 4;
             window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'backToTopSurface',
-                isLight: isLight,
+                type: 'scrollPosition',
+                atTop: atTop
             }));
         };
 
-        const scheduleBackToTopSurfaceSample = (force) => {
-            if (backToTopSampleScheduled) return;
-            backToTopSampleScheduled = true;
-            requestAnimationFrame(function() {
-                backToTopSampleScheduled = false;
-                postBackToTopSurface(force);
-            });
-        };
-
-        window.__acchymnsPostBackToTopSurface = function(force) {
-            scheduleBackToTopSurfaceSample(!!force);
-        };
-
-        const postScrollState = () => {
-        const atTop = (window.scrollY || document.documentElement.scrollTop || 0) <= 4;
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'scrollPosition',
-            atTop: atTop
-        }));
-        scheduleBackToTopSurfaceSample(false);
-        };
-
         window.addEventListener('scroll', postScrollState, { passive: true });
-        window.addEventListener('resize', function() {
-            scheduleBackToTopSurfaceSample(true);
-        }, { passive: true });
         postScrollState();
-        scheduleBackToTopSurfaceSample(true);
 
         document.addEventListener('touchstart', (event) => {
             const touch = event.changedTouches && event.changedTouches[0];
@@ -960,9 +850,6 @@ export default function DisplayScreen() {
         };
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', handleScroll);
-            window.visualViewport.addEventListener('scroll', function() {
-                scheduleBackToTopSurfaceSample(false);
-            });
             handleScroll();
         }
     })();
@@ -981,8 +868,6 @@ export default function DisplayScreen() {
 
     const applyWebViewHeaderCompensation = useCallback(() => {
         const topPadding = !isIos26OrNewer ? visibleHeaderBarHeight : 0;
-        // Keep the last lines of the song from sitting under the floating "back to top" button.
-        // Button is 48px tall and sits 24px from bottom; add a little extra breathing room.
         const bottomPadding = 40;
         const js = `
         (function() {
@@ -994,9 +879,6 @@ export default function DisplayScreen() {
                 document.head.appendChild(styleTag);
             }
             styleTag.textContent = 'html, body { padding-top: ${topPadding}px !important; padding-bottom: ${bottomPadding}px !important; box-sizing: border-box; }';
-            if (window.__acchymnsPostBackToTopSurface) {
-                window.__acchymnsPostBackToTopSurface(true);
-            }
         })();
         true;
         `;
@@ -1048,12 +930,6 @@ export default function DisplayScreen() {
     const MAX_OFFSET = 75;
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: offset.value }],
-    }));
-    const backToTopAnimatedStyle = useAnimatedStyle(() => ({
-        opacity: isLiquidGlass ? 1 : backToTopVisibility.value,
-    }));
-    const backToTopContentAnimatedStyle = useAnimatedStyle(() => ({
-        opacity: backToTopVisibility.value,
     }));
     const isSwipingRight = useSharedValue(false);
     const isSwipingLeft = useSharedValue(false);
@@ -1123,10 +999,26 @@ export default function DisplayScreen() {
             });
     }, [isZoomedOut, params.id, params.number, songs]);
 
-
     return (
         <View style={[styles.container]}>
             <Stack.Screen options={headerOptions} />
+            {isIos26OrNewer ? (
+                <DisplayHeaderToolbar
+                    isHeaderVisible={isHeaderVisible}
+                    theme={theme as 'light' | 'dark'}
+                    songNotesCount={songNotes.length}
+                    hasBroadcasting={!!context?.broadcastingToken}
+                    isBookmarked={isBookmarked}
+                    bookId={params.id}
+                    songId={params.number ?? ''}
+                    songTitle={songData?.title}
+                    onBack={() => router.back()}
+                    onMusicPress={handlePress}
+                    onBroadcast={broadcastSong}
+                    onBookmarkPress={handleBookmarkPress}
+                    onReportIssuePress={openReportIssuePrompt}
+                />
+            ) : null}
             {fauxHeaderBackgroundStyle ? (
                 <Animated.View
                     pointerEvents="none"
@@ -1285,53 +1177,39 @@ export default function DisplayScreen() {
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
-            {imageData && (
-                <Animated.View
-                    style={[styles.backToTopButtonContainer, backToTopAnimatedStyle]}
-                    pointerEvents={showBackToTop ? 'auto' : 'none'}
+            {imageData && isLiquidGlass && showBackToTop ? (
+                <GlassView
+                    style={styles.backToTopButtonContainer}
+                    isInteractive
                 >
-                    {isLiquidGlass ? (
-                        <GlassView
-                            {...backToTopGlassProps}
-                            style={styles.liquidGlassButton}
-                        >
-                            <Animated.View style={[styles.liquidGlassContent, backToTopContentAnimatedStyle]}>
-                                {backToTopTheme === 'dark' && (
-                                    <LinearGradient
-                                        colors={[
-                                            'rgba(255, 255, 255, 0.1)',
-                                            'rgba(255, 255, 255, 0.05)'
-                                        ]}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 1 }}
-                                        style={styles.backToTopDarkShimmer}
-                                        pointerEvents="none"
-                                    />
-                                )}
-                                <TouchableOpacity
-                                    style={[styles.liquidGlassTouchTarget, { backgroundColor: backToTopLiquidGlassBackground }]}
-                                    onPress={handleScrollToTop}
-                                    activeOpacity={0.9}
-                                >
-                                    <Ionicons name="chevron-up" size={22} color={backToTopColors.icon} />
-                                </TouchableOpacity>
-                            </Animated.View>
-                        </GlassView>
-                    ) : (
-                        <TouchableOpacity
-                            style={[
-                                styles.backToTopButton,
-                                { backgroundColor: backToTopColors.settingsButton },
-                                backToTopTheme === 'dark' && styles.backToTopButtonDark,
-                            ]}
-                            onPress={handleScrollToTop}
-                            activeOpacity={0.9}
-                        >
-                            <Ionicons name="chevron-up" size={22} color={backToTopColors.icon} />
-                        </TouchableOpacity>
-                    )}
-                </Animated.View>
-            )}
+                    <TouchableOpacity
+                        style={[
+                            styles.backToTopButton,
+                        ]}
+                        onPress={handleScrollToTop}
+                        activeOpacity={0.9}
+                    >
+                        <Ionicons name="chevron-up" size={22} color={Colors[theme].icon} />
+                    </TouchableOpacity>
+                </GlassView>
+            ) : null}
+            {imageData && !isLiquidGlass && showBackToTop ? (
+                <View
+                    style={styles.backToTopButtonContainer}
+                    pointerEvents="auto"
+                >
+                    <TouchableOpacity
+                        style={[
+                            styles.backToTopButton,
+                            { backgroundColor: Colors[theme].settingsButton },
+                        ]}
+                        onPress={handleScrollToTop}
+                        activeOpacity={0.9}
+                    >
+                        <Ionicons name="chevron-up" size={22} color={Colors[theme].icon} />
+                    </TouchableOpacity>
+                </View>
+            ) : null}
         </View>
     );
 }
@@ -1399,8 +1277,7 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean) {
             elevation: 8,
         },
         liquidGlassButton: {
-            width: BACK_TO_TOP_BUTTON_SIZE,
-            height: BACK_TO_TOP_BUTTON_SIZE,
+            flex: 1,
             borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
             overflow: 'hidden',
             shadowColor: "#000",
@@ -1412,18 +1289,6 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean) {
             shadowRadius: 5.5,
             elevation: 6,
         },
-        liquidGlassContent: {
-            width: '100%',
-            height: '100%',
-        },
-        backToTopDarkShimmer: {
-            ...StyleSheet.absoluteFill,
-            borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
-        },
-        backToTopButtonDark: {
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-        },
         liquidGlassTouchTarget: {
             width: '100%',
             height: '100%',
@@ -1434,6 +1299,9 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean) {
             position: 'absolute',
             right: BACK_TO_TOP_BUTTON_MARGIN_RIGHT,
             bottom: BACK_TO_TOP_BUTTON_MARGIN_BOTTOM,
+            width: BACK_TO_TOP_BUTTON_SIZE,
+            height: BACK_TO_TOP_BUTTON_SIZE,
+            borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,
         }
     });
 }    

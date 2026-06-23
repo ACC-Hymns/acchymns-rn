@@ -38,13 +38,13 @@ export default function DisplayLayout() {
                     name="broadcast"
                     options={{
                         title: i18n.t('broadcast'),
-                        presentation: isLiquidGlass ? 'formSheet' : 'modal',
+                        presentation: 'formSheet',
                         sheetAllowedDetents: [0.5],
                         sheetInitialDetentIndex: 0,
                         sheetGrabberVisible: false,
                         sheetCornerRadius: 54,
                         contentStyle: { backgroundColor: "transparent" },
-                        headerShown: !isLiquidGlass,
+                        headerShown: false,
                         headerTitleStyle: {
                             color: Colors[theme ?? 'light'].text,
                         },
