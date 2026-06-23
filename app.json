@@ -164,7 +164,8 @@
       "expo-sharing",
       "expo-status-bar",
       "@rnrepo/expo-config-plugin",
-      "@react-native-vector-icons/ionicons"
+      "@react-native-vector-icons/ionicons",
+      "@preeternal/react-native-file-hash"
     ],
     "experiments": {
       "typedRoutes": true

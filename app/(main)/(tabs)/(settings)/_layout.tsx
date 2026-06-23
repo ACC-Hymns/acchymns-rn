@@ -123,6 +123,19 @@ export default function HomeLayout() {
                         headerTintColor: Colors[theme].tint
                     }}
                 />
+                <Stack.Screen
+                    name="release_tag"
+                    options={{
+                        title: i18n.t('hymnalReleaseTag'),
+                        headerShown: true,
+                        headerTitleAlign: 'center',
+                        headerBackTitle: i18n.t('help'),
+                        headerBackButtonDisplayMode: 'minimal',
+                        headerTransparent: true,
+                        headerShadowVisible: false,
+                        headerTintColor: Colors[theme].tint
+                    }}
+                />
             </Stack>
     );
 }

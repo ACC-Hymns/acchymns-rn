@@ -2,6 +2,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
+import { useHymnalUpdates } from '@/hooks/useHymnalUpdates';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
@@ -169,6 +170,11 @@ export default function TabLayout() {
     const discoverPageFlagEnabled = useFeatureFlag('discover-page');
 
     const i18n = useI18n();
+    const { data: hymnalUpdates } = useHymnalUpdates();
+    const hymnalUpdateCount = hymnalUpdates?.outdatedHymnals.length ?? 0;
+    const hymnalUpdateBadge = hymnalUpdateCount > 0
+        ? (hymnalUpdateCount > 9 ? '9+' : String(hymnalUpdateCount))
+        : null;
 
     return (
             <NativeTabs 
@@ -247,6 +253,9 @@ export default function TabLayout() {
                         default: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='settings-outline' />,
                         selected: <NativeTabs.Trigger.VectorIcon family={Ionicons} name='settings' />,
                     }} selectedColor={Colors[theme].tabIconSelected} />
+                    {hymnalUpdateBadge ? (
+                        <NativeTabs.Trigger.Badge>{hymnalUpdateBadge}</NativeTabs.Trigger.Badge>
+                    ) : null}
                 </NativeTabs.Trigger>
         </NativeTabs>
         );

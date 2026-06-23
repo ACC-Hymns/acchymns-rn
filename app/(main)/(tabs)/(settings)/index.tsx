@@ -10,6 +10,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
 
 export default function SettingsScreen() {
 
@@ -56,11 +57,13 @@ export default function SettingsScreen() {
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight
-                        style={styles.settingsItem}
                         onPress={() => router.push('/hymnal_importer')}
                         underlayColor={Colors[theme].divider}
                     >
-                        <StyledText style={styles.settingsText}>{i18n.t('addHymnal')}</StyledText>
+                        <View style={styles.settingsItem}>
+                            <StyledText style={styles.settingsText}>{i18n.t('addHymnal')}</StyledText>
+                            <HymnalUpdateBadge />
+                        </View>
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                     <TouchableHighlight

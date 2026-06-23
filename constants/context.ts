@@ -21,6 +21,8 @@ interface HymnalContextType {
     setBroadcastingToken: (token: string | null) => void;
     broadcastingChurch: string | null;
     setBroadcastingChurch: (church: string | null) => void;
+    hymnalReleaseTag: string | null;
+    setHymnalReleaseTag: (tag: string | null) => void;
 
     onLayoutHomeView: () => void;
     openDetailsBottomSheet?: () => void;
@@ -28,7 +30,12 @@ interface HymnalContextType {
     deleteHymnal?: (book: string) => Promise<void>;
     resetPreferences: () => Promise<void>;
 
-    setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>
+    setDownloadProgressValues: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    dismissedHymnalPackages: Record<string, true>;
+    dismissHymnalPackage: (book: string) => void;
+    clearDismissedHymnalPackage: (book: string) => void;
+    clearAllDismissedHymnalPackages: () => void;
+    completeHymnalPackage: (book: string, digest: string) => Promise<void>;
 }
 
 export const HymnalContext = createContext<HymnalContextType | undefined>(undefined);

@@ -1,12 +1,11 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager, Share } from 'react-native';
+import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager } from 'react-native';
 import Alert from '@blazejkustra/react-native-alert';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { router, Stack, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { HymnalContext } from '@/constants/context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { Bookmark, BookSummary, Song, SongList } from '@/constants/types';
-import { getSongData } from '@/scripts/hymnals';
+import { BookSummary, SongList } from '@/constants/types';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import * as Haptics from 'expo-haptics';
 import { Colors } from '@/constants/Colors';
@@ -20,7 +19,9 @@ import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
 import { showReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
-import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { AudioPlayer, createAudioPlayer } from 'expo-audio';
+
+const NOTE_PLAYER_OPTIONS = { keepAudioSessionActive: true } as const;
 import { getHTMLStringFromSong } from '@/scripts/image_handler';
 import Slider from '@react-native-community/slider';
 import { compareTitles, searchHymnary, SearchResult } from '@/scripts/hymnary_api';
@@ -38,13 +39,13 @@ import { useSongData } from '@/hooks/useSongData';
 import { useSongListData } from '@/hooks/useSongListData';
 import WebView from 'react-native-webview';
 import { useHeaderHeight } from 'expo-router/react-navigation';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleOnRN } from 'react-native-worklets';
 import { ScreenHeight } from 'react-native-elements/dist/helpers';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as SwiftUI from '@expo/ui/swift-ui';
 import { presentationDetents } from '@expo/ui/swift-ui/modifiers';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
+import { configureTrackPlayerCommands } from '@/constants/trackPlayer';
 
 const MUSIC_SHEET_BASE_HEIGHT = 280;
 
@@ -62,14 +63,11 @@ type DisplayHeaderToolbarProps = {
     theme: 'light' | 'dark';
     songNotesCount: number;
     hasBroadcasting: boolean;
-    isBookmarked: boolean;
     bookId: string;
     songId: string;
-    songTitle?: string;
     onBack: () => void;
     onMusicPress: () => void;
     onBroadcast: () => void;
-    onBookmarkPress: () => void;
     onReportIssuePress: () => void;
 };
 
@@ -78,28 +76,15 @@ function DisplayHeaderToolbar({
     theme,
     songNotesCount,
     hasBroadcasting,
-    isBookmarked,
     bookId,
     songId,
-    songTitle,
     onBack,
     onMusicPress,
     onBroadcast,
-    onBookmarkPress,
     onReportIssuePress,
 }: DisplayHeaderToolbarProps) {
-    const i18n = useI18n();
     const iconColor = Colors[theme].icon;
     const hidden = !isHeaderVisible;
-
-    const openReportIssueAfterMenuCloses = useCallback(() => {
-        InteractionManager.runAfterInteractions(() => {
-            const delay = Platform.OS === 'ios' ? 350 : 120;
-            setTimeout(() => {
-                onReportIssuePress();
-            }, delay);
-        });
-    }, [onReportIssuePress]);
 
     return (
         <>
@@ -113,7 +98,7 @@ function DisplayHeaderToolbar({
             </Stack.Toolbar>
             <Stack.Toolbar placement="right">
                 <Stack.Toolbar.Button
-                    icon="music.note"
+                    icon="music.quarternote.3"
                     onPress={onMusicPress}
                     hidden={hidden || songNotesCount === 0}
                     tintColor={iconColor}
@@ -124,33 +109,15 @@ function DisplayHeaderToolbar({
                     hidden={hidden || !hasBroadcasting}
                     tintColor={iconColor}
                 />
-                <Stack.Toolbar.Menu icon="ellipsis" hidden={hidden} tintColor={iconColor}>
-                    <Stack.Toolbar.MenuAction
-                        icon="bookmark"
-                        isOn={isBookmarked}
-                        onPress={onBookmarkPress}
-                    >
-                        {isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
-                    </Stack.Toolbar.MenuAction>
-                    <Stack.Toolbar.MenuAction
-                        icon="square.and.arrow.up"
-                        onPress={async () => {
-                            await Share.share({
-                                title: songTitle,
-                                message: `https://acchymns.app/display/${bookId}/${songId}`,
-                            });
-                        }}
-                    >
-                        {i18n.t('share')}
-                    </Stack.Toolbar.MenuAction>
-                    <Stack.Toolbar.MenuAction
-                        icon="exclamationmark.bubble"
-                        destructive
-                        onPress={openReportIssueAfterMenuCloses}
-                    >
-                        {i18n.t('reportIssue')}
-                    </Stack.Toolbar.MenuAction>
-                </Stack.Toolbar.Menu>
+                <Stack.Toolbar.View hidden={hidden}>
+                    <View style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
+                        <DisplayMoreMenu
+                            bookId={bookId}
+                            songId={songId}
+                            onReportIssuePress={onReportIssuePress}
+                        />
+                    </View>
+                </Stack.Toolbar.View>
             </Stack.Toolbar>
         </>
     );
@@ -178,58 +145,6 @@ export default function DisplayScreen() {
     const SwiftUIRNHostView = SwiftUI.RNHostView ?? (({ children }: { children: React.ReactElement }) => children);
 
     const context = useContext(HymnalContext);
-    const BOOKMARKS_KEY = 'bookmarks';
-    const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
-    const [isBookmarked, setIsBookmarked] = useState(false);
-    const addBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Check if the bookmark already exists
-            const exists = bookmarks.some(b => b.book === bookmark.book && b.number === bookmark.number);
-            if (exists) {
-                removeBookmark(bookmark);
-                return;
-            }
-            bookmarks.push(bookmark);
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-            setExistingBookmarks(bookmarks); // Update the current bookmarks
-            setIsBookmarked(true); // Set the bookmark state to true
-        } catch (error) {
-            console.error("Error saving bookmarks:", error);
-        }
-    };
-
-    const removeBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Filter out the bookmark to be removed
-            const updatedBookmarks = bookmarks.filter(b => !(b.book === bookmark.book && b.number === bookmark.number));
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
-            setIsBookmarked(false); // Set the bookmark state to false
-        } catch (error) {
-            console.error("Error removing bookmark:", error);
-        }
-    };
-
-    const [songData, setSongData] = useState<Song | null>(null);
-    useLayoutEffect(() => {
-        if (params.number) {
-            getSongData(params.id).then((data) => {
-                setSongData(data?.[params.number] || null);
-            });
-
-            AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
-                setExistingBookmarks(JSON.parse(data || '[]'));
-            });
-        }
-    }, [params.id, params.number]);
-    useEffect(() => {
-        if (songData && existingBookmarks) {
-            const isBookmarked = existingBookmarks.some(b => b.book === params.id && b.number === params.number);
-            setIsBookmarked(isBookmarked);
-        }
-    }, [songData, existingBookmarks, params.id, params.number]);
 
     const book = useBookData(params.id, context);
     const { loading, songs, error } = useSongListData(book);
@@ -332,13 +247,6 @@ export default function DisplayScreen() {
         router.navigate({ pathname: '/display/[id]/[number]/broadcast', params: { id: params.id, number: params.number || "" } });
     }
 
-    const handleBookmarkPress = useCallback(() => {
-        addBookmark({
-            book: params.id,
-            number: params.number ?? '',
-        });
-    }, [params.id, params.number]);
-
     const headerOptions = useMemo(() => {
         const keepsStaticHeaderSlot = !isIos26OrNewer;
         const shouldShowHeaderChrome = isHeaderVisible;
@@ -415,9 +323,35 @@ export default function DisplayScreen() {
     ]);
 
     // piano
-    const progress = useProgress();
-    const isPianoPlaying = useIsPlaying();
     const [hasPiano, setHasPiano] = useState(false);
+    const progress = useProgress(hasPiano ? 0.25 : 1);
+    const isPianoPlaying = useIsPlaying();
+    const [pianoSeekOverride, setPianoSeekOverride] = useState<number | null>(null);
+    const pianoSeekReleaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pianoDuration = progress.duration > 0 ? progress.duration : 0;
+    const pianoPosition = pianoSeekOverride ?? progress.position;
+    const canSeekPiano = pianoDuration > 0;
+
+    const clearPianoSeekOverride = useCallback(() => {
+        if (pianoSeekReleaseTimeoutRef.current) {
+            clearTimeout(pianoSeekReleaseTimeoutRef.current);
+            pianoSeekReleaseTimeoutRef.current = null;
+        }
+        setPianoSeekOverride(null);
+    }, []);
+
+    useEffect(() => {
+        clearPianoSeekOverride();
+    }, [params.id, params.number, clearPianoSeekOverride]);
+
+    useEffect(() => {
+        if (pianoSeekOverride === null) {
+            return;
+        }
+        if (Math.abs(progress.position - pianoSeekOverride) <= 1) {
+            clearPianoSeekOverride();
+        }
+    }, [clearPianoSeekOverride, pianoSeekOverride, progress.position]);
 
     useEffect(() => {
         const openSheetToken = typeof params.openSheet === 'string' ? params.openSheet : undefined;
@@ -550,9 +484,10 @@ export default function DisplayScreen() {
                     if (response.ok) {
                         setHasPiano(true);
 
-                        // if the same track is already playing, don't set it again
+                        // if the same track is already active, just refresh media-session commands
                         const currentTrack = TrackPlayer.getActiveMediaItem();
                         if (currentTrack?.mediaId === `${params.id}:${params.number}`) {
+                            configureTrackPlayerCommands();
                             return;
                         }
 
@@ -563,7 +498,9 @@ export default function DisplayScreen() {
                             artist: book.name.medium,
                             artworkUrl: 'https://raw.githubusercontent.com/ACC-Hymns/acchymns-rn/refs/heads/main/assets/icons/ios-dark.png', // Load artwork from the network
                         };
+                        TrackPlayer.preload(track_data);
                         TrackPlayer.setMediaItem(track_data);
+                        configureTrackPlayerCommands();
                     } else {
 
                     }
@@ -600,7 +537,7 @@ export default function DisplayScreen() {
                 // Create audio players asynchronously to avoid blocking
                 for (const note of reversedNotes) {
                     const assetId = getNoteMp3(note);
-                    const player = createAudioPlayer(assetId);
+                    const player = createAudioPlayer(assetId, NOTE_PLAYER_OPTIONS);
                     audioPlayers.current.push(player);
                     // Yield to JS thread periodically
                     if (audioPlayers.current.length % 5 === 0) {
@@ -659,7 +596,7 @@ export default function DisplayScreen() {
             } catch (error) {
                 // try to release and reset the players
                 player.release();
-                audioPlayers.current[id] = createAudioPlayer(getNoteMp3(note));
+                audioPlayers.current[id] = createAudioPlayer(getNoteMp3(note), NOTE_PLAYER_OPTIONS);
                 audioPlayers.current[id].play();
             }
         }
@@ -741,15 +678,27 @@ export default function DisplayScreen() {
                 </TouchableOpacity>
                 <View style={{ width: 350, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 0 }}>
                     <StyledText style={{ width: 32, textAlign: 'left', color: Colors[theme].text }}>
-                        {formatTime(progress.position)}
+                        {formatTime(pianoPosition)}
                     </StyledText>
                     <Slider
-                        value={Math.round(progress.position * 100)}
+                        value={pianoPosition}
                         minimumValue={0}
-                        maximumValue={Math.round(progress.duration * 100)}
+                        maximumValue={pianoDuration || 1}
                         step={1}
-                        onValueChange={async (value: number) => {
-                            await TrackPlayer.seekTo(value / 100);
+                        disabled={!canSeekPiano}
+                        onValueChange={(value: number) => {
+                            setPianoSeekOverride(value);
+                        }}
+                        onSlidingComplete={(value: number) => {
+                            setPianoSeekOverride(value);
+                            TrackPlayer.seekTo(value);
+                            if (pianoSeekReleaseTimeoutRef.current) {
+                                clearTimeout(pianoSeekReleaseTimeoutRef.current);
+                            }
+                            pianoSeekReleaseTimeoutRef.current = setTimeout(() => {
+                                pianoSeekReleaseTimeoutRef.current = null;
+                                setPianoSeekOverride(null);
+                            }, 1500);
                         }}
                         tapToSeek={true}
                         minimumTrackTintColor={Colors[theme].tint}
@@ -758,7 +707,7 @@ export default function DisplayScreen() {
                         style={{ flex: 1 }}
                     />
                     <StyledText style={{ width: 32, textAlign: 'right', color: Colors[theme].text }}>
-                        {formatTime(progress.duration)}
+                        {formatTime(pianoDuration)}
                     </StyledText>
                 </View>
             </View>
@@ -1008,14 +957,11 @@ export default function DisplayScreen() {
                     theme={theme as 'light' | 'dark'}
                     songNotesCount={songNotes.length}
                     hasBroadcasting={!!context?.broadcastingToken}
-                    isBookmarked={isBookmarked}
                     bookId={params.id}
                     songId={params.number ?? ''}
-                    songTitle={songData?.title}
                     onBack={() => router.back()}
                     onMusicPress={handlePress}
                     onBroadcast={broadcastSong}
-                    onBookmarkPress={handleBookmarkPress}
                     onReportIssuePress={openReportIssuePrompt}
                 />
             ) : null}

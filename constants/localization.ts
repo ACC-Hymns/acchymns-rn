@@ -131,6 +131,7 @@ const translations = {
         // Hymnal Importer screen
         addHymnalSubtitle: 'Download hymnals to access them offline.',
         verifying: 'Verifying...',
+        extracting: 'Extracting...',
         size: 'Size',
         progress: 'Progress',
         failedToLoadHymnals: 'Failed to load Hymnals',
@@ -140,6 +141,17 @@ const translations = {
         verificationFailedMessage: 'Some files were unable to download properly. Please try again.',
         ok: 'OK',
         startingDownload: 'Starting download...',
+        updatesAvailable: 'Updates Available',
+        availableHymnals: 'Available to Download',
+        updateAvailable: 'Update available',
+        allHymnalsUpToDate: 'All your hymnals are up to date.',
+        hymnalReleaseTag: 'Hymnal Release Tag',
+        hymnalReleaseTagLatest: 'Latest release',
+        hymnalReleaseTagDescription: 'Choose which GitHub release to use for hymnal downloads and update checks. Downloads always use the exact asset URL from the selected release.',
+        customReleaseTag: 'Custom tag',
+        customReleaseTagPlaceholder: 'e.g. 42',
+        failedToLoadReleaseTags: 'Failed to load release tags.',
+        prerelease: 'pre-release',
     },
     es: {
         // Generic
@@ -251,6 +263,10 @@ const translations = {
         verificationFailedMessage: 'Algunos archivos no pudieron descargarse correctamente. Por favor, intenta nuevamente.',
         ok: 'OK',
         startingDownload: 'Iniciando descarga...',
+        updatesAvailable: 'Actualizaciones disponibles',
+        availableHymnals: 'Disponibles para descargar',
+        updateAvailable: 'Actualización disponible',
+        allHymnalsUpToDate: 'Todos tus himnarios están actualizados.',
     },
     fr: {
         // Generic
@@ -363,6 +379,10 @@ const translations = {
         verificationFailedMessage: 'Certains fichiers n\'ont pas pu être téléchargés correctement. Veuillez réessayer.',
         ok: 'D\'accord',
         startingDownload: 'Démarrage de la téléchargement...',
+        updatesAvailable: 'Mises à jour disponibles',
+        availableHymnals: 'Disponibles au téléchargement',
+        updateAvailable: 'Mise à jour disponible',
+        allHymnalsUpToDate: 'Tous vos hymnaires sont à jour.',
     },
     de: {
         // Generic
@@ -474,6 +494,10 @@ const translations = {
         verificationFailedMessage: 'Einige Dateien konnten nicht ordnungsgemäß heruntergeladen werden. Bitte versuche es erneut.',
         ok: 'OK',
         startingDownload: 'Herunterladen gestartet...',
+        updatesAvailable: 'Updates verfügbar',
+        availableHymnals: 'Zum Download verfügbar',
+        updateAvailable: 'Update verfügbar',
+        allHymnalsUpToDate: 'Alle Hymnals sind auf dem neuesten Stand.',
     },
     sr: {
         // Generic
@@ -585,6 +609,10 @@ const translations = {
         verificationFailedMessage: 'Neki fajlovi nisu mogli biti preuzeti. Pokušajte ponovno.',
         ok: 'U redu',
         startingDownload: 'Preuzimanje započelo...',
+        updatesAvailable: 'Dostupna ažuriranja',
+        availableHymnals: 'Dostupno za preuzimanje',
+        updateAvailable: 'Ažuriranje dostupno',
+        allHymnalsUpToDate: 'Svi vaši himnari su ažurirani.',
     },
     hu: {
         // Generic
@@ -696,6 +724,10 @@ const translations = {
         verificationFailedMessage: 'Néhány fájlt nem sikerült letölteni. Próbálja újra.',
         ok: 'OK',
         startingDownload: 'Letöltés indítása...',
+        updatesAvailable: 'Frissítések elérhetők',
+        availableHymnals: 'Letölthető',
+        updateAvailable: 'Frissítés elérhető',
+        allHymnalsUpToDate: 'Minden énekárja naprakész.',
     },
     ja: {
         // Generic
@@ -807,6 +839,10 @@ const translations = {
         verificationFailedMessage: '一部のファイルが正しくダウンロードされませんでした。もう一度お試しください。',
         ok: 'わかった',
         startingDownload: 'ダウンロードを開始しています...',
+        updatesAvailable: '更新が利用可能',
+        availableHymnals: 'ダウンロード可能',
+        updateAvailable: '更新が利用可能',
+        allHymnalsUpToDate: 'すべての賛美歌集は最新です。',
     },
     pt: {
         // Generic
@@ -918,6 +954,10 @@ const translations = {
         verificationFailedMessage: 'Alguns arquivos não puderam ser baixados corretamente. Tente novamente.',
         ok: 'OK',
         startingDownload: 'Iniciando download...',
+        updatesAvailable: 'Atualizações disponíveis',
+        availableHymnals: 'Disponíveis para download',
+        updateAvailable: 'Atualização disponível',
+        allHymnalsUpToDate: 'Todos os seus hinários estão atualizados.',
     }
 }
 

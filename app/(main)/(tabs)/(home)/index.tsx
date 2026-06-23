@@ -16,6 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { Animated as RNAnimated } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
 
 function parseStoredOrder(raw: string | null): { order: string[]; isValid: boolean } {
     if (!raw) {
@@ -245,12 +246,16 @@ export default function HomeScreen() {
                 <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 30 }}>
                     <TouchableOpacity
                         onPress={() => router.push('/hymnal_importer')}
+                        style={{ position: 'relative' }}
                     >
                         <Ionicons
                             name="add-circle-outline"
                             size={56}
                             color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
                         />
+                        <View style={{ position: 'absolute', top: -2, right: -4 }}>
+                            <HymnalUpdateBadge size="medium" />
+                        </View>
                     </TouchableOpacity>
                 </View>
             </Animated.ScrollView>

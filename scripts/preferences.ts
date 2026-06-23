@@ -10,6 +10,7 @@ export const PREFERENCE_KEYS = {
     invertSheetMusic: 'invertSheetMusic',
     broadcastingToken: 'broadcastingToken',
     broadcastingChurch: 'broadcastingChurch',
+    hymnalReleaseTag: 'hymnalReleaseTag',
 } as const;
 
 export type PreferenceKey = keyof typeof PREFERENCE_KEYS;
@@ -23,6 +24,7 @@ export type PreferencesState = {
     invertSheetMusic: boolean | null;
     broadcastingToken: string | null;
     broadcastingChurch: string | null;
+    hymnalReleaseTag: string | null;
 };
 
 export const INITIAL_PREFERENCES: PreferencesState = {
@@ -34,6 +36,7 @@ export const INITIAL_PREFERENCES: PreferencesState = {
     invertSheetMusic: null,
     broadcastingToken: null,
     broadcastingChurch: null,
+    hymnalReleaseTag: null,
 };
 
 const BOOLEAN_PREFERENCE_KEYS = new Set<PreferenceKey>([

@@ -3,12 +3,14 @@ import { getLoadedFonts, useFonts } from 'expo-font';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { loadHymnals, removeHymnal } from '@/scripts/hymnals';
+import { loadHymnals, removeHymnal, setHymnalDownloadProgressUpdater } from '@/scripts/hymnals';
+import { buildHymnalUpdatesQueryKey, optimisticallyMarkHymnalUpToDate } from '@/hooks/useHymnalUpdates';
+import { fetchHymnalReleaseData } from '@/scripts/hymnalUpdates';
 import { DownloadProgressContext, HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
 import { View } from 'react-native';
@@ -25,8 +27,8 @@ import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
 import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
 import TrackPlayer from '@rntp/player';
-import { PlayerCommand } from '@rntp/player';
 import { BackgroundEvent, Event } from '@rntp/player';
+import { configureTrackPlayerCommands, registerTrackPlayerMediaSessionRefresh } from '@/constants/trackPlayer';
 import { usePreferences } from '@/hooks/usePreferences';
 
 
@@ -80,27 +82,18 @@ export default function RootLayout() {
                     switch (event.type) {
                         case Event.RemotePlay: await TrackPlayer.play(); break;
                         case Event.RemotePause: await TrackPlayer.pause(); break;
-                        case Event.RemoteNext: await TrackPlayer.skipToNext(); break;
-                        case Event.RemotePrevious: await TrackPlayer.skipToPrevious(); break;
                         case Event.RemoteSeek: await TrackPlayer.seekTo(event.position); break;
                         case Event.RemoteSkipBackward: await TrackPlayer.seekBy(-10); break;
                         case Event.RemoteSkipForward: await TrackPlayer.seekBy(10); break;
                     }
                 });
 
-                await TrackPlayer.setupPlayer({
+                TrackPlayer.destroy();
+                TrackPlayer.setupPlayer({
                     contentType: 'music',
                     handleAudioBecomingNoisy: true,
                 });
-
-                await TrackPlayer.setCommands({
-                    capabilities: [
-                        PlayerCommand.PlayPause,
-                        PlayerCommand.SkipForward,
-                        PlayerCommand.SkipBackward,
-                        PlayerCommand.Seek
-                    ],
-                });
+                configureTrackPlayerCommands();
             } catch (error) {
                 console.error('TrackPlayer setup failed:', error);
             }
@@ -108,10 +101,27 @@ export default function RootLayout() {
         setup();
     }, []);
 
+    useEffect(() => registerTrackPlayerMediaSessionRefresh(), []);
+
     const [stableUserId, setStableUserId] = useState<string | null>(null);
 
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
+    const [dismissedHymnalPackages, setDismissedHymnalPackages] = useState<Record<string, true>>({});
+
+    useEffect(() => {
+        setHymnalDownloadProgressUpdater((book, progress) => {
+            setDownloadProgressValues((prev) => {
+                if (progress === 0) {
+                    const { [book]: _, ...rest } = prev;
+                    return rest;
+                }
+                return { ...prev, [book]: progress };
+            });
+        });
+
+        return () => setHymnalDownloadProgressUpdater(null);
+    }, []);
 
     const {
         discoverPageVisited,
@@ -130,6 +140,8 @@ export default function RootLayout() {
         setBroadcastingToken,
         broadcastingChurch,
         setBroadcastingChurch,
+        hymnalReleaseTag,
+        setHymnalReleaseTag,
         resetPreferences,
     } = usePreferences();
 
@@ -137,6 +149,45 @@ export default function RootLayout() {
         themeOverride === 'light' || themeOverride === 'dark'
             ? themeOverride
             : (systemColorScheme ?? 'light');
+
+    const dismissHymnalPackage = useCallback((book: string) => {
+        setDismissedHymnalPackages((prev) => ({ ...prev, [book]: true }));
+    }, []);
+
+    const clearDismissedHymnalPackage = useCallback((book: string) => {
+        setDismissedHymnalPackages((prev) => {
+            const { [book]: _, ...rest } = prev;
+            return rest;
+        });
+    }, []);
+
+    const clearAllDismissedHymnalPackages = useCallback(() => {
+        setDismissedHymnalPackages({});
+    }, []);
+
+    const previousReleaseTag = useRef<string | null | undefined>(undefined);
+    useEffect(() => {
+        if (previousReleaseTag.current === undefined) {
+            previousReleaseTag.current = hymnalReleaseTag;
+            return;
+        }
+        if (previousReleaseTag.current !== hymnalReleaseTag) {
+            clearAllDismissedHymnalPackages();
+            previousReleaseTag.current = hymnalReleaseTag;
+        }
+    }, [clearAllDismissedHymnalPackages, hymnalReleaseTag]);
+
+    const completeHymnalPackage = useCallback(async (book: string, digest: string) => {
+        dismissHymnalPackage(book);
+        optimisticallyMarkHymnalUpToDate(
+            queryClient,
+            buildHymnalUpdatesQueryKey(hymnalReleaseTag),
+            book,
+            digest,
+        );
+        const loadedData = await loadHymnals();
+        SET_BOOK_DATA(loadedData);
+    }, [dismissHymnalPackage, hymnalReleaseTag]);
 
     const deleteHymnal = useCallback(async (book: string) => {
         try {
@@ -146,13 +197,14 @@ export default function RootLayout() {
                 const { [book]: _, ...rest } = prev;
                 return rest;
             });
+            clearDismissedHymnalPackage(book);
 
             const updatedBooks = await loadHymnals();
             SET_BOOK_DATA(updatedBooks);
         } catch (error) {
             console.error("Failed to delete hymnal:", error);
         }
-    }, []);
+    }, [clearDismissedHymnalPackage]);
 
     const onLayoutRootView = useCallback(() => {
         if (appIsReady) {
@@ -166,6 +218,11 @@ export default function RootLayout() {
             SET_BOOK_DATA,
             onLayoutHomeView: onLayoutRootView,
             setDownloadProgressValues,
+            dismissedHymnalPackages,
+            dismissHymnalPackage,
+            clearDismissedHymnalPackage,
+            clearAllDismissedHymnalPackages,
+            completeHymnalPackage,
             discoverPageVisited,
             setDiscoverPageVisited,
             legacyNumberGrouping,
@@ -182,6 +239,8 @@ export default function RootLayout() {
             setBroadcastingToken,
             broadcastingChurch,
             setBroadcastingChurch,
+            hymnalReleaseTag,
+            setHymnalReleaseTag,
             resetPreferences,
             deleteHymnal
         };
@@ -190,6 +249,11 @@ export default function RootLayout() {
         SET_BOOK_DATA,
         onLayoutRootView,
         setDownloadProgressValues,
+        dismissedHymnalPackages,
+        dismissHymnalPackage,
+        clearDismissedHymnalPackage,
+        clearAllDismissedHymnalPackages,
+        completeHymnalPackage,
         discoverPageVisited,
         setDiscoverPageVisited,
         legacyNumberGrouping,
@@ -206,6 +270,8 @@ export default function RootLayout() {
         setBroadcastingToken,
         broadcastingChurch,
         setBroadcastingChurch,
+        hymnalReleaseTag,
+        setHymnalReleaseTag,
         resetPreferences,
         deleteHymnal,
     ]);
@@ -235,6 +301,22 @@ export default function RootLayout() {
             console.error("Error loading hymnals:", error);
         });
     }, [loaded, SET_BOOK_DATA]);
+
+    useEffect(() => {
+        if (!appIsReady) {
+            return;
+        }
+
+        const installedBookIds = Object.values(BOOK_DATA).map((book) => book.name.short);
+        queryClient.prefetchQuery({
+            queryKey: buildHymnalUpdatesQueryKey(hymnalReleaseTag),
+            queryFn: async () => {
+                const result = await fetchHymnalReleaseData(installedBookIds, hymnalReleaseTag);
+                const { outdatedHymnals: _, ...cache } = result;
+                return cache;
+            },
+        }).catch(() => undefined);
+    }, [appIsReady, hymnalReleaseTag]);
 
     if (!appIsReady || !stableUserId) {
         return null;

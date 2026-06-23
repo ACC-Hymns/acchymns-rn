@@ -74,6 +74,10 @@ export function usePreferences() {
         (value: string | null) => setPreference('broadcastingChurch', value),
         [setPreference],
     );
+    const setHymnalReleaseTag = useCallback(
+        (value: string | null) => setPreference('hymnalReleaseTag', value),
+        [setPreference],
+    );
 
     return {
         ...preferences,
@@ -85,6 +89,7 @@ export function usePreferences() {
         setInvertSheetMusic,
         setBroadcastingToken,
         setBroadcastingChurch,
+        setHymnalReleaseTag,
         resetPreferences,
     };
 }
