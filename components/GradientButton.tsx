@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Pressable } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 
 import StyledText from '@/components/StyledText';
 interface GradientButtonProps {
@@ -9,7 +10,10 @@ interface GradientButtonProps {
     onLongPress?: () => void;
     primaryColor: string;
     secondaryColor: string;
+    coverImageUrl?: string;
 }
+
+const failedCoverUrls = new Set<string>();
 
 const GradientButton: React.FC<GradientButtonProps> = ({
     title,
@@ -17,17 +21,22 @@ const GradientButton: React.FC<GradientButtonProps> = ({
     onLongPress,
     primaryColor,
     secondaryColor,
+    coverImageUrl,
 }) => {
-    // save press duration to state
-    const [pressStart, setPressStart] = React.useState<number | null>(null);
+    const [coverLoadFailed, setCoverLoadFailed] = React.useState(
+        coverImageUrl ? failedCoverUrls.has(coverImageUrl) : false,
+    );
+
+    React.useEffect(() => {
+        setCoverLoadFailed(coverImageUrl ? failedCoverUrls.has(coverImageUrl) : false);
+    }, [coverImageUrl]);
 
     return (
             <TouchableOpacity
                 onPress={() => {
-                    // check press duration
                     onPress?.();
                 }}
-
+                onLongPress={onLongPress}
                 style={styles.buttonContainer}
                 activeOpacity={0.7}
                 >
@@ -35,8 +44,21 @@ const GradientButton: React.FC<GradientButtonProps> = ({
                     colors={[primaryColor, secondaryColor]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    style={[styles.gradient]}
+                    style={styles.gradient}
                 >
+                    {!coverLoadFailed && coverImageUrl ? (
+                        <Image
+                            source={coverImageUrl}
+                            style={styles.coverImage}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                            transition={180}
+                            onError={() => {
+                                failedCoverUrls.add(coverImageUrl);
+                                setCoverLoadFailed(true);
+                            }}
+                        />
+                    ) : null}
                     <StyledText style={styles.buttonText}>{title}</StyledText>
                 </LinearGradient>
         </TouchableOpacity>
@@ -55,7 +77,18 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         justifyContent: 'center',
         height: 110,
-        flex: 1
+        flex: 1,
+        overflow: 'hidden',
+    },
+    coverImage: {
+        position: 'absolute',
+        right: 0,
+        top: 16,
+        width: 86,
+        height: 125,
+        opacity: 0.35,
+        borderRadius: 4,
+        transform: [{ rotate: '-15deg' }],
     },
     buttonText: {
         color: '#fff',

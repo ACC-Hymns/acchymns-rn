@@ -1,4 +1,5 @@
 import GradientButton from '@/components/GradientButton';
+import { getHymnalCoverUrl } from '@/constants/assets';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -17,6 +18,7 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { Animated as RNAnimated } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
+import { useFeatureFlag } from 'posthog-react-native';
 
 function parseStoredOrder(raw: string | null): { order: string[]; isValid: boolean } {
     if (!raw) {
@@ -49,6 +51,7 @@ export default function HomeScreen() {
     const router = useRouter();
 
     const i18n = useI18n();
+    const hymnalCoverImagesEnabled = useFeatureFlag('hymnal-cover-images');
 
     // before rendering, check if the user has any books
     // if not, push the user to the hymnal importer
@@ -142,6 +145,7 @@ export default function HomeScreen() {
                     title={context?.BOOK_DATA?.[item].name.medium || ""}
                     primaryColor={context?.BOOK_DATA?.[item].primaryColor || ""}
                     secondaryColor={context?.BOOK_DATA?.[item].secondaryColor || ""}
+                    coverImageUrl={hymnalCoverImagesEnabled ? getHymnalCoverUrl(item) : undefined}
                 />
             </View>
         )
@@ -151,7 +155,7 @@ export default function HomeScreen() {
         ({ item }) => (
             <HymnalItem item={item} />
         ),
-        [context?.BOOK_DATA, router]
+        [context?.BOOK_DATA, router, hymnalCoverImagesEnabled]
     );
 
     // Filter and memoize the data to only include items that exist in BOOK_DATA

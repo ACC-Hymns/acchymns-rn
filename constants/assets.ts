@@ -72,6 +72,12 @@ export const trebleNotePngs = {
 
 export const loginIconImage = require('../assets/icons/adaptive-icon.png');
 
+const HYMNAL_MEDIA_BASE_URL = 'https://acchymnsmedia.s3.us-east-2.amazonaws.com';
+
+export function getHymnalCoverUrl(hymnalId: string) {
+    return `${HYMNAL_MEDIA_BASE_URL}/covers/${hymnalId}.png`;
+}
+
 export const noteMp3s = {
     'C2': require('@/assets/sounds/C2.mp3'),
     'Db2': require('@/assets/sounds/Db2.mp3'),
