@@ -3,7 +3,7 @@
     "name": "Hymnal",
     "slug": "acchymns",
     "version": "5.0.0",
-    "runtimeVersion": "5.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "scheme": "acchymns",
