@@ -71,7 +71,7 @@ const translations = {
         settings: 'Settings',
         info: 'INFO',
         appVersion: 'App Version',
-        runtimeVersion: 'Runtime Version',
+        updateId: 'Update ID',
 
         // Help screen
         help: 'Help',
@@ -200,7 +200,7 @@ const translations = {
         settings: 'Configuración',
         info: 'INFORMACIÓN',
         appVersion: 'Versión de la aplicación',
-        runtimeVersion: 'Versión de ejecución',
+        updateId: 'ID de actualización',
 
         help: 'Ayuda',
         general: 'GENERAL',
@@ -317,7 +317,7 @@ const translations = {
         settings: 'Paramètres',
         info: 'INFORMATIONS',
         appVersion: 'Version de l\'application',
-        runtimeVersion: 'Version d\'exécution',
+        updateId: 'ID de mise à jour',
 
         help: 'Aide',
         general: 'GÉNÉRAL',
@@ -435,7 +435,7 @@ const translations = {
         settings: 'Einstellungen',
         info: 'INFORMATIONEN',
         appVersion: 'App-Version',
-        runtimeVersion: 'Laufzeitversion',
+        updateId: 'Update-ID',
 
         help: 'Hilfe',
         general: 'ALLGEMEIN',
@@ -552,7 +552,7 @@ const translations = {
         settings: 'Postavke',
         info: 'INFORMACIJE',
         appVersion: 'Verzija aplikacije',
-        runtimeVersion: 'Verzija izvršavanja',
+        updateId: 'ID ažuriranja',
 
         help: 'Pomoć',
         general: 'OPŠTE',
@@ -669,7 +669,7 @@ const translations = {
         settings: 'Beállítások',
         info: 'INFORMÁCIÓ',
         appVersion: 'Alkalmazás verzió',
-        runtimeVersion: 'Futásidejű verzió',
+        updateId: 'Frissítés azonosító',
 
         help: 'Súgó',
         general: 'ÁLTALÁNOS',
@@ -786,7 +786,7 @@ const translations = {
         settings: '設定',
         info: '情報',
         appVersion: 'アプリケーションバージョン',
-        runtimeVersion: 'ランタイムバージョン',
+        updateId: 'アップデートID',
 
         help: 'ヘルプ',
         general: '一般',
@@ -903,7 +903,7 @@ const translations = {
         settings: 'Preferências',
         info: 'INFORMAÇÕES',
         appVersion: 'Versão do aplicativo',
-        runtimeVersion: 'Versão de execução',
+        updateId: 'ID da atualização',
 
         help: 'Ajuda',
         general: 'GERAL',

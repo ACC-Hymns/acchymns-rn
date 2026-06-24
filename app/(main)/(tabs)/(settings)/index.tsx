@@ -21,7 +21,7 @@ export default function SettingsScreen() {
     const context = useContext(HymnalContext);
 
     const i18n = useI18n();
-    const runtimeVersion = Updates.runtimeVersion ?? Constants.expoConfig?.runtimeVersion;
+    const updateIdSegment = Updates.updateId?.split('-')[0];
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
@@ -48,8 +48,8 @@ export default function SettingsScreen() {
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
-                            <StyledText style={styles.settingsText}>{i18n.t('runtimeVersion')}</StyledText>
-                            <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{runtimeVersion}</StyledText>
+                            <StyledText style={styles.settingsText}>{i18n.t('updateId')}</StyledText>
+                            <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{updateIdSegment}</StyledText>
                         </View>
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
