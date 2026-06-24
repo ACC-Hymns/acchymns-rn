@@ -133,7 +133,7 @@ export default function DisplayScreen() {
         () => Platform.OS === 'android'
             // Android ModalBottomSheet only supports 0%, ~50%, and 100%; two snap points
             // are required so index 0 opens at partial (~50%) instead of full screen.
-            ? ['50%']
+            ? ['0%', '50%']
             : [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))],
         [windowHeight],
     );

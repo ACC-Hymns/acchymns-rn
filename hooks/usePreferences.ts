@@ -81,6 +81,7 @@ export function usePreferences() {
 
     return {
         ...preferences,
+        isPreferencesLoaded: isLoaded,
         setDiscoverPageVisited,
         setLegacyNumberGrouping,
         setLanguageOverride,

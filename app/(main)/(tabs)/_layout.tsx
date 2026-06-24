@@ -212,7 +212,7 @@ export default function TabLayout() {
 
                 
                 {discoverPageFlagEnabled && (
-                    !context?.discoverPageVisited ? (
+                    context?.discoverPageVisited !== true ? (
                         <NativeTabs.Trigger name="discover"
                             contentStyle={{ backgroundColor: Colors[theme].background }}
                         >

@@ -106,8 +106,11 @@ export default function RootLayout() {
     const [stableUserId, setStableUserId] = useState<string | null>(null);
 
     const [BOOK_DATA, SET_BOOK_DATA] = useState<Record<string, BookSummary>>({});
+    const [hymnalsLoaded, setHymnalsLoaded] = useState(false);
     const [downloadProgressValues, setDownloadProgressValues] = useState<Record<string, number>>({});
     const [dismissedHymnalPackages, setDismissedHymnalPackages] = useState<Record<string, true>>({});
+    const homeLayoutDoneRef = useRef(false);
+    const featureFlagsReadyRef = useRef(false);
 
     useEffect(() => {
         setHymnalDownloadProgressUpdater((book, progress) => {
@@ -143,6 +146,7 @@ export default function RootLayout() {
         hymnalReleaseTag,
         setHymnalReleaseTag,
         resetPreferences,
+        isPreferencesLoaded,
     } = usePreferences();
 
     const effectiveTheme: 'light' | 'dark' =
@@ -206,11 +210,25 @@ export default function RootLayout() {
         }
     }, [clearDismissedHymnalPackage]);
 
-    const onLayoutRootView = useCallback(() => {
-        if (appIsReady) {
+    const tryHideSplash = useCallback(() => {
+        if (
+            appIsReady
+            && homeLayoutDoneRef.current
+            && featureFlagsReadyRef.current
+        ) {
             SplashScreen.hideAsync();
         }
     }, [appIsReady]);
+
+    const onLayoutRootView = useCallback(() => {
+        homeLayoutDoneRef.current = true;
+        tryHideSplash();
+    }, [tryHideSplash]);
+
+    const onFeatureFlagsReady = useCallback(() => {
+        featureFlagsReadyRef.current = true;
+        tryHideSplash();
+    }, [tryHideSplash]);
 
     const context: HymnalContextType = useMemo(() => {
         return {
@@ -288,19 +306,28 @@ export default function RootLayout() {
                 console.error('Error loading stable user id:', error);
             });
 
-        const data = loadHymnals();
-        data.then((data) => {
-            SET_BOOK_DATA(data);
-            if (loaded) {
-                if (error)
-                    console.log(error);
+        loadHymnals()
+            .then((data) => {
+                SET_BOOK_DATA(data);
+                setHymnalsLoaded(true);
+            })
+            .catch((error) => {
+                console.error("Error loading hymnals:", error);
+                setHymnalsLoaded(true);
+            });
+    }, []);
 
-                setAppIsReady(true);
-            }
-        }).catch((error) => {
-            console.error("Error loading hymnals:", error);
-        });
-    }, [loaded, SET_BOOK_DATA]);
+    useEffect(() => {
+        if (!loaded || !hymnalsLoaded || !isPreferencesLoaded) {
+            return;
+        }
+
+        if (error) {
+            console.log(error);
+        }
+
+        setAppIsReady(true);
+    }, [loaded, hymnalsLoaded, isPreferencesLoaded, error]);
 
     useEffect(() => {
         if (!appIsReady) {
@@ -333,7 +360,7 @@ export default function RootLayout() {
                 distinctId: stableUserId,
             },
         }} autocapture={{ captureScreens: false }}>
-            <PostHogIdentity stableUserId={stableUserId} />
+            <PostHogIdentity stableUserId={stableUserId} onFeatureFlagsReady={onFeatureFlagsReady} />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <HymnalContext.Provider value={context}>
                     <DownloadProgressContext.Provider value={downloadProgressValues}>
