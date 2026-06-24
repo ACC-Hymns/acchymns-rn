@@ -5,7 +5,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { useHymnalUpdates } from '@/hooks/useHymnalUpdates';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import StyledText from '@/components/StyledText';
 import { router, usePathname } from 'expo-router';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
@@ -22,6 +22,52 @@ function parseMediaId(mediaId?: string) {
     return { bookId, songId };
 }
 
+const BOTTOM_ACCESSORY_REMOUNT_DELAY_MS = 150;
+
+/**
+ * Fully unmounts the bottom accessory while the window resizes, then remounts once
+ * dimensions settle. Matches a fresh launch layout without reloading the app.
+ */
+function useBottomAccessoryRemountOnResize(enabled: boolean) {
+    const { width, height } = useWindowDimensions();
+    const [mounted, setMounted] = useState(true);
+    const [mountKey, setMountKey] = useState(0);
+    const remountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const skipInitialResizeRef = useRef(true);
+
+    useEffect(() => {
+        if (!enabled) {
+            setMounted(true);
+            return;
+        }
+
+        if (skipInitialResizeRef.current) {
+            skipInitialResizeRef.current = false;
+            return;
+        }
+
+        setMounted(false);
+
+        if (remountTimerRef.current) {
+            clearTimeout(remountTimerRef.current);
+        }
+
+        remountTimerRef.current = setTimeout(() => {
+            setMountKey((key) => key + 1);
+            setMounted(true);
+            remountTimerRef.current = null;
+        }, BOTTOM_ACCESSORY_REMOUNT_DELAY_MS);
+
+        return () => {
+            if (remountTimerRef.current) {
+                clearTimeout(remountTimerRef.current);
+            }
+        };
+    }, [enabled, width, height]);
+
+    return { mounted, mountKey };
+}
+
 function MediaBottomAccessoryContent({
     theme,
     track,
@@ -30,7 +76,7 @@ function MediaBottomAccessoryContent({
     track: MediaItem;
 }) {
     const placement = NativeTabs.BottomAccessory.usePlacement?.() ?? 'regular';
-    const playing = useIsPlaying();     
+    const playing = useIsPlaying();
     const placementLogRef = useRef<string | null>(null);
 
     useEffect(() => {
@@ -48,44 +94,61 @@ function MediaBottomAccessoryContent({
         await TrackPlayer.play();
     };
 
-    return (
-        <View style={[styles.regularAccessory, { backgroundColor: Colors[theme].liquidGlass }]}>
-            {track.artworkUrl ? (
-                <Image source={{ uri: track.artworkUrl as string }} style={styles.trackArtwork} />
-            ) : (
-                <View style={[styles.trackArtwork, styles.trackArtworkFallback]}>
-                    <Ionicons name="musical-notes" size={16} color={Colors[theme].text} />
-                </View>
-            )}
+    const openTrack = () => {
+        if (!routeParams) return;
+        router.push({
+            pathname: '/display/[id]/[number]',
+            params: {
+                id: routeParams.bookId,
+                number: routeParams.songId,
+                openSheet: String(Date.now()),
+                openPiano: '1',
+            },
+        });
+    };
+
+    if (placement === 'inline') {
+        return (
             <Pressable
-                style={styles.trackInfo}
-                onPress={() => {
-                    if (!routeParams) return;
-                    router.push({
-                        pathname: '/display/[id]/[number]',
-                        params: {
-                            id: routeParams.bookId,
-                            number: routeParams.songId,
-                            openSheet: String(Date.now()),
-                            openPiano: '1',
-                        },
-                    });
-                }}
+                style={[styles.inlineAccessory, { backgroundColor: Colors[theme].liquidGlass }]}
+                onPress={togglePlayback}
+                accessibilityLabel={playing ? 'Pause' : 'Play'}
             >
-                <StyledText numberOfLines={1} style={[styles.trackTitle, { color: Colors[theme].text }]}>
-                    {track.title || 'Now Playing'}
-                </StyledText>
-                <StyledText numberOfLines={1} style={[styles.trackArtist, { color: Colors[theme].artistText }]}>
-                    {track.artist || 'Hymnal'}
-                </StyledText>
-            </Pressable>
-            <Pressable style={styles.playButton} onPress={togglePlayback}>
                 <Ionicons
                     name={playing ? 'pause' : 'play'}
-                    size={24}
+                    size={20}
                     color={Colors[theme].text}
                 />
             </Pressable>
+        );
+    }
+
+    return (
+        <View style={styles.regularAccessoryRoot}>
+            <View style={[styles.regularAccessory, { backgroundColor: Colors[theme].liquidGlass }]}>
+                {track.artworkUrl ? (
+                    <Image source={{ uri: track.artworkUrl as string }} style={styles.trackArtwork} />
+                ) : (
+                    <View style={[styles.trackArtwork, styles.trackArtworkFallback]}>
+                        <Ionicons name="musical-notes" size={16} color={Colors[theme].text} />
+                    </View>
+                )}
+                <Pressable style={styles.trackInfo} onPress={openTrack}>
+                    <StyledText numberOfLines={1} style={[styles.trackTitle, { color: Colors[theme].text }]}>
+                        {track.title || 'Now Playing'}
+                    </StyledText>
+                    <StyledText numberOfLines={1} style={[styles.trackArtist, { color: Colors[theme].artistText }]}>
+                        {track.artist || 'Hymnal'}
+                    </StyledText>
+                </Pressable>
+                <Pressable style={styles.playButton} onPress={togglePlayback}>
+                    <Ionicons
+                        name={playing ? 'pause' : 'play'}
+                        size={22}
+                        color={Colors[theme].text}
+                    />
+                </Pressable>
+            </View>
         </View>
     );
 }
@@ -167,6 +230,10 @@ export default function TabLayout() {
     const isDiscoverRoute = pathname === '/discover';
     const ios26DesignEnabled = isIOS26DesignEnabled();
     const tabBarMediaTrack = useTabBarMediaTrack(ios26DesignEnabled);
+    const { mounted: bottomAccessoryMounted, mountKey: bottomAccessoryMountKey } =
+        useBottomAccessoryRemountOnResize(Platform.OS === 'ios' && Platform.isPad);
+    const showBottomAccessory =
+        ios26DesignEnabled && tabBarMediaTrack && !isDiscoverRoute && bottomAccessoryMounted;
     const discoverPageFlagEnabled = useFeatureFlag('discover-page');
 
     const i18n = useI18n();
@@ -186,8 +253,8 @@ export default function TabLayout() {
             labelStyle={{ color: Colors[theme].tabIconDefault }} 
             badgeBackgroundColor={Colors[theme].primary}
             >
-                {ios26DesignEnabled && tabBarMediaTrack && !isDiscoverRoute ? (
-                    <NativeTabs.BottomAccessory>
+                {showBottomAccessory ? (
+                    <NativeTabs.BottomAccessory key={bottomAccessoryMountKey}>
                         <MediaBottomAccessoryContent theme={theme} track={tabBarMediaTrack} />
                     </NativeTabs.BottomAccessory>
                 ) : null}
@@ -261,25 +328,40 @@ export default function TabLayout() {
         );
 }
 
+const REGULAR_ACCESSORY_HEIGHT = 44;
+
 const styles = StyleSheet.create({
     inlineAccessory: {
+        alignSelf: 'center',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 8,
         borderRadius: 999,
     },
+    regularAccessoryRoot: {
+        width: '100%',
+        alignSelf: 'stretch',
+        flex: 1,
+        height: REGULAR_ACCESSORY_HEIGHT,
+    },
     regularAccessory: {
+        width: '100%',
+        flex: 1,
+        alignSelf: 'stretch',
         borderRadius: 14,
-        paddingVertical: 5,
-        paddingHorizontal: 16,
+        paddingLeft: 16,
+        paddingRight: 50,
+        height: REGULAR_ACCESSORY_HEIGHT,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        overflow: 'hidden',
     },
     trackInfo: {
         flex: 1,
+        minWidth: 0,
         marginRight: 12,
         marginLeft: 10,
+        justifyContent: 'center',
     },
     trackArtwork: {
         width: 30,
@@ -298,9 +380,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
     },
     playButton: {
-        width: 38,
-        height: 38,
-        borderRadius: 25,
+        position: 'absolute',
+        right: 8,
+        top: 0,
+        bottom: 0,
+        width: 34,
         alignItems: 'center',
         justifyContent: 'center',
     },

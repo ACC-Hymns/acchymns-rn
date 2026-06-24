@@ -39,7 +39,7 @@ export default function DisplayLayout() {
                     options={{
                         title: i18n.t('broadcast'),
                         presentation: 'formSheet',
-                        sheetAllowedDetents: [0.5],
+                        sheetAllowedDetents: [0.7],
                         sheetInitialDetentIndex: 0,
                         sheetGrabberVisible: false,
                         sheetCornerRadius: 54,

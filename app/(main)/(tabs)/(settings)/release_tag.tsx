@@ -1,6 +1,7 @@
 import StyledText from '@/components/StyledText';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
+import { isDevelopmentOrPreviewBuild } from '@/constants/build';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useI18n } from '@/hooks/useI18n';
@@ -28,9 +29,16 @@ export default function ReleaseTagScreen() {
     const i18n = useI18n();
     const navigation = useNavigation();
     const queryClient = useQueryClient();
+    const showReleaseTagSettings = isDevelopmentOrPreviewBuild();
 
     const [selectedTag, setSelectedTag] = useState(GITHUB_LATEST_RELEASE);
     const [customTag, setCustomTag] = useState('');
+
+    useEffect(() => {
+        if (!showReleaseTagSettings) {
+            router.replace('/(main)/(tabs)/(settings)/preferences');
+        }
+    }, [showReleaseTagSettings]);
 
     useEffect(() => {
         const storedTag = context?.hymnalReleaseTag?.trim();
@@ -71,6 +79,7 @@ export default function ReleaseTagScreen() {
         queryKey: ['hymnal-release-tags'],
         queryFn: () => fetchHymnalReleaseTags(25),
         staleTime: 5 * 60 * 1000,
+        enabled: showReleaseTagSettings,
     });
 
     const releaseOptions = useMemo(() => {
@@ -119,6 +128,25 @@ export default function ReleaseTagScreen() {
 
         return release.prerelease ? `${tag} (${i18n.t('prerelease')})` : tag;
     };
+
+    const subtitleForTag = (tag: string) => {
+        if (tag === GITHUB_LATEST_RELEASE) {
+            return null;
+        }
+
+        const release = releases?.find((item) => item.tag_name === tag);
+        if (!release?.published_at) {
+            return null;
+        }
+
+        return new Intl.DateTimeFormat(i18n.locale, { dateStyle: 'full', timeStyle: 'short' }).format(
+            new Date(release.published_at),
+        );
+    };
+
+    if (!showReleaseTagSettings) {
+        return null;
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors[theme].background }}>
@@ -172,7 +200,10 @@ export default function ReleaseTagScreen() {
                             </StyledText>
                         </View>
                     )}
-                    {status === 'success' && releaseOptions.map((tag, index) => (
+                    {status === 'success' && releaseOptions.map((tag, index) => {
+                        const subtitle = subtitleForTag(tag);
+
+                        return (
                         <React.Fragment key={tag}>
                             <TouchableHighlight
                                 onPress={() => applyTag(tag)}
@@ -181,8 +212,8 @@ export default function ReleaseTagScreen() {
                                 <View style={styles.settingsItem}>
                                     <View style={{ flex: 1, paddingRight: 12 }}>
                                         <StyledText style={styles.settingsText}>{labelForTag(tag)}</StyledText>
-                                        {tag !== GITHUB_LATEST_RELEASE && (
-                                            <StyledText style={styles.tagSubtitle}>{tag}</StyledText>
+                                        {subtitle && (
+                                            <StyledText style={styles.tagSubtitle}>{subtitle}</StyledText>
                                         )}
                                     </View>
                                     {selectedTag === tag && (
@@ -194,7 +225,8 @@ export default function ReleaseTagScreen() {
                                 <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                             )}
                         </React.Fragment>
-                    ))}
+                        );
+                    })}
                 </View>
             </ScrollView>
         </View>
@@ -208,7 +240,7 @@ function makeStyles(theme: 'light' | 'dark') {
             width: '100%',
         },
         scrollContent: {
-            paddingTop: 125,
+            paddingTop: 150,
             paddingBottom: 120,
             paddingRight: 20,
             paddingLeft: 20,
@@ -224,7 +256,7 @@ function makeStyles(theme: 'light' | 'dark') {
             fontWeight: '400',
             color: Colors[theme].fadedText,
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -236,7 +268,7 @@ function makeStyles(theme: 'light' | 'dark') {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
         },
         settingsText: {

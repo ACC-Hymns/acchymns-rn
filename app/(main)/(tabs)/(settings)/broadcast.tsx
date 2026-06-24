@@ -104,6 +104,9 @@ export default function BroadcastScreen() {
 
 
     const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 0, 10]
+    const PIN_KEYPAD_COLUMNS = 3;
+    const PIN_KEY_SIZE = 80;
+    const pinKeypadWidth = PIN_KEYPAD_COLUMNS * PIN_KEY_SIZE;
     const DX = 5;
     const TIME = 50;
     const EASING = Easing.elastic(0.5);
@@ -225,83 +228,88 @@ export default function BroadcastScreen() {
                                 ))
                             }
                         </Animated.View>
-                        <View style={[{
-                            justifyContent: 'center',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            flexWrap: 'wrap',
-                            width: '75%',
-                        }]}>
-                            {
+                        <View style={{
+                            width: pinKeypadWidth,
+                            alignSelf: 'center',
+                        }}>
+                            {Array.from(
+                                { length: Math.ceil(keys.length / PIN_KEYPAD_COLUMNS) },
+                                (_, rowIndex) => (
+                                    <View key={rowIndex} style={{ flexDirection: 'row' }}>
+                                        {keys
+                                            .slice(
+                                                rowIndex * PIN_KEYPAD_COLUMNS,
+                                                rowIndex * PIN_KEYPAD_COLUMNS + PIN_KEYPAD_COLUMNS,
+                                            )
+                                            .map((i) => (
+                                                (i < 10) ? (
+                                                    <TouchableHighlight
+                                                        underlayColor={Colors[theme]['buttonTap']}
+                                                        key={i}
+                                                        style={{
+                                                            width: PIN_KEY_SIZE,
+                                                            height: PIN_KEY_SIZE,
+                                                            borderRadius: 75,
 
-                                keys.map((i) => (
-                                    (i < 10) ? (
-                                        <TouchableHighlight
-                                            underlayColor={Colors[theme]['buttonTap']}
-                                            key={i}
-                                            style={{
-                                                width: 80,
-                                                height: 80,
-                                                borderRadius: 75,
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                            opacity: (i < 0) ? 0 : 1
+                                                        }}
 
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                opacity: (i < 0) ? 0 : 1
-                                            }}
+                                                        onPress={() => {
+                                                            if (i < 0)
+                                                                return;
 
-                                            onPress={() => {
-                                                if (i < 0)
-                                                    return;
+                                                            setPin(prev => {
+                                                                if (prev.length > 3) {
+                                                                    return prev;
+                                                                }
 
-                                                setPin(prev => {
-                                                    if (prev.length > 3) {
-                                                        return prev;
-                                                    }
+                                                                const pin = prev.concat(String(i));
+                                                                if (pin.length == 4) {
+                                                                    login(pin);
+                                                                }
 
-                                                    const pin = prev.concat(String(i));
-                                                    if (pin.length == 4) {
-                                                        login(pin);
-                                                    }
+                                                                return pin;
+                                                            })
+                                                        }}
+                                                    >
+                                                        <StyledText
+                                                            style={{ fontSize: 24, color: Colors[theme]['text'] }}
+                                                        >
+                                                            {i}
+                                                        </StyledText>
+                                                    </TouchableHighlight>
+                                                ) : (
+                                                    <TouchableHighlight
+                                                        underlayColor={Colors[theme]['buttonTap']}
+                                                        key={i}
+                                                        style={{
+                                                            width: PIN_KEY_SIZE,
+                                                            height: PIN_KEY_SIZE,
+                                                            borderRadius: 75,
 
-                                                    return pin;
-                                                })
-                                            }}
-                                        >
-                                            <StyledText
-                                                style={{ fontSize: 24, color: Colors[theme]['text'] }}
-                                            >
-                                                {i}
-                                            </StyledText>
-                                        </TouchableHighlight>
-                                    ) : (
-                                        <TouchableHighlight
-                                            underlayColor={Colors[theme]['buttonTap']}
-                                            key={i}
-                                            style={{
-                                                width: 80,
-                                                height: 80,
-                                                borderRadius: 75,
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center'
+                                                        }}
 
-                                                justifyContent: 'center',
-                                                alignItems: 'center'
-                                            }}
-
-                                            onPress={() => {
-                                                setPin(prev => {
-                                                    return prev.substring(0, prev.length - 1);
-                                                })
-                                            }}
-                                        >
-                                            <Ionicons
-                                                name="backspace-outline"
-                                                size={28}
-                                                color={Colors[theme]['text']}
-                                            />
-                                        </TouchableHighlight>
-                                    )
-
-                                ))
-                            }
+                                                        onPress={() => {
+                                                            setPin(prev => {
+                                                                return prev.substring(0, prev.length - 1);
+                                                            })
+                                                        }}
+                                                    >
+                                                        <Ionicons
+                                                            name="backspace-outline"
+                                                            size={28}
+                                                            color={Colors[theme]['text']}
+                                                        />
+                                                    </TouchableHighlight>
+                                                )
+                                            ))}
+                                    </View>
+                                ),
+                            )}
                         </View>
                     </>
                 )}
@@ -317,7 +325,7 @@ function makeStyles(theme: "light" | "dark") {
             fontWeight: '400',
             color: Colors[theme]['fadedText'],
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -329,7 +337,7 @@ function makeStyles(theme: "light" | "dark") {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
             
         },

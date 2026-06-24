@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity, Pressable, View, TouchableHighlight } from 'react-native';
+import { StyleSheet, TouchableOpacity, Pressable, View, TouchableHighlight, Platform, useWindowDimensions } from 'react-native';
 import { BottomSheetModal, BottomSheetView } from '@expo/ui/community/bottom-sheet';
 import { Checkbox } from '@futurejj/react-native-checkbox';
 import Ionicons from '@react-native-vector-icons/ionicons/static'
@@ -36,6 +36,11 @@ function reconcileOrder(savedOrder: string[], currentKeys: string[]): string[] {
     return [...normalizedSaved, ...missingKeys];
 }
 
+const FILTER_SHEET_CHROME_HEIGHT = 170;
+const FILTER_SHEET_MAX_HEIGHT = 560;
+const FILTER_LIST_MAX_HEIGHT_PHONE = 500;
+const FILTER_LIST_MAX_HEIGHT_PAD = 380;
+
 interface DiscoverFiltersBottomSheetProps {
     bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
     hymnalsAvailable: string[];
@@ -55,6 +60,29 @@ export function DiscoverFiltersBottomSheet({
     const context = useContext(HymnalContext);
     const i18n = useI18n();
     const styles = makeStyles(theme as any);
+    const { height: windowHeight } = useWindowDimensions();
+    const isPad = Platform.OS === 'ios' && Platform.isPad;
+
+    const snapPoints = useMemo(() => {
+        if (Platform.OS === 'android') {
+            return ['0%', '50%'];
+        }
+        const heightRatio = isPad ? 0.4 : 0.55;
+        return [Math.min(FILTER_SHEET_MAX_HEIGHT, Math.floor(windowHeight * heightRatio))];
+    }, [windowHeight, isPad]);
+
+    const listMaxHeight = useMemo(() => {
+        if (Platform.OS === 'android') {
+            return Math.min(
+                FILTER_LIST_MAX_HEIGHT_PHONE,
+                Math.floor(windowHeight * 0.5) - FILTER_SHEET_CHROME_HEIGHT,
+            );
+        }
+        const heightRatio = isPad ? 0.4 : 0.55;
+        const sheetHeight = Math.min(FILTER_SHEET_MAX_HEIGHT, Math.floor(windowHeight * heightRatio));
+        const listCap = isPad ? FILTER_LIST_MAX_HEIGHT_PAD : FILTER_LIST_MAX_HEIGHT_PHONE;
+        return Math.min(listCap, sheetHeight - FILTER_SHEET_CHROME_HEIGHT);
+    }, [windowHeight, isPad]);
 
     /*
     if (selectedHymnals.includes(item)) {
@@ -91,6 +119,8 @@ export function DiscoverFiltersBottomSheet({
             }}
             style={styles.bottomSheet}
             backgroundStyle={styles.bottomSheet}
+            enableDynamicSizing={false}
+            snapPoints={snapPoints}
         >
             <BottomSheetView style={styles.contentContainer}>
                 <View style={{ width: '100%' }}>
@@ -100,7 +130,7 @@ export function DiscoverFiltersBottomSheet({
                         </StyledText>
                     </View>
                     <View style={styles.hymnalListContainer}>
-                        <View style={styles.flatListWrapper}>
+                        <View style={[styles.flatListWrapper, { maxHeight: listMaxHeight }]}>
                             <FlatList
                                 data={availableHymnalsSorted}
                                 showsVerticalScrollIndicator={false}
@@ -173,7 +203,6 @@ function makeStyles(theme: "light" | "dark") {
             width: 48,
         },
         contentContainer: {
-            flex: 1,
             padding: 8,
             paddingBottom: 20,
             alignItems: 'center',
@@ -235,7 +264,6 @@ function makeStyles(theme: "light" | "dark") {
         },
         flatListWrapper: {
             position: 'relative',
-            maxHeight: 250,
         },
         hymnalItem: {
             flexDirection: 'row',

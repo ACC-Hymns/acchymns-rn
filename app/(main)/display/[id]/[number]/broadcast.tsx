@@ -9,8 +9,11 @@ import { request_client, set } from '@/scripts/broadcast';
 import { useBookData } from '@/hooks/useBookData';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
+import StyledText from '@/components/StyledText';
+import { useI18n } from '@/hooks/useI18n';
 
 const VERSE_GRID_COLUMNS = 8;
+const VERSE_GRID_COLUMNS_PORTRAIT = 5;
 
 export default function BroadcastPanel() {
 
@@ -23,6 +26,7 @@ export default function BroadcastPanel() {
     const context = useContext(HymnalContext);
     const book = useBookData(params.id, context);
     const isLiquidGlass = isIOS26DesignEnabled();
+    const i18n = useI18n();
 
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
@@ -106,6 +110,7 @@ export default function BroadcastPanel() {
                     size={18}
                     color='white'
                 />
+                <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
             </TouchableOpacity>
         </View>
     );
@@ -114,8 +119,15 @@ export default function BroadcastPanel() {
 function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
     const verseSize = isHorizontal ? 48 : 56;
     const verseMargin = isHorizontal ? 4 : 8;
+    const verseGridColumns = isHorizontal ? VERSE_GRID_COLUMNS : VERSE_GRID_COLUMNS_PORTRAIT;
 
     return StyleSheet.create({
+        actionButtonLabel:{
+            color: 'white',
+            fontSize: 16,
+            fontWeight: '600',
+            fontFamily: 'Lato',
+        },
         sheetCloseButtonContainer: {
             position: 'absolute',
             top: 16,
@@ -135,19 +147,17 @@ function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
             borderRadius: 15,
             justifyContent: 'center',
             alignItems: 'center',
-            width: '25%'
+            width: '25%',
+            flexDirection: 'row',
+            gap: 8,
         },
         sendButtonHorizontal: {
             margin: 16,
         },
-        verseGrid: isHorizontal ? {
+        verseGrid: {
             flexDirection: 'row',
             flexWrap: 'wrap',
-            width: VERSE_GRID_COLUMNS * (verseSize + verseMargin * 2),
-            justifyContent: 'center',
-        } : {
-            flexDirection: 'row',
-            flexWrap: 'wrap',
+            width: verseGridColumns * (verseSize + verseMargin * 2),
             justifyContent: 'center',
         },
         verseBubble: {
@@ -188,7 +198,7 @@ function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
             fontWeight: '400',
             color: Colors[theme]['fadedText'],
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -200,7 +210,7 @@ function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
 
         },
@@ -214,7 +224,7 @@ function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
         scrollView: {
             flex: 1,
             width: '100%',
-            paddingTop: 125,
+            paddingTop: 140,
             paddingBottom: 15,
         },
         button: {

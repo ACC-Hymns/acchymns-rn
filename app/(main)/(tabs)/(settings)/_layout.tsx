@@ -57,6 +57,10 @@ export default function HomeLayout() {
                     }}
                 />
                 <Stack.Screen
+                    name="scripture_picker"
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
                     name="broadcast_song"
                     options={{
                         title: i18n.t('setSongNumber'),

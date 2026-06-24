@@ -126,7 +126,7 @@ function makeStyles(theme: "light" | "dark") {
             fontWeight: '400',
             color: Colors[theme]['fadedText'],
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -138,7 +138,7 @@ function makeStyles(theme: "light" | "dark") {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
 
         },
@@ -152,7 +152,7 @@ function makeStyles(theme: "light" | "dark") {
         scrollView: {
             flex: 1,
             width: '100%',
-            paddingTop: 125,
+            paddingTop: 140,
             paddingBottom: 15,
             paddingRight: 20,
             paddingLeft: 20,

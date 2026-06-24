@@ -107,7 +107,7 @@ function makeStyles(theme: "light" | "dark") {
             fontWeight: '400',
             color: Colors[theme]['fadedText'],
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -119,7 +119,7 @@ function makeStyles(theme: "light" | "dark") {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
 
         },

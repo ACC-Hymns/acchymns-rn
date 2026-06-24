@@ -14,6 +14,20 @@ import { useBookData } from '@/hooks/useBookData';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Ionicons from '@react-native-vector-icons/ionicons'
+import { getKeypadColumns, getKeypadGridWidth } from '@/scripts/keypadGrid';
+
+const SONG_NUMBER_ITEM_SIZE = 60;
+const SONG_NUMBER_ITEM_MARGIN = 6;
+const SONG_NUMBER_MAX_COLUMNS = 5;
+const isPad = Platform.OS === 'ios' && Platform.isPad;
+
+function getSongNumberColumns(screenWidth: number) {
+    return getKeypadColumns(screenWidth, {
+        itemSize: SONG_NUMBER_ITEM_SIZE,
+        itemMargin: SONG_NUMBER_ITEM_MARGIN,
+        ...(isPad ? {} : { maxColumns: SONG_NUMBER_MAX_COLUMNS }),
+    });
+}
 
 export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
@@ -154,29 +168,18 @@ export default function SelectionScreen() {
         }));
     };
 
-    // Calculate number of columns based on screen width
-    // Each item is 60px wide + 12px margin (6px on each side) = 72px per item
-    // Using useState + useEffect to ensure stable value for FlatList
-    const calculateNumColumns = (screenWidth: number): number => {
-        const itemWidth = 60; // width of each button
-        const itemMargin = 12; // 6px margin on each side
-        const itemTotalWidth = itemWidth + itemMargin;
-        const horizontalPadding = 30; // approximate padding/margins on screen edges
-        
-        const availableWidth = screenWidth - horizontalPadding;
-        const calculatedColumns = Math.floor(availableWidth / itemTotalWidth);
-        
-        // Ensure at least 1 column, otherwise scale naturally
-        return Math.max(1, calculatedColumns);
-    };
-
-    const [numColumns, setNumColumns] = useState(() => 
-        calculateNumColumns(Dimensions.get('window').width)
+    const [numColumns, setNumColumns] = useState(() =>
+        getSongNumberColumns(Dimensions.get('window').width)
+    );
+    const songNumberGridWidth = getKeypadGridWidth(
+        numColumns,
+        SONG_NUMBER_ITEM_SIZE,
+        SONG_NUMBER_ITEM_MARGIN,
     );
 
     useEffect(() => {
         const subscription = Dimensions.addEventListener('change', ({ window }) => {
-            setNumColumns(calculateNumColumns(window.width));
+            setNumColumns(getSongNumberColumns(window.width));
         });
 
         return () => subscription?.remove();
@@ -194,18 +197,15 @@ export default function SelectionScreen() {
                                     keyExtractor={(item) => item}
                                     key={`legacy-${numColumns}`}
                                     numColumns={numColumns}
-                                    contentContainerStyle={{
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
-                                    }}
-                                    style={{ flex: 1, width: '100%', paddingTop: 20 }}
+                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    columnWrapperStyle={{ justifyContent: 'center' }}
+                                    style={{ flex: 1, width: songNumberGridWidth, alignSelf: 'center', paddingTop: 20 }}
                                     renderItem={({ item }) => (
                                         <TouchableOpacity
                                             style={{
-                                                margin: 6,
-                                                width: 60,
-                                                height: 60,
+                                                margin: SONG_NUMBER_ITEM_MARGIN,
+                                                width: SONG_NUMBER_ITEM_SIZE,
+                                                height: SONG_NUMBER_ITEM_SIZE,
                                                 borderRadius: 30,
                                                 backgroundColor: book.primaryColor,
                                                 justifyContent: 'center',
@@ -319,12 +319,14 @@ export default function SelectionScreen() {
                                                             keyExtractor={(number) => number}
                                                             key={`dropdown-${numColumns}`}
                                                             numColumns={numColumns}
+                                                            columnWrapperStyle={{ justifyContent: 'center' }}
+                                                            style={{ width: songNumberGridWidth, alignSelf: 'center', paddingTop: 20 }}
                                                             renderItem={({ item: number }) => (
                                                                 <TouchableOpacity
                                                                     style={{
-                                                                        margin: 6,
-                                                                        width: 60,
-                                                                        height: 60,
+                                                                        margin: SONG_NUMBER_ITEM_MARGIN,
+                                                                        width: SONG_NUMBER_ITEM_SIZE,
+                                                                        height: SONG_NUMBER_ITEM_SIZE,
                                                                         borderRadius: 30,
                                                                         backgroundColor: book.primaryColor,
                                                                         justifyContent: 'center',
@@ -437,7 +439,7 @@ export default function SelectionScreen() {
                                                 marginHorizontal: 15
                                             }}>
                                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: '18%', lineHeight: 25, fontWeight: 700, fontFamily: 'Lato' }}>
+                                                <StyledText style={{ color: Colors[theme].fadedText, fontSize: 20, width: 65, lineHeight: 25, fontWeight: 700, fontFamily: 'Lato' }}>
                                                     #{number}
                                                 </StyledText>
                                                 <StyledText numberOfLines={1} style={{ color: Colors[theme].text, fontSize: 16, flex: 1, textAlign: 'left', lineHeight: 25 }}>

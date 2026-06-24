@@ -46,6 +46,7 @@ const translations = {
         actions: 'ACTIONS',
         setSongNumber: 'Set Song Number',
         setBibleReading: 'Set Bible Reading',
+        send: 'Send',
         clearScreen: 'Clear Screen',
         logOut: 'Log Out',
 

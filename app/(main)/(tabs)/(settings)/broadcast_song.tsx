@@ -17,6 +17,16 @@ import { BookSummary } from '@/constants/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { request_client, set } from '@/scripts/broadcast';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
+import { getKeypadGridWidth } from '@/scripts/keypadGrid';
+
+const BROADCAST_VERSE_COLUMNS = 4;
+const BROADCAST_VERSE_SIZE = 56;
+const BROADCAST_VERSE_MARGIN = 8;
+const BROADCAST_VERSE_GRID_WIDTH = getKeypadGridWidth(
+    BROADCAST_VERSE_COLUMNS,
+    BROADCAST_VERSE_SIZE,
+    BROADCAST_VERSE_MARGIN,
+);
 
 function parseStoredOrder(raw: string | null): string[] {
     if (!raw) {
@@ -160,23 +170,28 @@ export default function BroadcastOptionsScreen() {
         <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <KeyboardAvoidingView style={{
-                    backgroundColor: Colors[theme]['background'],
-                    width: '100%',
-                    paddingTop: 125,
-                    paddingBottom: 15,
-                }}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        backgroundColor: Colors[theme]['background'],
+                        width: '100%',
+                        paddingBottom: 15,
+                    }}>
+                    <View style={{ width: '100%' }}>
                     <FlatList
                         data={sortOrder}
                         renderItem={renderItem}
                         horizontal={true}
                         showsHorizontalScrollIndicator={false}
+                        style={{ flexGrow: 0 }}
                         ItemSeparatorComponent={() => <View style={{ width: 5 }} />}
-                        contentContainerStyle={{ paddingHorizontal: 20 }}
+                        contentContainerStyle={{ paddingHorizontal: 20, alignItems: 'center' }}
                     />
 
-                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={{ marginTop: 20, marginHorizontal: 20, width: '25%' }}>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', marginTop: 16 }}>
+                        <View style={{ marginHorizontal: 20, width: '25%' }}>
                             <TextInput
                                 placeholder="#"
                                 placeholderTextColor={Colors[theme]['fadedText']}
@@ -225,14 +240,19 @@ export default function BroadcastOptionsScreen() {
                                 All
                             </Text>
                         </Pressable>
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <View style={{
+                            flexDirection: 'row',
+                            flexWrap: 'wrap',
+                            width: BROADCAST_VERSE_GRID_WIDTH,
+                            alignSelf: 'center',
+                        }}>
                             {Array.from({ length: 12 }, (_, i) => (
                                 <Pressable
                                     key={i + 1}
                                     style={{
-                                        width: 56,
-                                        height: 56,
-                                        margin: 8,
+                                        width: BROADCAST_VERSE_SIZE,
+                                        height: BROADCAST_VERSE_SIZE,
+                                        margin: BROADCAST_VERSE_MARGIN,
                                         borderRadius: 28,
                                         backgroundColor: Colors[theme]['settingsButton'],
                                         alignItems: 'center',
@@ -274,6 +294,7 @@ export default function BroadcastOptionsScreen() {
                                     size={18}
                                     color='white'
                                 />
+                                <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -285,8 +306,10 @@ export default function BroadcastOptionsScreen() {
                                     size={18}
                                     color='white'
                                 />
+                                <StyledText style={styles.actionButtonLabel}>{i18n.t('clearScreen')}</StyledText>
                             </TouchableOpacity>
                         </View>
+                    </View>
                     </View>
                 </KeyboardAvoidingView >
             </TouchableWithoutFeedback>
@@ -306,19 +329,29 @@ function makeStyles(theme: "light" | "dark") {
         },
         clearButton: {
             backgroundColor: Colors[theme].destructive,
-            padding: 15,
+            paddingVertical: 15,
+            paddingHorizontal: 24,
             borderRadius: 15,
+            flexDirection: 'row',
+            gap: 8,
             justifyContent: 'center',
             alignItems: 'center',
-            width: '25%',
         },
         actionButton: {
             backgroundColor: Colors[theme]['primary'],
-            padding: 15,
+            paddingVertical: 15,
+            paddingHorizontal: 24,
             borderRadius: 15,
+            flexDirection: 'row',
+            gap: 8,
             justifyContent: 'center',
             alignItems: 'center',
-            width: '25%',
+        },
+        actionButtonLabel: {
+            color: 'white',
+            fontSize: 16,
+            fontWeight: '600',
+            fontFamily: 'Lato',
         },
         sendButton: {
             backgroundColor: Colors[theme]['primary'],
@@ -340,7 +373,7 @@ function makeStyles(theme: "light" | "dark") {
             fontWeight: '400',
             color: Colors[theme]['fadedText'],
             fontFamily: 'Lato',
-            marginLeft: '5%',
+            marginLeft: 20,
             marginVertical: 8,
         },
         settingsContainer: {
@@ -352,7 +385,7 @@ function makeStyles(theme: "light" | "dark") {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingHorizontal: '5%',
+            paddingHorizontal: 20,
             paddingVertical: 14,
             
         },
@@ -366,7 +399,7 @@ function makeStyles(theme: "light" | "dark") {
         scrollView: {
             flex: 1,
             width: '100%',
-            paddingTop: 125,
+            paddingTop: 140,
             paddingBottom: 15,
         },
         button: {
