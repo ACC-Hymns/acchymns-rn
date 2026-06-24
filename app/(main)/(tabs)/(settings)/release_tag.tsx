@@ -122,7 +122,10 @@ export default function ReleaseTagScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors[theme].background }}>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+            >
                 <StyledText style={styles.descriptionText}>{i18n.t('hymnalReleaseTagDescription')}</StyledText>
 
                 <View style={{ marginTop: 16 }}>
@@ -203,8 +206,10 @@ function makeStyles(theme: 'light' | 'dark') {
         scrollView: {
             flex: 1,
             width: '100%',
+        },
+        scrollContent: {
             paddingTop: 125,
-            paddingBottom: 15,
+            paddingBottom: 120,
             paddingRight: 20,
             paddingLeft: 20,
         },

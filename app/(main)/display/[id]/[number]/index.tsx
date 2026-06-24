@@ -130,7 +130,11 @@ export default function DisplayScreen() {
     const { height: windowHeight } = useWindowDimensions();
     const headerHeightRatio = headerHeight / windowHeight;
     const musicSheetSnapPoints = useMemo(
-        () => [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))],
+        () => Platform.OS === 'android'
+            // Android ModalBottomSheet only supports 0%, ~50%, and 100%; two snap points
+            // are required so index 0 opens at partial (~50%) instead of full screen.
+            ? ['50%']
+            : [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))],
         [windowHeight],
     );
     const ios26DesignEnabled = isIOS26DesignEnabled();
