@@ -65,7 +65,7 @@ export async function loadPreferences(): Promise<PreferencesState> {
     const preferences: PreferencesState = { ...INITIAL_PREFERENCES };
 
     for (const [storageKey, storedValue] of entries) {
-        if (storedValue === null) {
+        if (storedValue === null || storedValue === '') {
             continue;
         }
 
@@ -94,14 +94,23 @@ export async function loadPreferences(): Promise<PreferencesState> {
 }
 
 export async function savePreferences(preferences: PreferencesState): Promise<void> {
-    const entries = (Object.keys(PREFERENCE_KEYS) as PreferenceKey[])
-        .flatMap((key) => {
-            const value = preferences[key];
-            return value === null ? [] : [[PREFERENCE_KEYS[key], serializeValue(value)] as [string, string]];
-        });
+    const entries: [string, string][] = [];
+    const keysToRemove: string[] = [];
+
+    for (const key of Object.keys(PREFERENCE_KEYS) as PreferenceKey[]) {
+        const value = preferences[key];
+        if (value === null) {
+            keysToRemove.push(PREFERENCE_KEYS[key]);
+        } else {
+            entries.push([PREFERENCE_KEYS[key], serializeValue(value)]);
+        }
+    }
 
     if (entries.length > 0) {
         await AsyncStorage.multiSet(entries);
+    }
+    if (keysToRemove.length > 0) {
+        await AsyncStorage.multiRemove(keysToRemove);
     }
 }
 

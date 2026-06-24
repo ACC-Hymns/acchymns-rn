@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -20,6 +21,7 @@ export default function SettingsScreen() {
     const context = useContext(HymnalContext);
 
     const i18n = useI18n();
+    const runtimeVersion = Updates.runtimeVersion ?? Constants.expoConfig?.runtimeVersion;
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
@@ -39,6 +41,15 @@ export default function SettingsScreen() {
                         <View style={styles.settingsItem}>
                             <StyledText style={styles.settingsText}>{i18n.t('appVersion')}</StyledText>
                             <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</StyledText>
+                        </View>
+                    </TouchableHighlight>
+                    <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                    <TouchableHighlight
+                        underlayColor={Colors[theme].divider}
+                    >
+                        <View style={styles.settingsItem}>
+                            <StyledText style={styles.settingsText}>{i18n.t('runtimeVersion')}</StyledText>
+                            <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{runtimeVersion}</StyledText>
                         </View>
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />

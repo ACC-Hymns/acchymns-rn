@@ -11,12 +11,26 @@ export type InstalledDigests = Record<string, InstalledHymnalPackage>;
 
 const HYMNAL_RELEASES_REPO = 'ACC-Hymns/books';
 
+export function normalizeHymnalReleaseTagPreference(
+    releaseTag: string | null | undefined,
+): string | null {
+    const trimmed = releaseTag?.trim();
+    return trimmed || null;
+}
+
+export function formatHymnalReleaseTagPreference(
+    releaseTag: string | null | undefined,
+    latestLabel: string,
+): string {
+    return normalizeHymnalReleaseTagPreference(releaseTag) ?? latestLabel;
+}
+
 export function releasePreferenceKey(releaseTag: string | null | undefined): string {
-    return releaseTag?.trim() || '';
+    return normalizeHymnalReleaseTagPreference(releaseTag) ?? '';
 }
 
 export function getHymnalReleaseApiUrl(releaseTag: string | null | undefined): string {
-    const tag = releaseTag?.trim();
+    const tag = normalizeHymnalReleaseTagPreference(releaseTag);
     if (!tag) {
         return `https://api.github.com/repos/${HYMNAL_RELEASES_REPO}/releases/latest`;
     }

@@ -129,7 +129,7 @@ export default function HomeLayout() {
                         title: i18n.t('hymnalReleaseTag'),
                         headerShown: true,
                         headerTitleAlign: 'center',
-                        headerBackTitle: i18n.t('help'),
+                        headerBackTitle: i18n.t('preferences'),
                         headerBackButtonDisplayMode: 'minimal',
                         headerTransparent: true,
                         headerShadowVisible: false,

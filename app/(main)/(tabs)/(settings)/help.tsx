@@ -133,21 +133,6 @@ export default function HelpScreen() {
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
-                            onPress={() => router.push('/(main)/(tabs)/(settings)/release_tag')}
-                            underlayColor={Colors[theme].divider}
-                        >
-                            <View style={styles.settingsItem}>
-                                <StyledText style={styles.settingsText}>{i18n.t('hymnalReleaseTag')}</StyledText>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>
-                                        {context?.hymnalReleaseTag ?? i18n.t('hymnalReleaseTagLatest')}
-                                    </StyledText>
-                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
-                                </View>
-                            </View>
-                        </TouchableHighlight>
-                        <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                        <TouchableHighlight
                             onPress={() => {
                                 Alert.alert(i18n.t('clearCacheConfirmation'), i18n.t('clearCacheConfirmationMessage'), [
                                     {

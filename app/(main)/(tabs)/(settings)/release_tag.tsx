@@ -8,7 +8,7 @@ import { fetchHymnalReleaseTags } from '@/scripts/hymnalUpdates';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useNavigation } from 'expo-router';
-import React, { useContext, useLayoutEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     ScrollView,
@@ -29,10 +29,14 @@ export default function ReleaseTagScreen() {
     const navigation = useNavigation();
     const queryClient = useQueryClient();
 
-    const [selectedTag, setSelectedTag] = useState(
-        context?.hymnalReleaseTag?.trim() || GITHUB_LATEST_RELEASE,
-    );
-    const [customTag, setCustomTag] = useState(context?.hymnalReleaseTag?.trim() || '');
+    const [selectedTag, setSelectedTag] = useState(GITHUB_LATEST_RELEASE);
+    const [customTag, setCustomTag] = useState('');
+
+    useEffect(() => {
+        const storedTag = context?.hymnalReleaseTag?.trim();
+        setSelectedTag(storedTag || GITHUB_LATEST_RELEASE);
+        setCustomTag(storedTag || '');
+    }, [context?.hymnalReleaseTag]);
 
     useLayoutEffect(() => {
         navigation.setOptions({

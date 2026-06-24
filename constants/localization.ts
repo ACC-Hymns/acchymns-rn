@@ -71,6 +71,7 @@ const translations = {
         settings: 'Settings',
         info: 'INFO',
         appVersion: 'App Version',
+        runtimeVersion: 'Runtime Version',
 
         // Help screen
         help: 'Help',
@@ -99,6 +100,7 @@ const translations = {
         legacyNumberSelection: 'Legacy Number Selection',
         language: 'Language',
         appearance: 'APPEARANCE',
+        hymnals: 'HYMNALS',
         theme: 'Theme',
         darkMode: 'Dark Mode',
         lightMode: 'Light Mode',
@@ -198,6 +200,7 @@ const translations = {
         settings: 'Configuración',
         info: 'INFORMACIÓN',
         appVersion: 'Versión de la aplicación',
+        runtimeVersion: 'Versión de ejecución',
 
         help: 'Ayuda',
         general: 'GENERAL',
@@ -224,6 +227,7 @@ const translations = {
         legacyNumberSelection: 'Selección de Número Antigua',
         language: 'Idioma',
         appearance: 'APARIENCIA',
+        hymnals: 'HIMNARIOS',
         theme: 'Tema',
         darkMode: 'Modo Oscuro',
         lightMode: 'Modo Claro',
@@ -313,6 +317,7 @@ const translations = {
         settings: 'Paramètres',
         info: 'INFORMATIONS',
         appVersion: 'Version de l\'application',
+        runtimeVersion: 'Version d\'exécution',
 
         help: 'Aide',
         general: 'GÉNÉRAL',
@@ -340,6 +345,7 @@ const translations = {
         legacyNumberSelection: 'Sélection de Numéro Ancien',
         language: 'Langue',
         appearance: 'APPARIENCE',
+        hymnals: 'HYMNES',
         theme: 'Thème',
         darkMode: 'Mode Sombre',
         lightMode: 'Mode Clair',
@@ -429,6 +435,7 @@ const translations = {
         settings: 'Einstellungen',
         info: 'INFORMATIONEN',
         appVersion: 'App-Version',
+        runtimeVersion: 'Laufzeitversion',
 
         help: 'Hilfe',
         general: 'ALLGEMEIN',
@@ -455,6 +462,7 @@ const translations = {
         legacyNumberSelection: 'Veraltete Zahlauswahl',
         language: 'Sprache',
         appearance: 'ERSCHEINUNGSBILD',
+        hymnals: 'GESANGBÜCHER',
         theme: 'Thema',
         darkMode: 'Dunkelmodus',
         lightMode: 'Hellmodus',
@@ -544,6 +552,7 @@ const translations = {
         settings: 'Postavke',
         info: 'INFORMACIJE',
         appVersion: 'Verzija aplikacije',
+        runtimeVersion: 'Verzija izvršavanja',
 
         help: 'Pomoć',
         general: 'OPŠTE',
@@ -570,6 +579,7 @@ const translations = {
         legacyNumberSelection: 'Starostručna Izbora',
         language: 'Jezik',
         appearance: 'APARATURA',
+        hymnals: 'HIMNALI',
         theme: 'Tema',
         darkMode: 'Tamni Modus',
         lightMode: 'Svijetli Modus',
@@ -659,6 +669,7 @@ const translations = {
         settings: 'Beállítások',
         info: 'INFORMÁCIÓ',
         appVersion: 'Alkalmazás verzió',
+        runtimeVersion: 'Futásidejű verzió',
 
         help: 'Súgó',
         general: 'ÁLTALÁNOS',
@@ -685,6 +696,7 @@ const translations = {
         legacyNumberSelection: 'Hagyományos számválasztás',
         language: 'Nyelv',
         appearance: 'MEGJELENÉS',
+        hymnals: 'ÉNEKESKÖNYVEK',
         theme: 'Téma',
         darkMode: 'Sötét mód',
         lightMode: 'Világos mód',
@@ -774,6 +786,7 @@ const translations = {
         settings: '設定',
         info: '情報',
         appVersion: 'アプリケーションバージョン',
+        runtimeVersion: 'ランタイムバージョン',
 
         help: 'ヘルプ',
         general: '一般',
@@ -800,6 +813,7 @@ const translations = {
         legacyNumberSelection: '旧番号選択',
         language: '言語',
         appearance: '外観',
+        hymnals: '賛美歌集',
         theme: 'テーマ',
         darkMode: 'ダークモード',
         lightMode: 'ライトモード',
@@ -889,6 +903,7 @@ const translations = {
         settings: 'Preferências',
         info: 'INFORMAÇÕES',
         appVersion: 'Versão do aplicativo',
+        runtimeVersion: 'Versão de execução',
 
         help: 'Ajuda',
         general: 'GERAL',
@@ -915,6 +930,7 @@ const translations = {
         legacyNumberSelection: 'Seleção de Número Antigo',
         language: 'Língua',
         appearance: 'APARÊNCIA',
+        hymnals: 'HINÁRIOS',
         theme: 'Tema',
         darkMode: 'Modo Escuro',
         lightMode: 'Modo Claro',
