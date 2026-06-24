@@ -3,6 +3,7 @@
     "name": "Hymnal",
     "slug": "acchymns",
     "version": "5.0.0",
+    "runtimeVersion": "5.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "scheme": "acchymns",
@@ -178,7 +179,6 @@
         "projectId": "dce778e0-a059-408f-a380-56d56a777daf"
       }
     },
-    "runtimeVersion": { "policy": "appVersion" },
     "updates": {
       "url": "https://u.expo.dev/dce778e0-a059-408f-a380-56d56a777daf"
     }
