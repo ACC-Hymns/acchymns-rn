@@ -1,4 +1,4 @@
-# ACCHymns
+# ACC Hymns (React Native)
 
 Mobile app for browsing Apostolic Christian Church (Nazarene) hymnals. Ships as **Hymnal** on iOS and Android ([acchymns.app](https://acchymns.app)).
 
