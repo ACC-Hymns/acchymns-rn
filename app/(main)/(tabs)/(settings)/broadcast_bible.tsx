@@ -21,7 +21,8 @@ import {
     SCRIPTURE_PICKER_COUNT,
 } from '@/constants/scripturePicker';
 
-import { request_client, set } from '@/scripts/broadcast';
+import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
+import { createBibleCommand, createClearCommand } from '@/scripts/displayCommand';
 
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 
@@ -114,7 +115,7 @@ export default function BroadcastBibleScreen() {
 
 
 
-        if (!currentContext.broadcastingChurch) {
+        if (!canPublishBroadcast(currentContext)) {
 
             return;
 
@@ -138,7 +139,11 @@ export default function BroadcastBibleScreen() {
 
 
 
-        await set(request_client(), currentContext.broadcastingChurch, top_text, "BIBLE", [], bottom_text);
+        await publishFromContext(
+            currentContext,
+            createBibleCommand(top_text, bottom_text),
+            i18n,
+        );
 
     }
 
@@ -146,7 +151,7 @@ export default function BroadcastBibleScreen() {
 
     async function clearScreen() {
 
-        if (!context?.broadcastingChurch) {
+        if (!canPublishBroadcast(context)) {
 
             return;
 
@@ -154,7 +159,7 @@ export default function BroadcastBibleScreen() {
 
 
 
-        await set(request_client(), context.broadcastingChurch, "", "", [-1], "");
+        await publishFromContext(context, createClearCommand(true), i18n);
 
     }
 

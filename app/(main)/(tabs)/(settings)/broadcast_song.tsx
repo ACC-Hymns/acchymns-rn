@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, ListRenderItemInfo, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
+import { Text, StyleSheet, View, TouchableHighlight, ListRenderItemInfo, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
@@ -15,7 +15,8 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSeq
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
 import { BookSummary } from '@/constants/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { request_client, set } from '@/scripts/broadcast';
+import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
+import { createClearCommand, createSongCommand } from '@/scripts/displayCommand';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import { getKeypadGridWidth } from '@/scripts/keypadGrid';
 
@@ -121,24 +122,31 @@ export default function BroadcastOptionsScreen() {
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
     async function broadcast_song_number() {
-        let book = bookData![selectedHymnal];
-        if (!book)
-            return book;
-
-        if(!context?.broadcastingChurch)
-            return;
-
-        let number = songInput.replace(/^0+/, '');
-
-        await set(request_client(), context?.broadcastingChurch, number, book.name?.medium || "", selectedVerses, book.primaryColor || "#000000");
-    }
-
-    async function clearScreen() {
-        if (!context?.broadcastingChurch) {
+        const book = bookData?.[selectedHymnal];
+        if (!book || !canPublishBroadcast(context)) {
             return;
         }
 
-        await set(request_client(), context.broadcastingChurch, "", "", [-1], "");
+        const number = songInput.replace(/^0+/, '');
+
+        await publishFromContext(
+            context,
+            createSongCommand({
+                number,
+                bookMedium: book.name?.medium || '',
+                verses: selectedVerses,
+                bookColor: book.primaryColor || '#000000',
+            }),
+            i18n,
+        );
+    }
+
+    async function clearScreen() {
+        if (!canPublishBroadcast(context)) {
+            return;
+        }
+
+        await publishFromContext(context, createClearCommand(true), i18n);
     }
 
     const renderItem = ({ item }: ListRenderItemInfo<string>) => (
@@ -170,8 +178,7 @@ export default function BroadcastOptionsScreen() {
         <>
             <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                <View
                     style={{
                         flex: 1,
                         justifyContent: 'center',
@@ -311,7 +318,7 @@ export default function BroadcastOptionsScreen() {
                         </View>
                     </View>
                     </View>
-                </KeyboardAvoidingView >
+                </View>
             </TouchableWithoutFeedback>
             </View>
         </>

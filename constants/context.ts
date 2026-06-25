@@ -21,6 +21,10 @@ interface HymnalContextType {
     setBroadcastingToken: (token: string | null) => void;
     broadcastingChurch: string | null;
     setBroadcastingChurch: (church: string | null) => void;
+    hymnSignHost: string | null;
+    setHymnSignHost: (host: string | null) => void;
+    hymnSignPort: number;
+    setHymnSignPort: (port: number) => void;
     hymnalReleaseTag: string | null;
     setHymnalReleaseTag: (tag: string | null) => void;
 

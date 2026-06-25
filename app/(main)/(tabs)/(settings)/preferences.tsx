@@ -7,6 +7,7 @@ import { Divider } from 'react-native-elements';
 import { HymnalContext } from '@/constants/context';
 import { getLanguageName } from '@/constants/localization';
 import { useI18n } from '@/hooks/useI18n';
+import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
@@ -19,6 +20,7 @@ export default function PreferencesScreen() {
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
     const router = useRouter();
+    const push = useRouterPushOnce();
     const context = useContext(HymnalContext);
 
     const i18n = useI18n();
@@ -77,7 +79,7 @@ export default function PreferencesScreen() {
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
 
                         <TouchableHighlight
-                            onPress={() => router.push('/(main)/(tabs)/(settings)/language')}
+                            onPress={() => push('/(main)/(tabs)/(settings)/language')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
@@ -94,7 +96,7 @@ export default function PreferencesScreen() {
                     </View>
                     <View style={[styles.settingsContainer]}>
                         <TouchableHighlight
-                            onPress={() => router.push('/(main)/(tabs)/(settings)/theme')}
+                            onPress={() => push('/(main)/(tabs)/(settings)/theme')}
                             underlayColor={Colors[theme].divider}
                         >
                             <View style={styles.settingsItem}>
@@ -113,7 +115,7 @@ export default function PreferencesScreen() {
                             </View>
                             <View style={[styles.settingsContainer]}>
                                 <TouchableHighlight
-                                    onPress={() => router.push('/(main)/(tabs)/(settings)/release_tag')}
+                                    onPress={() => push('/(main)/(tabs)/(settings)/release_tag')}
                                     underlayColor={Colors[theme].divider}
                                 >
                                     <View style={styles.settingsItem}>

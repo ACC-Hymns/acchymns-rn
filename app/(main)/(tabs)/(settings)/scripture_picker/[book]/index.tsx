@@ -1,6 +1,7 @@
 import React, { useLayoutEffect } from 'react';
 import { FlatList, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { makeScripturePickerStyles } from '@/components/scripturePicker/scripturePickerStyles';
@@ -15,6 +16,7 @@ import { useScripturePickerScrollHeader } from '@/components/scripturePicker/use
 export default function ScripturePickerChaptersScreen() {
     const theme = useColorScheme() ?? 'light';
     const styles = makeScripturePickerStyles(theme);
+    const push = useRouterPushOnce();
     const navigation = useNavigation();
     const onScroll = useScripturePickerScrollHeader();
     const params = useLocalSearchParams<{ book?: string; index?: string }>();
@@ -53,7 +55,7 @@ export default function ScripturePickerChaptersScreen() {
                     <TouchableOpacity
                         style={[styles.tile, chapterTileStyle]}
                         onPress={() => {
-                            router.push({
+                            push({
                                 pathname: '/(main)/(tabs)/(settings)/scripture_picker/[book]/[chapter]',
                                 params: {
                                     book: selectedBook.name,

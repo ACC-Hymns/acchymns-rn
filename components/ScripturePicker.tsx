@@ -4,6 +4,7 @@ import {
     getScriptureReference,
     ScriptureSelection,
     selectionToReading,
+    setScriptureReference,
     subscribeScriptureReferences,
 } from '@/constants/scripturePicker';
 import { openScripturePicker } from '@/constants/scripturePickerNavigation';
@@ -47,13 +48,22 @@ export default function ScripturePicker({ pickerIndex, send }: ScripturePickerPr
                     </StyledText>
                 </TouchableOpacity>
                 {selection?.rangeStart != null && (
-                    <TouchableOpacity
-                        style={styles.sendButton}
-                        onPress={() => send(selectionToReading(selection))}
-                    >
-                        <Ionicons name="send" size={18} color="white" />
-                        <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
-                    </TouchableOpacity>
+                    <View style={styles.actionButtonGroup}>
+                        <TouchableOpacity
+                            style={styles.clearButton}
+                            accessibilityLabel={i18n.t('clear')}
+                            onPress={() => setScriptureReference(pickerIndex, null)}
+                        >
+                            <Ionicons name="trash-outline" size={18} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.sendButton}
+                            onPress={() => send(selectionToReading(selection))}
+                        >
+                            <Ionicons name="send" size={18} color="white" />
+                            <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
         </View>

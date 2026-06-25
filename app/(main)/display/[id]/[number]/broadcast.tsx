@@ -5,7 +5,8 @@ import React, { useContext, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { Pressable } from 'react-native-gesture-handler';
-import { request_client, set } from '@/scripts/broadcast';
+import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
+import { createSongCommand } from '@/scripts/displayCommand';
 import { useBookData } from '@/hooks/useBookData';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
@@ -31,13 +32,20 @@ export default function BroadcastPanel() {
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
     async function broadcast_song_number() {
-        if (!book)
-            return book;
-
-        if (!context?.broadcastingChurch)
+        if (!book || !canPublishBroadcast(context)) {
             return;
+        }
 
-        await set(request_client(), context?.broadcastingChurch, params.number, book.name?.medium || "", selectedVerses, book.primaryColor || "#000000");
+        await publishFromContext(
+            context,
+            createSongCommand({
+                number: params.number,
+                bookMedium: book.name?.medium || '',
+                verses: selectedVerses,
+                bookColor: book.primaryColor || '#000000',
+            }),
+            i18n,
+        );
         router.back();
     };
 

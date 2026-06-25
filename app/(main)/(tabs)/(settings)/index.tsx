@@ -1,8 +1,8 @@
 import { Colors } from '@/constants/Colors';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, TouchableWithoutFeedback } from 'react-native';
 import { TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
+import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
@@ -17,7 +17,7 @@ export default function SettingsScreen() {
 
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
-    const router = useRouter();
+    const push = useRouterPushOnce();
     const context = useContext(HymnalContext);
 
     const i18n = useI18n();
@@ -54,7 +54,7 @@ export default function SettingsScreen() {
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                     <TouchableHighlight
-                        onPress={() => router.push('/(main)/(tabs)/(settings)/help')}
+                        onPress={() => push('/(main)/(tabs)/(settings)/help')}
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
@@ -68,7 +68,7 @@ export default function SettingsScreen() {
                 </View>
                 <View style={[styles.settingsContainer]}>
                     <TouchableHighlight
-                        onPress={() => router.push('/hymnal_importer')}
+                        onPress={() => push('/hymnal_importer')}
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
@@ -79,14 +79,14 @@ export default function SettingsScreen() {
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                     <TouchableHighlight
                         style={styles.settingsItem}
-                        onPress={() => router.push('/broadcast')}
+                        onPress={() => push('/broadcast')}
                         underlayColor={Colors[theme].divider}
                     >
                         <StyledText style={styles.settingsText}>{i18n.t('broadcast')}</StyledText>
                     </TouchableHighlight>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                     <TouchableHighlight
-                        onPress={() => router.push('/(main)/(tabs)/(settings)/preferences')}
+                        onPress={() => push('/(main)/(tabs)/(settings)/preferences')}
                         underlayColor={Colors[theme].divider}
                     >
                         <View style={styles.settingsItem}>
