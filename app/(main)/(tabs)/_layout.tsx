@@ -1,5 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useHymnalUpdates } from '@/hooks/useHymnalUpdates';
@@ -23,6 +23,19 @@ function parseMediaId(mediaId?: string) {
 }
 
 const BOTTOM_ACCESSORY_REMOUNT_DELAY_MS = 150;
+const REGULAR_COLLAPSED_HEIGHT = 8;
+
+type BottomAccessoryLayoutContextValue = {
+    activePlacement: 'regular' | 'inline';
+    usesDualPlacement: boolean;
+    setRegularHeight: (height: number) => void;
+};
+
+const BottomAccessoryLayoutContext = createContext<BottomAccessoryLayoutContextValue>({
+    activePlacement: 'regular',
+    usesDualPlacement: false,
+    setRegularHeight: () => {},
+});
 
 /**
  * Fully unmounts the bottom accessory while the window resizes, then remounts once
@@ -36,6 +49,7 @@ function useBottomAccessoryRemountOnResize(enabled: boolean) {
     const skipInitialResizeRef = useRef(true);
 
     useEffect(() => {
+
         if (!enabled) {
             setMounted(true);
             return;
@@ -68,80 +82,47 @@ function useBottomAccessoryRemountOnResize(enabled: boolean) {
     return { mounted, mountKey };
 }
 
-function MediaBottomAccessoryContent({
+function RegularAccessoryPlayer({
     theme,
     track,
+    playing,
+    onTogglePlayback,
+    onOpenTrack,
+    onLayout,
 }: {
     theme: 'light' | 'dark';
     track: MediaItem;
+    playing: boolean;
+    onTogglePlayback: () => void;
+    onOpenTrack: () => void;
+    onLayout?: (event: { nativeEvent: { layout: { height: number } } }) => void;
 }) {
-    const placement = NativeTabs.BottomAccessory.usePlacement?.() ?? 'regular';
-    const playing = useIsPlaying();
-    const placementLogRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        if (!DEBUG_MEDIA_ACCESSORY) return;
-        if (placementLogRef.current === placement) return;
-        placementLogRef.current = placement;
-    }, [placement, track.mediaId]);
-
-    const routeParams = parseMediaId(track.mediaId);
-    const togglePlayback = async () => {
-        if (playing) {
-            TrackPlayer.pause();
-            return;
-        }
-        await TrackPlayer.play();
-    };
-
-    const openTrack = () => {
-        if (!routeParams) return;
-        router.push({
-            pathname: '/display/[id]/[number]',
-            params: {
-                id: routeParams.bookId,
-                number: routeParams.songId,
-                openSheet: String(Date.now()),
-                openPiano: '1',
-            },
-        });
-    };
-
-    if (placement === 'inline') {
-        return (
-            <Pressable
-                style={[styles.inlineAccessory, { backgroundColor: Colors[theme].liquidGlass }]}
-                onPress={togglePlayback}
-                accessibilityLabel={playing ? 'Pause' : 'Play'}
-            >
-                <Ionicons
-                    name={playing ? 'pause' : 'play'}
-                    size={20}
-                    color={Colors[theme].text}
-                />
-            </Pressable>
-        );
-    }
-
     return (
-        <View style={styles.regularAccessoryRoot}>
-            <View style={[styles.regularAccessory, { backgroundColor: Colors[theme].liquidGlass }]}>
-                {track.artworkUrl ? (
-                    <Image source={{ uri: track.artworkUrl as string }} style={styles.trackArtwork} />
-                ) : (
-                    <View style={[styles.trackArtwork, styles.trackArtworkFallback]}>
-                        <Ionicons name="musical-notes" size={16} color={Colors[theme].text} />
-                    </View>
-                )}
-                <Pressable style={styles.trackInfo} onPress={openTrack}>
-                    <StyledText numberOfLines={1} style={[styles.trackTitle, { color: Colors[theme].text }]}>
-                        {track.title || 'Now Playing'}
-                    </StyledText>
-                    <StyledText numberOfLines={1} style={[styles.trackArtist, { color: Colors[theme].artistText }]}>
-                        {track.artist || 'Hymnal'}
-                    </StyledText>
-                </Pressable>
-                <Pressable style={styles.playButton} onPress={togglePlayback}>
+        <View
+            pointerEvents="box-none"
+            style={styles.measurementRoot}
+            collapsable={false}
+            onLayout={onLayout}
+        >
+            <View style={[styles.regularAccessorySlot, { backgroundColor: Colors[theme].liquidGlass }]}>
+                <View style={styles.regularAccessory}>
+                    {track.artworkUrl ? (
+                        <Image source={{ uri: track.artworkUrl as string }} style={styles.trackArtwork} />
+                    ) : (
+                        <View style={[styles.trackArtwork, styles.trackArtworkFallback]}>
+                            <Ionicons name="musical-notes" size={16} color={Colors[theme].text} />
+                        </View>
+                    )}
+                    <Pressable style={styles.trackInfo} onPress={onOpenTrack}>
+                        <StyledText numberOfLines={1} style={[styles.trackTitle, { color: Colors[theme].text }]}>
+                            {track.title || 'Now Playing'}
+                        </StyledText>
+                        <StyledText numberOfLines={1} style={[styles.trackArtist, { color: Colors[theme].artistText }]}>
+                            {track.artist || 'Hymnal'}
+                        </StyledText>
+                    </Pressable>
+                </View>
+                <Pressable style={styles.playButton} onPress={onTogglePlayback}>
                     <Ionicons
                         name={playing ? 'pause' : 'play'}
                         size={22}
@@ -150,6 +131,71 @@ function MediaBottomAccessoryContent({
                 </Pressable>
             </View>
         </View>
+    );
+}
+
+function MediaBottomAccessoryContent({
+    theme,
+    track,
+    playing,
+    onTogglePlayback,
+    onOpenTrack,
+}: {
+    theme: 'light' | 'dark';
+    track: MediaItem;
+    playing: boolean;
+    onTogglePlayback: () => void;
+    onOpenTrack: () => void;
+}) {
+    const placement = NativeTabs.BottomAccessory.usePlacement?.() ?? 'regular';
+    const { activePlacement, usesDualPlacement, setRegularHeight } = useContext(BottomAccessoryLayoutContext);
+
+    const handleRegularLayout = useCallback((event: { nativeEvent: { layout: { height: number } } }) => {
+        setRegularHeight(event.nativeEvent.layout.height);
+    }, [setRegularHeight]);
+
+    const regularPlayerProps = {
+        theme,
+        track,
+        playing,
+        onTogglePlayback,
+        onOpenTrack,
+    };
+
+    // RN 0.82+ mounts regular + inline accessory content at once. Native toggles visibility
+    // with layer opacity, but the inline layer stays on top and still receives touches.
+    // When regular is active, mirror the full player in the inline slot so taps reach controls.
+    if (placement === 'inline') {
+        if (activePlacement === 'inline') {
+            return (
+                <View pointerEvents="box-none" style={styles.measurementRoot} collapsable={false}>
+                    <Pressable
+                        style={[styles.inlineAccessory, { backgroundColor: Colors[theme].liquidGlass }]}
+                        onPress={onTogglePlayback}
+                        accessibilityLabel={playing ? 'Pause' : 'Play'}
+                    >
+                        <Ionicons
+                            name={playing ? 'pause' : 'play'}
+                            size={20}
+                            color={Colors[theme].text}
+                        />
+                    </Pressable>
+                </View>
+            );
+        }
+
+        return <RegularAccessoryPlayer {...regularPlayerProps} />;
+    }
+
+    if (activePlacement === 'inline') {
+        return <View pointerEvents="none" style={styles.measurementRoot} collapsable={false} />;
+    }
+
+    return (
+        <RegularAccessoryPlayer
+            {...regularPlayerProps}
+            onLayout={usesDualPlacement ? handleRegularLayout : undefined}
+        />
     );
 }
 
@@ -193,15 +239,28 @@ function useTabBarMediaTrack(watch: boolean): MediaItem | null {
         }
     }, [watch]);
 
-    TrackPlayer.addEventListener(Event.PlaybackStateChanged, () => {
-        void refreshTrack();
-    });
-    TrackPlayer.addEventListener(Event.MediaItemTransition, () => {
-        void refreshTrack();
-    });
-    TrackPlayer.addEventListener(Event.QueueChanged, () => {
-        void refreshTrack();
-    });
+    useEffect(() => {
+        if (!watch) {
+            return;
+        }
+
+        const playbackSub = TrackPlayer.addEventListener(Event.PlaybackStateChanged, () => {
+            void refreshTrack();
+        });
+        const transitionSub = TrackPlayer.addEventListener(Event.MediaItemTransition, () => {
+            void refreshTrack();
+        });
+        const queueSub = TrackPlayer.addEventListener(Event.QueueChanged, () => {
+            void refreshTrack();
+        });
+
+        return () => {
+            playbackSub.remove();
+            transitionSub.remove();
+            queueSub.remove();
+        };
+    }, [watch, refreshTrack]);
+
     useEffect(() => {
         if (!watch) {
             setTrack(null);
@@ -242,8 +301,51 @@ export default function TabLayout() {
     const hymnalUpdateBadge = hymnalUpdateCount > 0
         ? (hymnalUpdateCount > 9 ? '9+' : String(hymnalUpdateCount))
         : null;
+    const [regularAccessoryHeight, setRegularAccessoryHeight] = useState<number | null>(null);
+    const usesDualPlacement = Platform.OS === 'ios';
+    const activePlacement: 'regular' | 'inline' =
+        !usesDualPlacement || regularAccessoryHeight === null || regularAccessoryHeight >= REGULAR_COLLAPSED_HEIGHT
+            ? 'regular'
+            : 'inline';
+    const bottomAccessoryLayoutContext = useMemo(
+        () => ({
+            activePlacement,
+            usesDualPlacement,
+            setRegularHeight: setRegularAccessoryHeight,
+        }),
+        [activePlacement, usesDualPlacement],
+    );
+
+    const playing = useIsPlaying();
+    const openBottomAccessoryTrack = useCallback(() => {
+        const routeParams = parseMediaId(tabBarMediaTrack?.mediaId);
+        if (!routeParams) return;
+        router.push({
+            pathname: '/display/[id]/[number]',
+            params: {
+                id: routeParams.bookId,
+                number: routeParams.songId,
+                openSheet: String(Date.now()),
+                openPiano: '1',
+            },
+        });
+    }, [tabBarMediaTrack?.mediaId]);
+    const toggleBottomAccessoryPlayback = useCallback(async () => {
+        if (playing) {
+            await TrackPlayer.pause();
+            return;
+        }
+        await TrackPlayer.play();
+    }, [playing]);
+
+    useEffect(() => {
+        if (!bottomAccessoryMounted || !usesDualPlacement) {
+            setRegularAccessoryHeight(null);
+        }
+    }, [bottomAccessoryMounted, usesDualPlacement]);
 
     return (
+        <BottomAccessoryLayoutContext.Provider value={bottomAccessoryLayoutContext}>
             <NativeTabs 
             indicatorColor={Colors[theme].primaryFaded} 
             labelVisibilityMode='labeled' 
@@ -255,7 +357,13 @@ export default function TabLayout() {
             >
                 {showBottomAccessory ? (
                     <NativeTabs.BottomAccessory key={bottomAccessoryMountKey}>
-                        <MediaBottomAccessoryContent theme={theme} track={tabBarMediaTrack} />
+                        <MediaBottomAccessoryContent
+                            theme={theme}
+                            track={tabBarMediaTrack}
+                            playing={playing}
+                            onTogglePlayback={toggleBottomAccessoryPlayback}
+                            onOpenTrack={openBottomAccessoryTrack}
+                        />
                     </NativeTabs.BottomAccessory>
                 ) : null}
                 <NativeTabs.Trigger name="(home)"
@@ -325,12 +433,14 @@ export default function TabLayout() {
                     ) : null}
                 </NativeTabs.Trigger>
         </NativeTabs>
+        </BottomAccessoryLayoutContext.Provider>
         );
 }
 
-const REGULAR_ACCESSORY_HEIGHT = 44;
-
 const styles = StyleSheet.create({
+    measurementRoot: {
+        ...StyleSheet.absoluteFill,
+    },
     inlineAccessory: {
         alignSelf: 'center',
         alignItems: 'center',
@@ -338,23 +448,17 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 999,
     },
-    regularAccessoryRoot: {
-        width: '100%',
-        alignSelf: 'stretch',
-        flex: 1,
-        height: REGULAR_ACCESSORY_HEIGHT,
+    regularAccessorySlot: {
+        ...StyleSheet.absoluteFill,
+        borderRadius: 14,
+        overflow: 'hidden',
     },
     regularAccessory: {
-        width: '100%',
         flex: 1,
-        alignSelf: 'stretch',
-        borderRadius: 14,
         paddingLeft: 16,
         paddingRight: 50,
-        height: REGULAR_ACCESSORY_HEIGHT,
         flexDirection: 'row',
         alignItems: 'center',
-        overflow: 'hidden',
     },
     trackInfo: {
         flex: 1,
@@ -385,6 +489,7 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         width: 34,
+        zIndex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
