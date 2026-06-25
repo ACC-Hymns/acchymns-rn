@@ -1,5 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_HYMNSIGN_PORT } from '@/constants/displayCommand';
 import { validate_token } from '@/scripts/broadcast';
+import {
+    ECAMP_CHURCH_ID,
+    ECAMP_LOCAL_BROADCAST_TOKEN,
+    isLocalBroadcastToken,
+} from '@/constants/broadcastAuth';
 
 export const PREFERENCE_KEYS = {
     discoverPageVisited: 'discoverPageVisited',
@@ -10,6 +16,8 @@ export const PREFERENCE_KEYS = {
     invertSheetMusic: 'invertSheetMusic',
     broadcastingToken: 'broadcastingToken',
     broadcastingChurch: 'broadcastingChurch',
+    hymnSignHost: 'hymnSignHost',
+    hymnSignPort: 'hymnSignPort',
     hymnalReleaseTag: 'hymnalReleaseTag',
 } as const;
 
@@ -24,6 +32,8 @@ export type PreferencesState = {
     invertSheetMusic: boolean | null;
     broadcastingToken: string | null;
     broadcastingChurch: string | null;
+    hymnSignHost: string | null;
+    hymnSignPort: number;
     hymnalReleaseTag: string | null;
 };
 
@@ -36,6 +46,8 @@ export const INITIAL_PREFERENCES: PreferencesState = {
     invertSheetMusic: null,
     broadcastingToken: null,
     broadcastingChurch: null,
+    hymnSignHost: null,
+    hymnSignPort: DEFAULT_HYMNSIGN_PORT,
     hymnalReleaseTag: null,
 };
 
@@ -56,9 +68,16 @@ function parseStoredValue<K extends PreferenceKey>(
     return value as PreferencesState[K];
 }
 
-function serializeValue(value: boolean | string): string {
-    return typeof value === 'boolean' ? value.toString() : value;
+function serializeValue(value: boolean | string | number): string {
+    return typeof value === 'boolean' ? value.toString() : String(value);
 }
+
+function parseHymnSignPort(value: string): number {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_HYMNSIGN_PORT;
+}
+
+const LEGACY_PREFERENCE_KEYS = new Set(['broadcastTarget']);
 
 export async function loadPreferences(): Promise<PreferencesState> {
     const entries = await AsyncStorage.multiGet(Object.values(PREFERENCE_KEYS));
@@ -76,17 +95,31 @@ export async function loadPreferences(): Promise<PreferencesState> {
             continue;
         }
 
+        if (LEGACY_PREFERENCE_KEYS.has(storageKey)) {
+            continue;
+        }
+
+        if (key === 'hymnSignPort') {
+            Object.assign(preferences, { hymnSignPort: parseHymnSignPort(storedValue) });
+            continue;
+        }
+
         Object.assign(preferences, { [key]: parseStoredValue(key, storedValue) });
     }
 
     const storedToken = entries.find(([key]) => key === PREFERENCE_KEYS.broadcastingToken)?.[1];
     if (storedToken) {
-        try {
-            const response = await validate_token(storedToken);
-            preferences.broadcastingToken = response.status === 200 ? storedToken : null;
-        } catch (error) {
-            console.error('Error validating broadcasting token:', error);
-            preferences.broadcastingToken = null;
+        if (isLocalBroadcastToken(storedToken)) {
+            preferences.broadcastingToken = ECAMP_LOCAL_BROADCAST_TOKEN;
+            preferences.broadcastingChurch = ECAMP_CHURCH_ID;
+        } else {
+            try {
+                const response = await validate_token(storedToken);
+                preferences.broadcastingToken = response.status === 200 ? storedToken : null;
+            } catch (error) {
+                console.error('Error validating broadcasting token:', error);
+                preferences.broadcastingToken = null;
+            }
         }
     }
 
@@ -101,8 +134,10 @@ export async function savePreferences(preferences: PreferencesState): Promise<vo
         const value = preferences[key];
         if (value === null) {
             keysToRemove.push(PREFERENCE_KEYS[key]);
+        } else if (key === 'hymnSignPort') {
+            entries.push([PREFERENCE_KEYS[key], serializeValue(value as number)]);
         } else {
-            entries.push([PREFERENCE_KEYS[key], serializeValue(value)]);
+            entries.push([PREFERENCE_KEYS[key], serializeValue(value as boolean | string)]);
         }
     }
 

@@ -101,5 +101,19 @@
   "verificationFailed": "Verification Failed",
   "verificationFailedMessage": "Some files were unable to download properly. Please try again.",
   "ok": "OK",
-  "startingDownload": "Starting download..."
+  "startingDownload": "Starting download...",
+  "broadcastTarget": "Broadcast Target",
+  "broadcastTargetAws": "AWS Display",
+  "broadcastTargetHymnSign": "HymnSign",
+  "broadcastTargetBoth": "Both",
+  "hymnSignSettings": "HYMNSIGN",
+  "hymnSignHost": "Sign IP Address",
+  "hymnSignHostPlaceholder": "192.168.1.42",
+  "hymnSignPort": "Sign Port",
+  "hymnSignWifiNote": "Your phone must be on the same WiFi as the sign.",
+  "testHymnSignConnection": "Test Connection",
+  "hymnSignConnectionSuccess": "Connected to HymnSign",
+  "hymnSignConnectionFailed": "Could not reach HymnSign",
+  "broadcastFailed": "Broadcast Failed",
+  "broadcastBibleHymnSignSkipped": "Scripture readings are only sent to AWS displays."
 }

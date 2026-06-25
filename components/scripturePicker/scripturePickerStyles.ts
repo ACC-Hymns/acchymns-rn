@@ -88,6 +88,18 @@ export function makeScripturePickerStyles(theme: 'light' | 'dark') {
             color: Colors[theme].text,
             textAlign: 'center',
         },
+        actionButtonGroup: {
+            flexDirection: 'row',
+            gap: 8,
+        },
+        clearButton: {
+            backgroundColor: Colors[theme].destructive,
+            padding: 5,
+            paddingHorizontal: 12,
+            borderRadius: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
         sendButton: {
             backgroundColor: Colors[theme].primary,
             padding: 5,

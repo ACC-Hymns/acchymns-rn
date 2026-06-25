@@ -13,6 +13,11 @@ import Ionicons from '@react-native-vector-icons/ionicons'
 import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { TokenAuthResponse, validate_token } from '@/scripts/broadcast';
+import {
+    authenticateLocalBroadcastPin,
+    ECAMP_CHURCH_ID,
+    isLocalBroadcastToken,
+} from '@/constants/broadcastAuth';
 import { scheduleOnRN } from 'react-native-worklets';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 
@@ -91,6 +96,13 @@ export default function BroadcastScreen() {
                     return;
                 }
 
+                if (isLocalBroadcastToken(context.broadcastingToken)) {
+                    context.setBroadcastingChurch(ECAMP_CHURCH_ID);
+                    setAuthorized(true);
+                    router.replace('/(main)/(tabs)/(settings)/broadcast_options');
+                    return;
+                }
+
                 let token_response = await validate_token(context.broadcastingToken);
                 if (token_response.status != 200) return signout();
                 let token_response_data = token_response.data as TokenAuthResponse;
@@ -116,6 +128,29 @@ export default function BroadcastScreen() {
         setPin("");
     }
     async function login(code: string) {
+        const localAuth = authenticateLocalBroadcastPin(code);
+        if (localAuth) {
+            setAuthorized(true);
+            lockPosition.value = withSequence(
+                withTiming(0, { duration: TIME / 2, easing: EASING }),
+                withRepeat(
+                    withTiming(DX, {
+                        duration: TIME,
+                        easing: EASING,
+                    }),
+                    1,
+                    true
+                ),
+                withTiming(0, { duration: TIME / 2, easing: EASING }, () => {
+                    scheduleOnRN(animFinishCallback);
+                }),
+            );
+            context?.setBroadcastingToken(localAuth.token);
+            context?.setBroadcastingChurch(localAuth.church_id);
+            router.replace('/(main)/(tabs)/(settings)/broadcast_options');
+            return;
+        }
+
         let response = await check_code(code);
         let authorized = response.status == 200;
         if (!authorized) {

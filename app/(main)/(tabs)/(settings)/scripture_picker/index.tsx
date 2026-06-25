@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View, SectionList, useWindowDimensions } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { useScripturePickerScrollHeader } from '@/components/scripturePicker/useScripturePickerScrollHeader';
@@ -18,6 +19,7 @@ export default function ScripturePickerBooksScreen() {
     const theme = useColorScheme() ?? 'light';
     const styles = makeScripturePickerStyles(theme);
     const onScroll = useScripturePickerScrollHeader();
+    const push = useRouterPushOnce();
     const params = useLocalSearchParams<{ index?: string }>();
     const pickerIndex = parsePickerIndex(params.index);
     const { width: screenWidth } = useWindowDimensions();
@@ -63,7 +65,7 @@ export default function ScripturePickerBooksScreen() {
                                 key={book.name}
                                 style={[styles.bookTile, bookTileStyle]}
                                 onPress={() => {
-                                    router.push({
+                                    push({
                                         pathname: '/(main)/(tabs)/(settings)/scripture_picker/[book]',
                                         params: {
                                             book: book.name,
