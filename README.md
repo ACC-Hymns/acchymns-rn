@@ -1,50 +1,54 @@
-# Welcome to your Expo app 👋
+# ACCHymns
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Mobile app for browsing Apostolic Christian Church (Nazarene) hymnals. Ships as **Hymnal** on iOS and Android ([acchymns.app](https://acchymns.app)).
 
-## Get started
+Built with Expo SDK 56 and [Expo Router](https://docs.expo.dev/router/introduction/). Screens live in `app/`, shared UI in `components/`, and most non-UI logic in `scripts/`.
 
-1. Install dependencies
+## Development
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+This project uses a [development build](https://docs.expo.dev/develop/development-builds/introduction/), not Expo Go. Several native modules (Skia, audio, file hashing, etc.) require it.
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Run on a simulator or device:
 
-## Learn more
+```bash
+npm run ios
+npm run android
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Copy `.env` from a teammate or your secrets store before running locally. The app reads `EXPO_PUBLIC_ACCHYMNS_KEY` (Discover API) and `EXPO_PUBLIC_POSTHOG_KEY` (analytics).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Hymnal packages are downloaded at runtime from [ACC-Hymns/books](https://github.com/ACC-Hymns/books). On first launch the app pulls the default set (ZH, GH, HG, JH); additional hymnals can be added from Settings.
 
-## Join the community
+## Scripts
 
-Join our community of developers creating universal apps.
+| Command | |
+| --- | --- |
+| `npm start` | Metro dev server |
+| `npm run ios` / `npm run android` | Native dev build |
+| `npm test` | Jest (watch mode) |
+| `npm run lint` | ESLint |
+| `npm run release -- -p ios --profile production` | EAS build + App Store submit |
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+See `scripts/eas-release.js` for release flags (`--local`, `--no-submit`, etc.). Build profiles are in `eas.json`.
+
+## Layout
+
+```
+app/           Routes (tabs: home, search, discover, bookmarks, settings)
+components/    Shared UI
+constants/     Types, theme, context
+hooks/         React hooks
+locales/       i18n strings (en, es, fr, de, pt, sr)
+scripts/       Hymnal downloads, broadcast, deep links, release tooling
+```
+
+Settings includes broadcast controls for pushing hymns and scripture to AWS displays and HymnSign, plus hymn package updates and release-tag switching for testing new book data.
+
+## Related repos
+
+- [ACC-Hymns/books](https://github.com/ACC-Hymns/books) — hymnal package source
