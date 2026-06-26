@@ -226,8 +226,8 @@ export default function DiscoverScreen() {
 
     const promptFooter = (
         <>
-            <View style={styles.suggestionsSlot} pointerEvents={showSuggestions ? 'auto' : 'none'}>
-                {showSuggestions && (
+            {showSuggestions && (
+                <View style={styles.suggestionsSlot}>
                     <FlatList
                         data={promptSuggestions}
                         horizontal={true}
@@ -249,8 +249,8 @@ export default function DiscoverScreen() {
                         )}
                         keyExtractor={(item, index) => index.toString()}
                     />
-                )}
-            </View>
+                </View>
+            )}
             <ConicGradientRenderer
                 borderRadius={18}
                 poke={3}
