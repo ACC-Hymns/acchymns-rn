@@ -4,6 +4,7 @@ import {
     createSongCommand,
     toDynamoFields,
     toHymnSignMessages,
+    toIoTPayload,
     versesToVerseStates,
 } from '@/scripts/displayCommand';
 
@@ -77,5 +78,26 @@ describe('displayCommand adapters', () => {
 
     it('returns no hymn sign messages for bible command', () => {
         expect(toHymnSignMessages(createBibleCommand('John', '3:16'))).toEqual([]);
+    });
+
+    it('maps song command to IoT payload', () => {
+        const command = createSongCommand({
+            number: '0123',
+            bookMedium: 'Gospel Hymns',
+            verses: [1, 3],
+            bookColor: '#ff0000',
+        });
+
+        expect(toIoTPayload(command)).toEqual({
+            action: 'song',
+            number: '123',
+            hymnal: 'Gospel Hymns',
+            verses: [1, 3],
+            bookColor: '#ff0000',
+        });
+    });
+
+    it('returns null IoT payload for bible command', () => {
+        expect(toIoTPayload(createBibleCommand('John', '3:16'))).toBeNull();
     });
 });

@@ -1,13 +1,11 @@
 import { BroadcastTarget, DisplayCommand } from '@/constants/displayCommand';
 import { toDynamoFields } from '@/scripts/displayCommand';
-import { HymnSignConnectionError, sendToHymnSign } from '@/scripts/hymnSign';
+import { HymnSignConnectionError, publishToHymnSign } from '@/scripts/iotPublish';
 import { request_client, set } from '@/scripts/broadcast';
 
 export type PublishDisplayCommandOptions = {
     churchId: string | null;
     target: BroadcastTarget;
-    hymnSignHost: string | null;
-    hymnSignPort: number;
 };
 
 export type PublishDisplayCommandResult = {
@@ -40,6 +38,8 @@ export async function publishDisplayCommand(
             const error = new Error('Church is not configured for AWS broadcast');
             result.aws = 'failed';
             result.errors.push(error);
+        } else if (command.action === 'brightness') {
+            result.aws = 'skipped';
         } else {
             try {
                 const { song, book, verses, color } = toDynamoFields(command);
@@ -56,13 +56,13 @@ export async function publishDisplayCommand(
         if (command.action === 'bible') {
             result.hymnSign = 'skipped';
             result.hymnSignSkippedReason = 'bible';
-        } else if (!options.hymnSignHost?.trim()) {
+        } else if (!options.churchId) {
             result.hymnSign = 'skipped';
             result.hymnSignSkippedReason = 'not_configured';
-            result.errors.push(new HymnSignConnectionError('HymnSign IP address is not configured'));
+            result.errors.push(new HymnSignConnectionError('Church is not configured for HymnSign'));
         } else {
             try {
-                await sendToHymnSign(options.hymnSignHost, options.hymnSignPort, command);
+                await publishToHymnSign(options.churchId, command);
                 result.hymnSign = 'success';
             } catch (error) {
                 result.hymnSign = 'failed';

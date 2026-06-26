@@ -1,10 +1,6 @@
 import { Alert } from 'react-native';
 import { BroadcastTarget } from '@/constants/displayCommand';
-import {
-    getBroadcastTargetForChurch,
-    getHymnSignHostForChurch,
-    getHymnSignPortForChurch,
-} from '@/constants/broadcastAuth';
+import { getBroadcastTargetForChurch } from '@/constants/broadcastAuth';
 import { HymnalContextType } from '@/constants/context';
 import {
     publishDisplayCommand,
@@ -21,23 +17,11 @@ export function getBroadcastPublishOptions(context: HymnalContextType | undefine
     return {
         churchId,
         target,
-        hymnSignHost: getHymnSignHostForChurch(churchId, context?.hymnSignHost),
-        hymnSignPort: getHymnSignPortForChurch(context?.hymnSignPort),
     };
 }
 
 export function canPublishBroadcast(context: HymnalContextType | undefined): boolean {
-    if (!context?.broadcastingChurch) {
-        return false;
-    }
-
-    const target = getBroadcastTargetForChurch(context.broadcastingChurch);
-
-    if (target === 'hymnsign' && !getHymnSignHostForChurch(context.broadcastingChurch, context.hymnSignHost)?.trim()) {
-        return false;
-    }
-
-    return true;
+    return Boolean(context?.broadcastingChurch);
 }
 
 export function reportBroadcastResult(

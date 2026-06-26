@@ -55,6 +55,41 @@ export function toDynamoFields(command: DisplayCommand): DynamoBroadcastFields {
                 verses: [-1],
                 color: '',
             };
+        case 'brightness':
+            return {
+                song: '',
+                book: '',
+                verses: [-1],
+                color: '',
+            };
+    }
+}
+
+export function toIoTPayload(command: DisplayCommand): Record<string, unknown> | null {
+    switch (command.action) {
+        case 'song': {
+            const number = command.number.replace(/^0+/, '') || '0';
+            return {
+                action: 'song',
+                number,
+                hymnal: command.hymnal,
+                verses: command.verses,
+                bookColor: command.bookColor,
+            };
+        }
+        case 'clear':
+            return {
+                action: 'clear',
+                clearHymnal: command.clearHymnal ?? true,
+            };
+        case 'brightness':
+            return {
+                action: 'brightness',
+                large: command.large,
+                small: command.small,
+            };
+        case 'bible':
+            return null;
     }
 }
 

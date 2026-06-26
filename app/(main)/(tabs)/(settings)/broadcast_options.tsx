@@ -1,15 +1,10 @@
 import { Colors } from '@/constants/Colors';
-import { StyleSheet, ScrollView, View, TouchableHighlight, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { StyleSheet, ScrollView, View, TouchableHighlight, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useLayoutEffect, useState } from 'react';
 import { Divider } from 'react-native-elements';
 import { HymnalContext } from '@/constants/context';
-import {
-    ECAMP_HYMNSIGN_HOST,
-    getHymnSignHostForChurch,
-    getHymnSignPortForChurch,
-    isEcampHymnSignChurch,
-} from '@/constants/broadcastAuth';
+import { isEcampHymnSignChurch } from '@/constants/broadcastAuth';
 import { useI18n } from '@/hooks/useI18n';
 import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -54,8 +49,7 @@ export default function BroadcastOptionsScreen() {
 
     const i18n = useI18n();
     const showHymnSignSettings = isEcampHymnSignChurch(context?.broadcastingChurch);
-    const hymnSignHost = getHymnSignHostForChurch(context?.broadcastingChurch, context?.hymnSignHost) ?? '';
-    const hymnSignPort = getHymnSignPortForChurch(context?.hymnSignPort);
+    const churchId = context?.broadcastingChurch ?? '';
 
     function signout() {
         context?.setBroadcastingToken(null);
@@ -68,15 +62,14 @@ export default function BroadcastOptionsScreen() {
     }
 
     async function handleTestConnection() {
-        const host = hymnSignHost.trim();
-        if (!host) {
-            Alert.alert(i18n.t('hymnSignConnectionFailed'), i18n.t('hymnSignHostPlaceholder'));
+        if (!churchId) {
+            Alert.alert(i18n.t('hymnSignConnectionFailed'), i18n.t('selectedChurch'));
             return;
         }
 
         setTestingConnection(true);
         try {
-            await testHymnSignConnection(host, hymnSignPort);
+            await testHymnSignConnection(churchId);
             Alert.alert(i18n.t('hymnSignConnectionSuccess'));
         } catch (error) {
             const message = error instanceof Error ? error.message : i18n.t('hymnSignConnectionFailed');
@@ -110,37 +103,6 @@ export default function BroadcastOptionsScreen() {
                                 <StyledText style={styles.settingsLabel}>{i18n.t('hymnSignSettings')}</StyledText>
                             </View>
                             <View style={[styles.settingsContainer]}>
-                                <View style={styles.settingsItem}>
-                                    <StyledText style={styles.settingsText}>{i18n.t('hymnSignHost')}</StyledText>
-                                    <TextInput
-                                        value={context?.hymnSignHost ?? ''}
-                                        onChangeText={(value) => context?.setHymnSignHost(value.trim() === '' ? null : value)}
-                                        placeholder={ECAMP_HYMNSIGN_HOST}
-                                        placeholderTextColor={Colors[theme].fadedText}
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        keyboardType="numbers-and-punctuation"
-                                        style={[styles.settingsText, styles.hostInput, { color: Colors[theme].text }]}
-                                    />
-                                </View>
-                                <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
-                                <View style={styles.settingsItem}>
-                                    <StyledText style={styles.settingsText}>{i18n.t('hymnSignPort')}</StyledText>
-                                    <TextInput
-                                        value={String(hymnSignPort)}
-                                        onChangeText={(value) => {
-                                            const parsed = Number.parseInt(value, 10);
-                                            if (Number.isFinite(parsed) && parsed > 0) {
-                                                context?.setHymnSignPort(parsed);
-                                            }
-                                        }}
-                                        placeholder="81"
-                                        placeholderTextColor={Colors[theme].fadedText}
-                                        keyboardType="number-pad"
-                                        style={[styles.settingsText, styles.portInput, { color: Colors[theme].text }]}
-                                    />
-                                </View>
-                                <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                                 <TouchableHighlight
                                     onPress={handleTestConnection}
                                     underlayColor={Colors[theme].divider}
@@ -151,12 +113,12 @@ export default function BroadcastOptionsScreen() {
                                         {testingConnection ? (
                                             <ActivityIndicator color={Colors[theme].primary} />
                                         ) : (
-                                            <Ionicons name="wifi-outline" size={18} color={Colors[theme].fadedIcon} />
+                                            <Ionicons name="cloud-outline" size={18} color={Colors[theme].fadedIcon} />
                                         )}
                                     </View>
                                 </TouchableHighlight>
                             </View>
-                            <StyledText style={styles.noteText}>{i18n.t('hymnSignWifiNote')}</StyledText>
+                            <StyledText style={styles.noteText}>{i18n.t('hymnSignCloudNote')}</StyledText>
                         </>
                     )}
 
@@ -252,16 +214,6 @@ function makeStyles(theme: "light" | "dark") {
             fontWeight: '400',
             color: Colors[theme]['text'],
             fontFamily: 'Lato',
-        },
-        hostInput: {
-            minWidth: 140,
-            textAlign: 'right',
-            paddingVertical: 0,
-        },
-        portInput: {
-            minWidth: 64,
-            textAlign: 'right',
-            paddingVertical: 0,
         },
         noteText: {
             fontSize: 14,

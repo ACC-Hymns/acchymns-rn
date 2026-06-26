@@ -160,13 +160,6 @@ android {
 }
 
 dependencies {
-        // FIX: Duplicate classes from Glide (added by custom config plugin)
-        configurations.all {
-            exclude group: 'com.github.bumptech.glide', module: 'glide'
-            exclude group: 'com.github.bumptech.glide', module: 'compiler'
-            exclude group: 'com.github.bumptech.glide', module: 'okhttp3-integration'
-        }
-      
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 

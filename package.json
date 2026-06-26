@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.828.0",
+    "@aws-sdk/client-iot-data-plane": "^3.828.0",
     "@aws-sdk/credential-providers": "^3.828.0",
     "@blazejkustra/react-native-alert": "^1.0.0",
     "@expo/material-symbols": "^0.1.1",

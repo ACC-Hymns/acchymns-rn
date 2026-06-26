@@ -159,7 +159,6 @@
       "expo-web-browser",
       "expo-asset",
       "./plugins/withAndroidSvgFix",
-      "./plugins/withGlideFix",
       "./plugins/withMetaspaceFix",
       "expo-image",
       "expo-sharing",

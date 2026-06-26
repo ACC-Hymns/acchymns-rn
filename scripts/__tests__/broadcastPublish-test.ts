@@ -46,18 +46,15 @@ describe('canPublishBroadcast', () => {
         expect(canPublishBroadcast(makeContext({ broadcastingChurch: 'church-1' }))).toBe(true);
     });
 
-    it('uses configured hymn sign host for ECAMP', () => {
+    it('routes ECAMP to hymnsign without requiring a local IP', () => {
         const options = getBroadcastPublishOptions(
             makeContext({
                 broadcastingChurch: ECAMP_CHURCH_ID,
-                hymnSignHost: '10.0.0.50',
-                hymnSignPort: 8080,
             }),
         );
 
         expect(options.target).toBe('hymnsign');
-        expect(options.hymnSignHost).toBe('10.0.0.50');
-        expect(options.hymnSignPort).toBe(8080);
+        expect(options.churchId).toBe(ECAMP_CHURCH_ID);
         expect(canPublishBroadcast(makeContext({ broadcastingChurch: ECAMP_CHURCH_ID }))).toBe(true);
     });
 
@@ -69,6 +66,5 @@ describe('canPublishBroadcast', () => {
         );
 
         expect(options.target).toBe('aws');
-        expect(options.hymnSignHost).toBeNull();
     });
 });

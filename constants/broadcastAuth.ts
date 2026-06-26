@@ -8,9 +8,6 @@ export const ECAMP_CHURCH_ID = 'ECAMP';
 /** Local token stored for ECAMP HymnSign sessions (not validated by AWS Lambda). */
 export const ECAMP_LOCAL_BROADCAST_TOKEN = 'local:ecamp-hymnsign';
 
-/** HymnSign WebSocket host on the ECAMP church LAN. */
-export const ECAMP_HYMNSIGN_HOST = '192.168.2.102';
-
 export function isLocalBroadcastToken(token: string | null | undefined): boolean {
     return token === ECAMP_LOCAL_BROADCAST_TOKEN;
 }
@@ -23,6 +20,7 @@ export function getBroadcastTargetForChurch(churchId: string | null | undefined)
     return isEcampHymnSignChurch(churchId) ? 'hymnsign' : 'aws';
 }
 
+/** @deprecated HymnSign V3 is cloud-controlled via IoT Core; host is no longer used. */
 export function getHymnSignHostForChurch(
     churchId: string | null | undefined,
     configuredHost?: string | null,
@@ -31,10 +29,10 @@ export function getHymnSignHostForChurch(
         return null;
     }
 
-    const host = configuredHost?.trim();
-    return host || ECAMP_HYMNSIGN_HOST;
+    return configuredHost?.trim() || null;
 }
 
+/** @deprecated HymnSign V3 is cloud-controlled via IoT Core; port is no longer used. */
 export function getHymnSignPortForChurch(configuredPort?: number | null): number {
     if (configuredPort && configuredPort > 0) {
         return configuredPort;

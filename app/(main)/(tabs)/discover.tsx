@@ -15,6 +15,7 @@ import {
     useContext,
     useEffect,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react';
@@ -23,12 +24,11 @@ import {
     View,
     Platform,
     TouchableOpacity,
-    KeyboardAvoidingView,
     Keyboard,
-    TouchableWithoutFeedback,
     FlatList,
 } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Ionicons from '@react-native-vector-icons/ionicons'
@@ -44,7 +44,7 @@ import Animated, {
     useAnimatedStyle,
     useDerivedValue,
 } from 'react-native-reanimated';
-import { KeyboardStickyView, useKeyboardAnimation, useKeyboardState } from 'react-native-keyboard-controller';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
 export default function DiscoverScreen() {
     const theme = useColorScheme() ?? 'light';
@@ -128,9 +128,8 @@ export default function DiscoverScreen() {
     const [latestPrompt, setLatestPrompt] = useState("");
 
     // Reanimated Keyboard Logic
-    const { height, progress } = useKeyboardAnimation();
-
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const promptInputRef = useRef<TextInput>(null);
     const isModalOpenRef = useRef(false);
 
     const handlePress = useCallback(() => {
@@ -215,104 +214,125 @@ export default function DiscoverScreen() {
         }, [])
     );
 
-    const offset = { closed: 0, opened: Platform.OS === 'ios' ? 80 : 20 };
+    const insets = useSafeAreaInsets();
+    const showSuggestions = prompt.trim().length === 0 && dataSource.length === 0;
+    const footerOffset = useMemo(
+        () => ({
+            closed: 0,
+            opened: Platform.OS === 'ios' ? 80 : insets.bottom + 80,
+        }),
+        [insets.bottom],
+    );
+
+    const promptFooter = (
+        <>
+            <View style={styles.suggestionsSlot} pointerEvents={showSuggestions ? 'auto' : 'none'}>
+                {showSuggestions && (
+                    <FlatList
+                        data={promptSuggestions}
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.suggestionsListContent}
+                        renderItem={({ item }) => (
+                            <Pressable
+                                style={styles.suggestionButton}
+                                onPress={() => {
+                                    promptInputRef.current?.blur();
+                                    Keyboard.dismiss();
+                                    setPrompt(item);
+                                }}
+                            >
+                                <StyledText style={styles.suggestionButtonText}>
+                                    {item}
+                                </StyledText>
+                            </Pressable>
+                        )}
+                        keyExtractor={(item, index) => index.toString()}
+                    />
+                )}
+            </View>
+            <ConicGradientRenderer
+                borderRadius={18}
+                poke={3}
+                colors={[
+                    Colors[theme]['settingsButton'],
+                    "#C95EFF",
+                    "#94ABFF",
+                    Colors[theme]['settingsButton'],
+                ]}
+                spinRate={loading ? 450 : 15}
+                enabled={prompt.trim().length > 0 || loading}
+            >
+                <View style={styles.promptBox}>
+                    {showEnglishOnlyNotice && (
+                        <StyledText style={styles.discoverEnglishNotice}>
+                            {i18n.t('discoverEnglishOnlyNotice')}
+                        </StyledText>
+                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TextInput
+                            ref={promptInputRef}
+                            style={styles.promptInput}
+                            placeholderTextColor={Colors[theme].fadedText}
+                            onChangeText={setPrompt}
+                            value={prompt}
+                            placeholder={`${i18n.t('promptPlaceholder')}`}
+                            keyboardType="default"
+                        />
+                    </View>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <TouchableOpacity
+                            style={[styles.filterButton, { flexDirection: 'row', alignItems: 'center' }]}
+                            onPress={() => {
+                                Keyboard.dismiss();
+                                handlePress();
+                            }}
+                        >
+                            <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters')}</StyledText>
+                            <Ionicons
+                                name="filter"
+                                size={18}
+                                color={Colors[theme]['text']}
+                            />
+                        </TouchableOpacity>
+                        <View style={styles.sendButtonSlot}>
+                            {prompt.trim().length > 0 && !loading && (
+                                <TouchableOpacity
+                                    style={styles.promptButton}
+                                    onPress={() => {
+                                        Keyboard.dismiss();
+                                        sendPrompt(prompt);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="arrow-up"
+                                        size={24}
+                                        color={Colors[theme]['fadedText']}
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            </ConicGradientRenderer>
+        </>
+    );
 
     return (
-            <View style={{ flex: 1, backgroundColor: 'blue' }}>
+            <View style={{ flex: 1 }}>
                 <View style={{ flex: 1 }}>
                     {hymnalsAvailable.length > 0 && (
-                        <KeyboardStickyView style={[styles.footerContainer]} offset={offset}>
-                            {prompt.trim().length === 0 && dataSource.length == 0 && (
-                                <FlatList
-                                    data={promptSuggestions}
-                                    horizontal={true}
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{
-                                        paddingHorizontal: 10,
-                                        paddingVertical: 5,
-                                    }}
-                                    renderItem={({ item }) => (
-                                        <Pressable
-                                            style={styles.suggestionButton}
-                                            onPress={() => {
-                                                setPrompt(item);
-                                            }}
-                                        >
-                                            <StyledText style={styles.suggestionButtonText}>
-                                                {item}
-                                            </StyledText>
-                                        </Pressable>
-                                    )}
-                                    keyExtractor={(item, index) => index.toString()}
-                                />
-                            )}
-                            <ConicGradientRenderer
-                                borderRadius={18}
-                                poke={3}
-                                colors={[
-                                    Colors[theme]['settingsButton'],
-                                    "#C95EFF",
-                                    "#94ABFF",
-                                    Colors[theme]['settingsButton'],
-                                ]}
-                                spinRate={loading ? 450 : 15}
-                                enabled={prompt.trim().length > 0 || loading}
-                            >
-                                <View style={styles.promptBox}>
-                                    {showEnglishOnlyNotice && (
-                                        <StyledText style={styles.discoverEnglishNotice}>
-                                            {i18n.t('discoverEnglishOnlyNotice')}
-                                        </StyledText>
-                                    )}
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <TextInput
-                                            style={styles.promptInput}
-                                            placeholderTextColor={Colors[theme].fadedText}
-                                            onChangeText={setPrompt}
-                                            value={prompt}
-                                            placeholder={`${i18n.t('promptPlaceholder')}`}
-                                            keyboardType="default"
-                                        />
-                                    </View>
-                                    <View
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                        }}
-                                    >
-                                        <TouchableOpacity
-                                            style={[styles.filterButton, { flexDirection: 'row', alignItems: 'center' }]}
-                                            onPress={() => {
-                                                Keyboard.dismiss();
-                                                handlePress();
-                                            }}
-                                        >
-                                            <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters')}</StyledText>
-                                            <Ionicons
-                                                name="filter"
-                                                size={18}
-                                                color={Colors[theme]['text']}
-                                            />
-                                        </TouchableOpacity>
-                                        {prompt.trim().length > 0 && !loading && (
-                                            <TouchableOpacity
-                                                style={styles.promptButton}
-                                                onPress={() => {
-                                                    Keyboard.dismiss();
-                                                    sendPrompt(prompt);
-                                                }}
-                                            >
-                                                <Ionicons
-                                                    name="arrow-up"
-                                                    size={24}
-                                                    color={Colors[theme]['fadedText']}
-                                                />
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                </View>
-                            </ConicGradientRenderer>
+                        <KeyboardStickyView
+                            style={[styles.footerContainer]}
+                            offset={footerOffset}
+                        >
+                            {promptFooter}
                         </KeyboardStickyView>
                     )}
 
@@ -486,7 +506,21 @@ function makeStyles(theme: "light" | "dark") {
             position: 'absolute',
             zIndex: 10,
             width: '100%',
-            bottom: Platform.OS === 'ios' ? 80 : 100
+            bottom: Platform.OS === 'ios' ? 80 : 0,
+        },
+        suggestionsSlot: {
+            minHeight: 60,
+            justifyContent: 'center',
+        },
+        suggestionsListContent: {
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+        },
+        sendButtonSlot: {
+            width: 54,
+            height: 54,
+            alignItems: 'center',
+            justifyContent: 'center',
         },
         promptButton: {
             backgroundColor: Colors[theme]['settingsButton'],

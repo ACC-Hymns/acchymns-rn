@@ -21,4 +21,9 @@ export type DisplayCommand =
     | {
           action: 'clear';
           clearHymnal?: boolean;
+      }
+    | {
+          action: 'brightness';
+          large: number;
+          small: number;
       };
