@@ -9,6 +9,7 @@ import {
     parseEcampCommandPayload,
 } from '@/scripts/ecampDisplay';
 import { getIotCredentialsProvider, getIotEndpoint, IOT_REGION } from '@/scripts/iotCredentials';
+import { ensureIotIdentityPolicyAttached } from '@/scripts/iotIdentityPolicy';
 import { hymnSignCommandTopic } from '@/scripts/iotPublish';
 
 type EcampDisplayListener = (state: EcampDisplayState | null) => void;
@@ -111,6 +112,8 @@ async function connectClient(): Promise<void> {
     }
 
     connectPromise = (async () => {
+        await ensureIotIdentityPolicyAttached();
+
         const endpoint = getIotEndpoint();
         const topic = hymnSignCommandTopic(ECAMP_CHURCH_ID);
         const signedUrl = await createSignedIotWsUrl(endpoint);

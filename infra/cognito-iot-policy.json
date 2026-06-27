@@ -3,23 +3,25 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": "iot:Connect",
-      "Resource": "arn:aws:iot:us-east-2:*:client/acchymns-*"
+      "Action": [
+        "iot:Connect",
+        "iot:Publish",
+        "iot:Subscribe",
+        "iot:Receive"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-2:382131451454:client/acchymns-*",
+        "arn:aws:iot:us-east-2:382131451454:topic/hymnsign/*/command",
+        "arn:aws:iot:us-east-2:382131451454:topicfilter/hymnsign/*/command"
+      ]
     },
     {
       "Effect": "Allow",
-      "Action": "iot:Publish",
-      "Resource": "arn:aws:iot:us-east-2:*:topic/hymnsign/*/command"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "iot:Subscribe",
-      "Resource": "arn:aws:iot:us-east-2:*:topicfilter/hymnsign/*/command"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "iot:Receive",
-      "Resource": "arn:aws:iot:us-east-2:*:topic/hymnsign/*/command"
+      "Action": [
+        "iot:AttachPolicy",
+        "iot:ListAttachedPolicies"
+      ],
+      "Resource": "arn:aws:iot:us-east-2:382131451454:policy/HymnSignAppPublish"
     }
   ]
 }

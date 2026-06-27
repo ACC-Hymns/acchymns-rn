@@ -10,6 +10,7 @@ import {
     HymnSignConnectionError,
     IOT_REGION,
 } from '@/scripts/iotCredentials';
+import { ensureIotIdentityPolicyAttached } from '@/scripts/iotIdentityPolicy';
 
 export { HymnSignConnectionError } from '@/scripts/iotCredentials';
 
@@ -31,6 +32,7 @@ async function publishPayload(
     options?: { retain?: boolean; qos?: 0 | 1 },
 ): Promise<void> {
     await ensureIotCredentialsReady();
+    await ensureIotIdentityPolicyAttached();
 
     const topic = hymnSignCommandTopic(churchId);
     const client = iotDataClient();
