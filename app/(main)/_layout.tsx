@@ -1,9 +1,11 @@
+import EcampSingingBanner from "@/components/EcampSingingBanner";
 import { Colors } from "@/constants/Colors";
 import { useI18n } from "@/hooks/useI18n";
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { router, Stack } from "expo-router";
 import React from "react";
+import { View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function MainStackLayout() {
@@ -11,9 +13,12 @@ export default function MainStackLayout() {
     const i18n = useI18n();
     return (
         <ThemeProvider value={effectiveTheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack
-            initialRouteName="(tabs)"
-        >
+        <View style={{ flex: 1 }}>
+            <EcampSingingBanner />
+            <Stack
+                initialRouteName="(tabs)"
+                screenOptions={{ contentStyle: { flex: 1 } }}
+            >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
                 name="hymnal_importer"
@@ -44,7 +49,8 @@ export default function MainStackLayout() {
             />
             <Stack.Screen name="display/[id]/[number]" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
-        </Stack>
+            </Stack>
+        </View>
         </ThemeProvider>
     );
 }

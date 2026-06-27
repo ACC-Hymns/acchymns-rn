@@ -1,4 +1,5 @@
 import { BroadcastTarget, DisplayCommand } from '@/constants/displayCommand';
+import { notifyEcampDisplayRefresh } from '@/scripts/ecampDisplay';
 import { toDynamoFields } from '@/scripts/displayCommand';
 import { HymnSignConnectionError, publishToHymnSign } from '@/scripts/iotPublish';
 import { request_client, set } from '@/scripts/broadcast';
@@ -21,6 +22,19 @@ function requiresAws(target: BroadcastTarget): boolean {
 
 function requiresHymnSign(target: BroadcastTarget): boolean {
     return target === 'hymnsign' || target === 'both';
+}
+
+async function mirrorHymnSignStateToDisplayTable(
+    churchId: string,
+    command: DisplayCommand,
+): Promise<void> {
+    if (command.action === 'brightness') {
+        return;
+    }
+
+    const { song, book, verses, color } = toDynamoFields(command);
+    await set(request_client(), churchId, song, book, verses, color);
+    notifyEcampDisplayRefresh();
 }
 
 export async function publishDisplayCommand(
@@ -63,6 +77,11 @@ export async function publishDisplayCommand(
         } else {
             try {
                 await publishToHymnSign(options.churchId, command);
+                try {
+                    await mirrorHymnSignStateToDisplayTable(options.churchId, command);
+                } catch (error) {
+                    console.warn('Failed to mirror HymnSign state to display table:', error);
+                }
                 result.hymnSign = 'success';
             } catch (error) {
                 result.hymnSign = 'failed';

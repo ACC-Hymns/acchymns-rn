@@ -67,6 +67,7 @@ const translations = {
         hymnSignConnectionFailed: 'Could not reach HymnSign',
         broadcastFailed: 'Broadcast Failed',
         broadcastBibleHymnSignSkipped: 'Scripture readings are only sent to AWS displays.',
+        currentlySinging: 'Currently singing %{label}',
 
         // Search and Bookmarks screen
         search: 'Search',
