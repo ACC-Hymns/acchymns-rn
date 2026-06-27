@@ -7,6 +7,9 @@ export const ECAMP_BANNER_GAP = 12;
 export const ECAMP_BANNER_MEDIA_ACCESSORY_GAP = 0;
 export const ECAMP_BANNER_ESTIMATED_HEIGHT = 72;
 export const ECAMP_BANNER_BACK_TO_TOP_GAP = 8;
+export const ECAMP_BANNER_DISMISS_DRAG_THRESHOLD = 48;
+export const ECAMP_BANNER_DISMISS_VELOCITY_THRESHOLD = 600;
+export const ECAMP_BANNER_DISMISS_OFFSET = 120;
 
 export function isSettingsRoute(pathname: string): boolean {
     return pathname === '/preferences' || pathname === '/help' 

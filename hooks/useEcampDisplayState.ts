@@ -18,6 +18,13 @@ import {
 } from '@/scripts/ecampDisplaySubscription';
 import { getSongData } from '@/scripts/hymnals';
 import { isEcampBannerRoute } from '@/constants/ecampBanner';
+import {
+    dismissEcampBanner,
+    getDismissedEcampDisplayKey,
+    isEcampBannerDismissedForDisplay,
+    subscribeEcampBannerDismiss,
+    syncEcampBannerDismissForDisplayKey,
+} from '@/scripts/ecampBannerDismiss';
 
 const LOG_PREFIX = '[ECAMP Subscribe]';
 
@@ -42,11 +49,29 @@ export function useEcampDisplayState() {
     const routeHidden = !isEcampBannerRoute(pathname);
     const bannerEnabled = context?.recommendedHymnBannerEnabled ?? true;
     const [display, setDisplay] = useState<EcampDisplayState | null>(null);
+    const [dismissedDisplayKey, setDismissedDisplayKey] = useState<string | null>(
+        getDismissedEcampDisplayKey(),
+    );
     const [book, setBook] = useState<BookSummary | undefined>();
     const [songs, setSongs] = useState<SongList | null>(null);
     const [songNumber, setSongNumber] = useState<string | null>(null);
 
     const displayKey = ecampDisplayStateKey(display);
+    const userDismissed = isEcampBannerDismissedForDisplay(display);
+
+    const dismissBanner = useCallback(() => {
+        if (!display) {
+            return;
+        }
+
+        dismissEcampBanner(display);
+    }, [display]);
+
+    useEffect(() => subscribeEcampBannerDismiss(setDismissedDisplayKey), []);
+
+    useEffect(() => {
+        syncEcampBannerDismissForDisplayKey(displayKey);
+    }, [displayKey]);
 
     const handleDisplayUpdate = useCallback((state: EcampDisplayState | null) => {
         logHook('hook received display update', {
@@ -218,11 +243,14 @@ export function useEcampDisplayState() {
 
     return {
         display,
+        displayKey,
         title,
         book,
         hymnalLabel,
         songRoute,
         viewingSameSong,
-        hidden: routeHidden || !bannerEnabled || viewingSameSong,
+        userDismissed,
+        dismissBanner,
+        hidden: routeHidden || !bannerEnabled || viewingSameSong || userDismissed,
     };
 }

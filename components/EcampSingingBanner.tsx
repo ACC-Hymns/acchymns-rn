@@ -1,9 +1,18 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import StyledText from '@/components/StyledText';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
@@ -11,6 +20,9 @@ import { useEcampDisplayState } from '@/hooks/useEcampDisplayState';
 import { useI18n } from '@/hooks/useI18n';
 import { useTabBarMediaAccessoryVisible } from '@/hooks/useTabBarMediaAccessoryVisible';
 import {
+    ECAMP_BANNER_DISMISS_DRAG_THRESHOLD,
+    ECAMP_BANNER_DISMISS_OFFSET,
+    ECAMP_BANNER_DISMISS_VELOCITY_THRESHOLD,
     getEcampBannerBottomInset,
     isMainTabRoute,
 } from '@/constants/ecampBanner';
@@ -25,19 +37,69 @@ export default function EcampSingingBanner() {
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const isOpeningSongRef = useRef(false);
     const tabBarMediaAccessoryVisible = useTabBarMediaAccessoryVisible();
-    const { display, hymnalLabel, songRoute, hidden } = useEcampDisplayState();
+    const {
+        display,
+        displayKey,
+        hymnalLabel,
+        songRoute,
+        hidden,
+        dismissBanner,
+    } = useEcampDisplayState();
+    const translateY = useSharedValue(0);
     const isLiquidGlass = useMemo(
         () => isIOS26DesignEnabled()
             && isLiquidGlassAvailable()
             && isGlassEffectAPIAvailable(),
         [],
     );
+    const isVisible = Boolean(display) && !hidden;
 
-    if (!display) {
-        return null;
-    }
+    useEffect(() => {
+        if (isVisible) {
+            translateY.value = 0;
+        }
+    }, [displayKey, isVisible, translateY]);
 
-    const isVisible = !hidden;
+    const finishDismiss = useCallback(() => {
+        dismissBanner();
+    }, [dismissBanner]);
+
+    const panGesture = useMemo(() => Gesture.Pan()
+        .enabled(isVisible)
+        .activeOffsetY(8)
+        .failOffsetX([-24, 24])
+        .onUpdate((event) => {
+            'worklet';
+            if (event.translationY > 0) {
+                translateY.value = event.translationY;
+            }
+        })
+        .onEnd((event) => {
+            'worklet';
+            const shouldDismiss = event.translationY > ECAMP_BANNER_DISMISS_DRAG_THRESHOLD
+                || event.velocityY > ECAMP_BANNER_DISMISS_VELOCITY_THRESHOLD;
+
+            if (shouldDismiss) {
+                scheduleOnRN(Haptics.impactAsync, Haptics.ImpactFeedbackStyle.Light);
+                translateY.value = withTiming(
+                    ECAMP_BANNER_DISMISS_OFFSET,
+                    { duration: 180 },
+                    (finished) => {
+                        if (finished) {
+                            scheduleOnRN(finishDismiss);
+                        }
+                    },
+                );
+                return;
+            }
+
+            translateY.value = withSpring(0, { damping: 20, stiffness: 300 });
+        }), [finishDismiss, isVisible, translateY]);
+
+    const dragAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: translateY.value }],
+        opacity: Math.max(0, 1 - translateY.value / ECAMP_BANNER_DISMISS_OFFSET),
+    }));
 
     const isLandscape = windowWidth > windowHeight;
     const horizontalPadding = 12;
@@ -117,6 +179,10 @@ export default function EcampSingingBanner() {
         );
     }
 
+    if (!display) {
+        return null;
+    }
+
     return (
         <View
             pointerEvents={isVisible ? 'box-none' : 'none'}
@@ -130,40 +196,47 @@ export default function EcampSingingBanner() {
                 !isVisible && styles.visuallyHidden,
             ]}
         >
-            <LinearGradient
-                colors={[...CAMP_GRADIENT]}
-                locations={[...CAMP_GRADIENT_LOCATIONS]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[
-                    styles.card,
-                    cardWidth != null && { width: cardWidth },
-                ]}
-            >
-                <View style={styles.content} collapsable={false}>
-                    <View style={styles.textBlock} collapsable={false}>
-                        <StyledText style={styles.eventHeader}>
-                            {i18n.t('easternCamp2026')}
-                        </StyledText>
-                        <View style={styles.songRow}>
-                            <StyledText style={styles.number}>
-                                {display.songNumber}
-                            </StyledText>
-                            <StyledText
-                                style={[
-                                    styles.hymnal,
-                                    !hymnalLabel && styles.hymnalPlaceholder,
-                                ]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
-                                {hymnalLabel ?? ' '}
-                            </StyledText>
+            <GestureDetector gesture={panGesture}>
+                <Animated.View
+                    style={[
+                        isLandscape && styles.landscapeCardWrap,
+                        cardWidth != null && { width: cardWidth },
+                        dragAnimatedStyle,
+                    ]}
+                >
+                    <LinearGradient
+                        colors={[...CAMP_GRADIENT]}
+                        locations={[...CAMP_GRADIENT_LOCATIONS]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.card}
+                    >
+                        <View style={styles.content} collapsable={false}>
+                            <View style={styles.textBlock} collapsable={false}>
+                                <StyledText style={styles.eventHeader}>
+                                    {i18n.t('easternCamp2026')}
+                                </StyledText>
+                                <View style={styles.songRow}>
+                                    <StyledText style={styles.number}>
+                                        {display.songNumber}
+                                    </StyledText>
+                                    <StyledText
+                                        style={[
+                                            styles.hymnal,
+                                            !hymnalLabel && styles.hymnalPlaceholder,
+                                        ]}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                    >
+                                        {hymnalLabel ?? ' '}
+                                    </StyledText>
+                                </View>
+                            </View>
+                            {songRoute ? renderViewButton() : null}
                         </View>
-                    </View>
-                    {songRoute ? renderViewButton() : null}
-                </View>
-            </LinearGradient>
+                    </LinearGradient>
+                </Animated.View>
+            </GestureDetector>
         </View>
     );
 }
@@ -183,6 +256,9 @@ const styles = StyleSheet.create({
     },
     outerLandscape: {
         alignItems: 'center',
+    },
+    landscapeCardWrap: {
+        alignSelf: 'center',
     },
     visuallyHidden: {
         opacity: 0,
