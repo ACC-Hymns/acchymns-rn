@@ -5,6 +5,7 @@ import { HymnalContext } from '@/constants/context';
 import { BookSummary, SongList } from '@/constants/types';
 import {
     EcampDisplayState,
+    ecampDisplaySongKey,
     ecampDisplayStateKey,
     ecampDisplayStatesEqual,
     findBookForDisplayRecord,
@@ -20,10 +21,10 @@ import { getSongData } from '@/scripts/hymnals';
 import { isEcampBannerRoute } from '@/constants/ecampBanner';
 import {
     dismissEcampBanner,
-    getDismissedEcampDisplayKey,
+    getDismissedEcampSongKey,
     isEcampBannerDismissedForDisplay,
     subscribeEcampBannerDismiss,
-    syncEcampBannerDismissForDisplayKey,
+    syncEcampBannerDismissForSongKey,
 } from '@/scripts/ecampBannerDismiss';
 
 const LOG_PREFIX = '[ECAMP Subscribe]';
@@ -49,14 +50,15 @@ export function useEcampDisplayState() {
     const routeHidden = !isEcampBannerRoute(pathname);
     const bannerEnabled = context?.recommendedHymnBannerEnabled ?? true;
     const [display, setDisplay] = useState<EcampDisplayState | null>(null);
-    const [dismissedDisplayKey, setDismissedDisplayKey] = useState<string | null>(
-        getDismissedEcampDisplayKey(),
+    const [dismissedSongKey, setDismissedSongKey] = useState<string | null>(
+        getDismissedEcampSongKey(),
     );
     const [book, setBook] = useState<BookSummary | undefined>();
     const [songs, setSongs] = useState<SongList | null>(null);
     const [songNumber, setSongNumber] = useState<string | null>(null);
 
     const displayKey = ecampDisplayStateKey(display);
+    const songKey = ecampDisplaySongKey(display);
     const userDismissed = isEcampBannerDismissedForDisplay(display);
 
     const dismissBanner = useCallback(() => {
@@ -67,11 +69,11 @@ export function useEcampDisplayState() {
         dismissEcampBanner(display);
     }, [display]);
 
-    useEffect(() => subscribeEcampBannerDismiss(setDismissedDisplayKey), []);
+    useEffect(() => subscribeEcampBannerDismiss(setDismissedSongKey), []);
 
     useEffect(() => {
-        syncEcampBannerDismissForDisplayKey(displayKey);
-    }, [displayKey]);
+        syncEcampBannerDismissForSongKey(songKey);
+    }, [songKey]);
 
     const handleDisplayUpdate = useCallback((state: EcampDisplayState | null) => {
         logHook('hook received display update', {
@@ -244,6 +246,7 @@ export function useEcampDisplayState() {
     return {
         display,
         displayKey,
+        songKey,
         title,
         book,
         hymnalLabel,

@@ -40,6 +40,7 @@ export default function EcampSingingBanner() {
     const {
         display,
         displayKey,
+        songKey,
         hymnalLabel,
         songRoute,
         hidden,
@@ -58,7 +59,7 @@ export default function EcampSingingBanner() {
         if (isVisible) {
             translateY.value = 0;
         }
-    }, [displayKey, isVisible, translateY]);
+    }, [songKey, isVisible, translateY]);
 
     const finishDismiss = useCallback(() => {
         dismissBanner();

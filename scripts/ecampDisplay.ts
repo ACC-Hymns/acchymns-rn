@@ -14,6 +14,14 @@ export function ecampDisplayStateKey(state: EcampDisplayState | null | undefined
     return `${state.songNumber}|${state.bookMedium}|${state.verses.join(',')}`;
 }
 
+export function ecampDisplaySongKey(state: EcampDisplayState | null | undefined): string {
+    if (!state) {
+        return '';
+    }
+
+    return `${state.songNumber}|${state.bookMedium}`;
+}
+
 export function ecampDisplayStatesEqual(
     left: EcampDisplayState | null | undefined,
     right: EcampDisplayState | null | undefined,

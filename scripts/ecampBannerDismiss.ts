@@ -1,44 +1,44 @@
-import { EcampDisplayState, ecampDisplayStateKey } from '@/scripts/ecampDisplay';
+import { EcampDisplayState, ecampDisplaySongKey } from '@/scripts/ecampDisplay';
 
-type DismissListener = (dismissedDisplayKey: string | null) => void;
+type DismissListener = (dismissedSongKey: string | null) => void;
 
-let dismissedDisplayKey: string | null = null;
+let dismissedSongKey: string | null = null;
 const listeners = new Set<DismissListener>();
 
 function notifyListeners() {
     for (const listener of listeners) {
-        listener(dismissedDisplayKey);
+        listener(dismissedSongKey);
     }
 }
 
-export function getDismissedEcampDisplayKey(): string | null {
-    return dismissedDisplayKey;
+export function getDismissedEcampSongKey(): string | null {
+    return dismissedSongKey;
 }
 
 export function isEcampBannerDismissedForDisplay(
     display: EcampDisplayState | null,
 ): boolean {
-    if (!display || !dismissedDisplayKey) {
+    if (!display || !dismissedSongKey) {
         return false;
     }
 
-    return ecampDisplayStateKey(display) === dismissedDisplayKey;
+    return ecampDisplaySongKey(display) === dismissedSongKey;
 }
 
 export function dismissEcampBanner(display: EcampDisplayState): void {
-    const key = ecampDisplayStateKey(display);
+    const key = ecampDisplaySongKey(display);
     if (!key) {
         return;
     }
 
-    dismissedDisplayKey = key;
+    dismissedSongKey = key;
     notifyListeners();
 }
 
 export function subscribeEcampBannerDismiss(
     listener: DismissListener,
 ): () => void {
-    listener(dismissedDisplayKey);
+    listener(dismissedSongKey);
     listeners.add(listener);
 
     return () => {
@@ -46,17 +46,13 @@ export function subscribeEcampBannerDismiss(
     };
 }
 
-export function syncEcampBannerDismissForDisplayKey(displayKey: string): void {
-    if (!displayKey) {
-        if (dismissedDisplayKey !== null) {
-            dismissedDisplayKey = null;
-            notifyListeners();
-        }
+export function syncEcampBannerDismissForSongKey(songKey: string): void {
+    if (!songKey) {
         return;
     }
 
-    if (dismissedDisplayKey && dismissedDisplayKey !== displayKey) {
-        dismissedDisplayKey = null;
+    if (dismissedSongKey && dismissedSongKey !== songKey) {
+        dismissedSongKey = null;
         notifyListeners();
     }
 }
