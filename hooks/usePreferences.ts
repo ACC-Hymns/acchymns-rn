@@ -86,6 +86,10 @@ export function usePreferences() {
         (value: string | null) => setPreference('hymnalReleaseTag', value),
         [setPreference],
     );
+    const setRecommendedHymnBannerEnabled = useCallback(
+        (value: boolean | null) => setPreference('recommendedHymnBannerEnabled', value),
+        [setPreference],
+    );
 
     return {
         ...preferences,
@@ -101,6 +105,7 @@ export function usePreferences() {
         setHymnSignHost,
         setHymnSignPort,
         setHymnalReleaseTag,
+        setRecommendedHymnBannerEnabled,
         resetPreferences,
     };
 }

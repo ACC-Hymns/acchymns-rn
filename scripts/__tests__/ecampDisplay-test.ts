@@ -1,8 +1,11 @@
 import { BookSummary } from '@/constants/types';
 import {
+    ecampDisplayStateKey,
+    ecampDisplayStatesEqual,
     findBookForDisplayRecord,
     formatEcampSingingLabel,
     parseEcampCommandPayload,
+    parseEcampDisplayMessage,
 } from '@/scripts/ecampDisplay';
 
 const bookData: Record<string, BookSummary> = {
@@ -38,6 +41,15 @@ describe('ecampDisplay', () => {
         expect(parseEcampCommandPayload('not-json')).toBeNull();
     });
 
+    it('ignores unrelated MQTT payloads without treating them as clear', () => {
+        expect(parseEcampDisplayMessage(JSON.stringify({ action: 'clear' }))).toEqual({ kind: 'clear' });
+        expect(parseEcampDisplayMessage(JSON.stringify({ action: 'brightness', large: 200, small: 100 }))).toEqual({
+            kind: 'ignore',
+        });
+        expect(parseEcampDisplayMessage(JSON.stringify({ action: 'ping' }))).toEqual({ kind: 'ignore' });
+        expect(parseEcampDisplayMessage('not-json')).toEqual({ kind: 'ignore' });
+    });
+
     it('matches books by medium, short, or long name', () => {
         expect(findBookForDisplayRecord('Gospel Hymns', bookData)?.name.short).toBe('GH');
         expect(findBookForDisplayRecord('gh', bookData)?.name.short).toBe('GH');
@@ -53,5 +65,27 @@ describe('ecampDisplay', () => {
 
         expect(formatEcampSingingLabel(display, 'Amazing Grace')).toBe('Amazing Grace (#456)');
         expect(formatEcampSingingLabel(display, null)).toBe('#456');
+    });
+
+    it('compares display state by song content instead of object identity', () => {
+        const left = {
+            songNumber: '456',
+            bookMedium: 'Gospel Hymns',
+            verses: [1, 2],
+        };
+        const right = {
+            songNumber: '456',
+            bookMedium: 'Gospel Hymns',
+            verses: [1, 2],
+        };
+
+        expect(ecampDisplayStateKey(left)).toBe('456|Gospel Hymns|1,2');
+        expect(ecampDisplayStatesEqual(left, right)).toBe(true);
+        expect(
+            ecampDisplayStatesEqual(left, {
+                ...right,
+                songNumber: '457',
+            }),
+        ).toBe(false);
     });
 });

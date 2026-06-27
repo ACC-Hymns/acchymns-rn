@@ -108,6 +108,28 @@ export default function PreferencesScreen() {
                             </View>
                         </TouchableHighlight>
                     </View>
+                    <View style={{ marginTop: 24 }}>
+                        <StyledText style={styles.settingsLabel}>{i18n.t('easternCamp')}</StyledText>
+                    </View>
+                    <View style={[styles.settingsContainer]}>
+                        <TouchableHighlight
+                            underlayColor={Colors[theme].divider}
+                        >
+                            <View style={styles.settingsItem}>
+                                <StyledText style={styles.settingsText}>{i18n.t('recommendedHymnBanner')}</StyledText>
+                                <View>
+                                    <Switch
+                                        trackColor={{ true: Platform.OS === 'ios' ? Colors[theme].primary : Colors[theme].primaryFaded }}
+                                        thumbColor={Platform.OS === 'ios' ? 'white' : (context?.recommendedHymnBannerEnabled ?? true) ? Colors[theme].primary : Colors[theme].fadedIcon}
+                                        value={context?.recommendedHymnBannerEnabled ?? true}
+                                        onValueChange={(value) => {
+                                            context?.setRecommendedHymnBannerEnabled(value);
+                                        }}
+                                    />
+                                </View>
+                            </View>
+                        </TouchableHighlight>
+                    </View>
                     {isDevelopmentOrPreviewBuild() && (
                         <>
                             <View style={{ marginTop: 24 }}>

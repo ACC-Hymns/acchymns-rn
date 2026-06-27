@@ -120,5 +120,9 @@
   "hymnSignConnectionFailed": "Could not reach HymnSign",
   "broadcastFailed": "Broadcast Failed",
   "broadcastBibleHymnSignSkipped": "Scripture readings are only sent to AWS displays.",
-  "currentlySinging": "Currently singing %{label}"
+  "easternCamp2026": "EASTERN CAMP 2026",
+  "currentlySinging": "Currently singing",
+  "viewCurrentSong": "View",
+  "recommendedHymnBanner": "Recommended Hymn Banner",
+  "easternCamp": "EASTERN CAMP"
 }

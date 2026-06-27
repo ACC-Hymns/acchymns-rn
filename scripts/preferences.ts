@@ -19,6 +19,7 @@ export const PREFERENCE_KEYS = {
     hymnSignHost: 'hymnSignHost',
     hymnSignPort: 'hymnSignPort',
     hymnalReleaseTag: 'hymnalReleaseTag',
+    recommendedHymnBannerEnabled: 'recommendedHymnBannerEnabled',
 } as const;
 
 export type PreferenceKey = keyof typeof PREFERENCE_KEYS;
@@ -35,6 +36,7 @@ export type PreferencesState = {
     hymnSignHost: string | null;
     hymnSignPort: number;
     hymnalReleaseTag: string | null;
+    recommendedHymnBannerEnabled: boolean | null;
 };
 
 export const INITIAL_PREFERENCES: PreferencesState = {
@@ -49,6 +51,7 @@ export const INITIAL_PREFERENCES: PreferencesState = {
     hymnSignHost: null,
     hymnSignPort: DEFAULT_HYMNSIGN_PORT,
     hymnalReleaseTag: null,
+    recommendedHymnBannerEnabled: true,
 };
 
 const BOOLEAN_PREFERENCE_KEYS = new Set<PreferenceKey>([
@@ -56,6 +59,7 @@ const BOOLEAN_PREFERENCE_KEYS = new Set<PreferenceKey>([
     'legacyNumberGrouping',
     'postHogOptedIn',
     'invertSheetMusic',
+    'recommendedHymnBannerEnabled',
 ]);
 
 function parseStoredValue<K extends PreferenceKey>(
@@ -121,6 +125,10 @@ export async function loadPreferences(): Promise<PreferencesState> {
                 preferences.broadcastingToken = null;
             }
         }
+    }
+
+    if (preferences.recommendedHymnBannerEnabled === null) {
+        preferences.recommendedHymnBannerEnabled = true;
     }
 
     return preferences;

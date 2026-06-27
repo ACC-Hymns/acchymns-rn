@@ -149,6 +149,8 @@ export default function RootLayout() {
         setHymnSignPort,
         hymnalReleaseTag,
         setHymnalReleaseTag,
+        recommendedHymnBannerEnabled,
+        setRecommendedHymnBannerEnabled,
         resetPreferences,
         isPreferencesLoaded,
     } = usePreferences();
@@ -267,6 +269,8 @@ export default function RootLayout() {
             setHymnSignPort,
             hymnalReleaseTag,
             setHymnalReleaseTag,
+            recommendedHymnBannerEnabled,
+            setRecommendedHymnBannerEnabled,
             resetPreferences,
             deleteHymnal
         };
@@ -302,6 +306,8 @@ export default function RootLayout() {
         setHymnSignPort,
         hymnalReleaseTag,
         setHymnalReleaseTag,
+        recommendedHymnBannerEnabled,
+        setRecommendedHymnBannerEnabled,
         resetPreferences,
         deleteHymnal,
     ]);

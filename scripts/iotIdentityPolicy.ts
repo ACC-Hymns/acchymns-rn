@@ -5,7 +5,6 @@ import {
 import {
     AttachPolicyCommand,
     IoTClient,
-    ListAttachedPoliciesCommand,
 } from '@aws-sdk/client-iot';
 
 import {
@@ -53,26 +52,22 @@ export async function ensureIotIdentityPolicyAttached(): Promise<void> {
             credentials,
         });
 
-        const attached = await iotClient.send(
-            new ListAttachedPoliciesCommand({
-                target: identityId,
-            }),
-        );
+        try {
+            await iotClient.send(
+                new AttachPolicyCommand({
+                    policyName: IOT_APP_POLICY_NAME,
+                    target: identityId,
+                }),
+            );
+        } catch (error) {
+            const errorName = error instanceof Error
+                ? (error as Error & { name?: string }).name
+                : undefined;
 
-        const alreadyAttached = attached.policies?.some(
-            (policy) => policy.policyName === IOT_APP_POLICY_NAME,
-        );
-
-        if (alreadyAttached) {
-            return;
+            if (errorName !== 'ResourceAlreadyExistsException') {
+                throw error;
+            }
         }
-
-        await iotClient.send(
-            new AttachPolicyCommand({
-                policyName: IOT_APP_POLICY_NAME,
-                target: identityId,
-            }),
-        );
     })();
 
     try {

@@ -6,6 +6,7 @@
       "Action": [
         "iot:Connect",
         "iot:Publish",
+        "iot:RetainPublish",
         "iot:Subscribe",
         "iot:Receive"
       ],
@@ -17,11 +18,8 @@
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "iot:AttachPolicy",
-        "iot:ListAttachedPolicies"
-      ],
-      "Resource": "arn:aws:iot:us-east-2:382131451454:policy/HymnSignAppPublish"
+      "Action": "iot:AttachPolicy",
+      "Resource": "*"
     }
   ]
 }

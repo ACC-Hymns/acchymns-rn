@@ -1,5 +1,4 @@
 import { BookSummary } from '@/constants/types';
-import { getSongData } from '@/scripts/hymnals';
 
 export type EcampDisplayState = {
     songNumber: string;
@@ -7,7 +6,41 @@ export type EcampDisplayState = {
     verses: number[];
 };
 
-export function parseEcampCommandPayload(payload: string): EcampDisplayState | null {
+export function ecampDisplayStateKey(state: EcampDisplayState | null | undefined): string {
+    if (!state) {
+        return '';
+    }
+
+    return `${state.songNumber}|${state.bookMedium}|${state.verses.join(',')}`;
+}
+
+export function ecampDisplayStatesEqual(
+    left: EcampDisplayState | null | undefined,
+    right: EcampDisplayState | null | undefined,
+): boolean {
+    return ecampDisplayStateKey(left) === ecampDisplayStateKey(right);
+}
+
+export function mergeEcampDisplayState(
+    previous: EcampDisplayState | null,
+    next: EcampDisplayState,
+): EcampDisplayState {
+    if (!previous) {
+        return next;
+    }
+
+    return {
+        ...next,
+        bookMedium: next.bookMedium || previous.bookMedium,
+    };
+}
+
+export type EcampDisplayMessage =
+    | { kind: 'song'; state: EcampDisplayState }
+    | { kind: 'clear' }
+    | { kind: 'ignore' };
+
+export function parseEcampDisplayMessage(payload: string): EcampDisplayMessage {
     try {
         const message = JSON.parse(payload) as {
             action?: string;
@@ -17,26 +50,42 @@ export function parseEcampCommandPayload(payload: string): EcampDisplayState | n
         };
 
         if (message.action === 'clear') {
-            return null;
+            return { kind: 'clear' };
         }
 
         if (message.action !== 'song') {
-            return null;
+            return { kind: 'ignore' };
         }
 
         const songNumber = String(message.number ?? '').trim();
         if (!songNumber || songNumber === '---') {
-            return null;
+            return { kind: 'ignore' };
         }
 
         return {
-            songNumber,
-            bookMedium: String(message.hymnal ?? '').trim(),
-            verses: Array.isArray(message.verses) ? message.verses : [],
+            kind: 'song',
+            state: {
+                songNumber,
+                bookMedium: String(message.hymnal ?? '').trim(),
+                verses: Array.isArray(message.verses) ? message.verses : [],
+            },
         };
     } catch {
+        return { kind: 'ignore' };
+    }
+}
+
+export function parseEcampCommandPayload(payload: string): EcampDisplayState | null {
+    const message = parseEcampDisplayMessage(payload);
+    if (message.kind === 'song') {
+        return message.state;
+    }
+
+    if (message.kind === 'clear') {
         return null;
     }
+
+    return null;
 }
 
 export function findBookForDisplayRecord(
@@ -56,28 +105,64 @@ export function findBookForDisplayRecord(
     });
 }
 
-export async function resolveEcampSongTitle(
+export function findSongNumberInList(
+    songs: Record<string, { number?: string; title: string }>,
+    songNumber: string,
+): string | null {
+    const normalizedNumber = songNumber.replace(/^0+/, '') || '0';
+
+    if (songs[songNumber]) {
+        return songNumber;
+    }
+
+    if (songs[normalizedNumber]) {
+        return normalizedNumber;
+    }
+
+    const match = Object.entries(songs).find(
+        ([key, entry]) =>
+            key === songNumber
+            || (entry.number ?? '').replace(/^0+/, '') === normalizedNumber,
+    );
+
+    return match?.[0] ?? null;
+}
+
+export function normalizeSongNumber(songNumber: string): string {
+    return songNumber.replace(/^0+/, '') || '0';
+}
+
+export function isViewingEcampSong(
+    pathname: string,
+    routeParams: { id?: string | string[]; number?: string | string[] },
     display: EcampDisplayState,
-    bookData: Record<string, BookSummary>,
-): Promise<string | null> {
-    const book = findBookForDisplayRecord(display.bookMedium, bookData);
-    if (!book) {
-        return null;
+    songRoute: { bookId: string; number: string } | null,
+    book?: BookSummary,
+): boolean {
+    if (!pathname.includes('/display/')) {
+        return false;
     }
 
-    const songs = await getSongData(book.name.short);
-    if (!songs) {
-        return null;
+    const id = Array.isArray(routeParams.id) ? routeParams.id[0] : routeParams.id;
+    const number = Array.isArray(routeParams.number) ? routeParams.number[0] : routeParams.number;
+
+    if (!id || !number) {
+        return false;
     }
 
-    const normalizedNumber = display.songNumber.replace(/^0+/, '') || '0';
-    const song = songs[display.songNumber]
-        ?? songs[normalizedNumber]
-        ?? Object.values(songs).find(
-            (entry) => (entry.number ?? '').replace(/^0+/, '') === normalizedNumber,
-        );
+    const normalizedRouteNumber = normalizeSongNumber(number);
+    const normalizedDisplayNumber = normalizeSongNumber(display.songNumber);
 
-    return song?.title ?? null;
+    if (songRoute) {
+        return id === songRoute.bookId
+            && normalizedRouteNumber === normalizeSongNumber(songRoute.number);
+    }
+
+    if (book && id === book.name.short) {
+        return normalizedRouteNumber === normalizedDisplayNumber;
+    }
+
+    return false;
 }
 
 export function formatEcampSingingLabel(

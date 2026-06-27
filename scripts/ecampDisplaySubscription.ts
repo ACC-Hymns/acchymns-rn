@@ -6,7 +6,9 @@ import mqtt, { MqttClient } from 'mqtt';
 import { ECAMP_CHURCH_ID } from '@/constants/broadcastAuth';
 import {
     EcampDisplayState,
-    parseEcampCommandPayload,
+    ecampDisplayStatesEqual,
+    mergeEcampDisplayState,
+    parseEcampDisplayMessage,
 } from '@/scripts/ecampDisplay';
 import { getIotCredentialsProvider, getIotEndpoint, IOT_REGION } from '@/scripts/iotCredentials';
 import { ensureIotIdentityPolicyAttached } from '@/scripts/iotIdentityPolicy';
@@ -21,8 +23,26 @@ let subscriberCount = 0;
 const listeners = new Set<EcampDisplayListener>();
 
 function notifyListeners(state: EcampDisplayState | null) {
+    if (ecampDisplayStatesEqual(state, currentState)) {
+        return;
+    }
+
     currentState = state;
     listeners.forEach((listener) => listener(state));
+}
+
+function applyMessage(payload: string) {
+    const message = parseEcampDisplayMessage(payload);
+    if (message.kind === 'ignore') {
+        return;
+    }
+
+    if (message.kind === 'clear') {
+        notifyListeners(null);
+        return;
+    }
+
+    notifyListeners(mergeEcampDisplayState(currentState, message.state));
 }
 
 function buildSignedQuery(query: Record<string, string | string[] | undefined>): string {
@@ -94,7 +114,7 @@ function attachClientHandlers(nextClient: MqttClient, topic: string) {
     });
 
     nextClient.on('message', (_topic, payload) => {
-        notifyListeners(parseEcampCommandPayload(payload.toString('utf8')));
+        applyMessage(payload.toString('utf8'));
     });
 
     nextClient.on('error', (error) => {
@@ -195,5 +215,10 @@ export async function startEcampDisplaySubscription(): Promise<() => void> {
 }
 
 export function applyLocalEcampDisplayState(state: EcampDisplayState | null) {
-    notifyListeners(state);
+    if (state === null) {
+        notifyListeners(null);
+        return;
+    }
+
+    notifyListeners(mergeEcampDisplayState(currentState, state));
 }

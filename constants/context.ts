@@ -27,6 +27,8 @@ interface HymnalContextType {
     setHymnSignPort: (port: number) => void;
     hymnalReleaseTag: string | null;
     setHymnalReleaseTag: (tag: string | null) => void;
+    recommendedHymnBannerEnabled: boolean | null;
+    setRecommendedHymnBannerEnabled: (enabled: boolean | null) => void;
 
     onLayoutHomeView: () => void;
     openDetailsBottomSheet?: () => void;
