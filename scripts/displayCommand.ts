@@ -7,7 +7,8 @@ export type HymnSignWireMessage =
     | { type: 'number'; value: string; hymnal: string; verseStates?: boolean[] }
     | { type: 'toggle'; states: boolean[]; hymnal: string; number: string }
     | { type: 'clear'; clearHymnal: boolean }
-    | { type: 'hymnal'; hymnal: string };
+    | { type: 'hymnal'; hymnal: string }
+    | { type: 'brightness'; large: number; small: number };
 
 export type DynamoBroadcastFields = {
     song: string;
@@ -105,6 +106,8 @@ export function toHymnSignMessages(command: DisplayCommand): HymnSignWireMessage
             return [{ type: 'clear', clearHymnal: command.clearHymnal ?? true }];
         case 'bible':
             return [];
+        case 'brightness':
+            return [{ type: 'brightness', large: command.large, small: command.small }];
     }
 }
 
@@ -135,5 +138,13 @@ export function createClearCommand(clearHymnal = true): DisplayCommand {
     return {
         action: 'clear',
         clearHymnal,
+    };
+}
+
+export function createBrightnessCommand(large: number, small: number): DisplayCommand {
+    return {
+        action: 'brightness',
+        large,
+        small,
     };
 }

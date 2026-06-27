@@ -1,5 +1,6 @@
 import {
     createBibleCommand,
+    createBrightnessCommand,
     createClearCommand,
     createSongCommand,
     toDynamoFields,
@@ -99,5 +100,15 @@ describe('displayCommand adapters', () => {
 
     it('returns null IoT payload for bible command', () => {
         expect(toIoTPayload(createBibleCommand('John', '3:16'))).toBeNull();
+    });
+
+    it('maps brightness command to IoT payload', () => {
+        const command = createBrightnessCommand(200, 128);
+
+        expect(toIoTPayload(command)).toEqual({
+            action: 'brightness',
+            large: 200,
+            small: 128,
+        });
     });
 });

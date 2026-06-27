@@ -153,6 +153,22 @@ export default function BroadcastOptionsScreen() {
                                 </TouchableHighlight>
                             </>
                         )}
+                        {showHymnSignSettings && (
+                            <>
+                                <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
+                                <TouchableHighlight
+                                    onPress={() => push('/(main)/(tabs)/(settings)/broadcast_brightness')}
+                                    underlayColor={Colors[theme].divider}
+                                >
+                                    <View style={styles.settingsItem}>
+                                        <StyledText style={styles.settingsText}>{i18n.t('hymnSignBrightness')}</StyledText>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                            <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
+                                        </View>
+                                    </View>
+                                </TouchableHighlight>
+                            </>
+                        )}
                         <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                         <TouchableHighlight
                             onPress={clear}

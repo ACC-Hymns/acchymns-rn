@@ -4,6 +4,9 @@ export const DEFAULT_BROADCAST_TARGET: BroadcastTarget = 'aws';
 export const DEFAULT_HYMNSIGN_PORT = 81;
 export const HYMNSIGN_VERSE_COUNT = 20;
 export const HYMNSIGN_CONNECTION_TIMEOUT_MS = 3000;
+export const HYMNSIGN_BRIGHTNESS_MAX = 255;
+export const DEFAULT_HYMNSIGN_LARGE_BRIGHTNESS = 255;
+export const DEFAULT_HYMNSIGN_SMALL_BRIGHTNESS = 255;
 
 export type DisplayCommand =
     | {

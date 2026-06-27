@@ -74,6 +74,19 @@ export default function HomeLayout() {
                     }}
                 />
                 <Stack.Screen
+                    name="broadcast_brightness"
+                    options={{
+                        title: i18n.t('hymnSignBrightness'),
+                        headerShown: true,
+                        headerTitleAlign: 'center',
+                        headerBackTitle: i18n.t('broadcast'),
+                        headerBackButtonDisplayMode: 'minimal',
+                        headerTransparent: true,
+                        headerShadowVisible: false,
+                        headerTintColor: Colors[theme].tint
+                    }}
+                />
+                <Stack.Screen
                     name="broadcast_options"
                     options={{
                         title: i18n.t('broadcast'),
