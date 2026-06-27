@@ -20,7 +20,7 @@ npm run ios
 npm run android
 ```
 
-Copy `.env` from a teammate or your secrets store before running locally. The app reads `EXPO_PUBLIC_ACCHYMNS_KEY` (Discover API) and `EXPO_PUBLIC_POSTHOG_KEY` (analytics).
+Copy `.env` from a teammate or your secrets store before running locally. The app reads `EXPO_PUBLIC_ACCHYMNS_KEY` (Discover API), `EXPO_PUBLIC_POSTHOG_KEY` (analytics), and `EXPO_PUBLIC_AWS_IOT_ENDPOINT` (HymnSign IoT Core publish/subscribe). See `.env.example` for the expected IoT endpoint format.
 
 Hymnal packages are downloaded at runtime from [ACC-Hymns/books](https://github.com/ACC-Hymns/books). On first launch the app pulls the default set (ZH, GH, HG, JH); additional hymnals can be added from Settings.
 

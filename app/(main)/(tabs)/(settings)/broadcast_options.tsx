@@ -72,7 +72,11 @@ export default function BroadcastOptionsScreen() {
             await testHymnSignConnection(churchId);
             Alert.alert(i18n.t('hymnSignConnectionSuccess'));
         } catch (error) {
-            const message = error instanceof Error ? error.message : i18n.t('hymnSignConnectionFailed');
+            const message = error instanceof Error
+                ? error.message
+                : typeof error === 'string'
+                    ? error
+                    : i18n.t('hymnSignConnectionFailed');
             Alert.alert(i18n.t('hymnSignConnectionFailed'), message);
         } finally {
             setTestingConnection(false);

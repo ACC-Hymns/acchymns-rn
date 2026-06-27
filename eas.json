@@ -8,9 +8,14 @@
       "autoIncrement": true,
       "developmentClient": true,
       "distribution": "store",
+      "env": {
+        "EXPO_USE_PRECOMPILED_MODULES": "0",
+        "EXPO_PUBLIC_AWS_IOT_ENDPOINT": "a38oag019dsx4y-ats.iot.us-east-2.amazonaws.com"
+      },
       "ios": {
         "env": {
-          "EXPO_USE_PRECOMPILED_MODULES": "0"
+          "EXPO_USE_PRECOMPILED_MODULES": "0",
+          "EXPO_PUBLIC_AWS_IOT_ENDPOINT": "a38oag019dsx4y-ats.iot.us-east-2.amazonaws.com"
         }
       },
       "android": {
@@ -21,10 +26,16 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_AWS_IOT_ENDPOINT": "a38oag019dsx4y-ats.iot.us-east-2.amazonaws.com"
+      }
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_AWS_IOT_ENDPOINT": "a38oag019dsx4y-ats.iot.us-east-2.amazonaws.com"
+      },
       "android": {
         "buildType": "app-bundle",
         "ndk": "26.1.10909125"
