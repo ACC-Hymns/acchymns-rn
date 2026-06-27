@@ -2,7 +2,7 @@ import { BookSummary } from '@/constants/types';
 import {
     findBookForDisplayRecord,
     formatEcampSingingLabel,
-    parseEcampDisplayItem,
+    parseEcampCommandPayload,
 } from '@/scripts/ecampDisplay';
 
 const bookData: Record<string, BookSummary> = {
@@ -17,13 +17,14 @@ const bookData: Record<string, BookSummary> = {
 };
 
 describe('ecampDisplay', () => {
-    it('parses active ECAMP display records', () => {
+    it('parses active ECAMP command payloads', () => {
         expect(
-            parseEcampDisplayItem({
-                SONG_NUMBER: { S: '456' },
-                BOOK_ID: { S: 'Gospel Hymns' },
-                VERSES: { NS: ['1', '2'] },
-            }),
+            parseEcampCommandPayload(JSON.stringify({
+                action: 'song',
+                number: '456',
+                hymnal: 'Gospel Hymns',
+                verses: [1, 2],
+            })),
         ).toEqual({
             songNumber: '456',
             bookMedium: 'Gospel Hymns',
@@ -31,22 +32,10 @@ describe('ecampDisplay', () => {
         });
     });
 
-    it('returns null when the sign is cleared', () => {
-        expect(
-            parseEcampDisplayItem({
-                SONG_NUMBER: { S: '' },
-                BOOK_ID: { S: 'Gospel Hymns' },
-                VERSES: { NS: ['-1'] },
-            }),
-        ).toBeNull();
-
-        expect(
-            parseEcampDisplayItem({
-                SONG_NUMBER: { S: '---' },
-                BOOK_ID: { S: 'Gospel Hymns' },
-                VERSES: { NS: ['-1'] },
-            }),
-        ).toBeNull();
+    it('returns null when the sign is cleared or payload is unrelated', () => {
+        expect(parseEcampCommandPayload(JSON.stringify({ action: 'clear' }))).toBeNull();
+        expect(parseEcampCommandPayload(JSON.stringify({ action: 'brightness', large: 200, small: 100 }))).toBeNull();
+        expect(parseEcampCommandPayload('not-json')).toBeNull();
     });
 
     it('matches books by medium, short, or long name', () => {

@@ -1,8 +1,4 @@
-import type { AttributeValue } from '@aws-sdk/client-dynamodb';
-
-import { ECAMP_CHURCH_ID } from '@/constants/broadcastAuth';
 import { BookSummary } from '@/constants/types';
-import { get, request_client } from '@/scripts/broadcast';
 import { getSongData } from '@/scripts/hymnals';
 
 export type EcampDisplayState = {
@@ -11,45 +7,36 @@ export type EcampDisplayState = {
     verses: number[];
 };
 
-type RefreshListener = () => void;
-const refreshListeners = new Set<RefreshListener>();
+export function parseEcampCommandPayload(payload: string): EcampDisplayState | null {
+    try {
+        const message = JSON.parse(payload) as {
+            action?: string;
+            number?: string | number;
+            hymnal?: string;
+            verses?: number[];
+        };
 
-export function buildEcampDisplayQueryKey() {
-    return ['ecamp-display'] as const;
-}
+        if (message.action === 'clear') {
+            return null;
+        }
 
-export function subscribeEcampDisplayRefresh(listener: RefreshListener) {
-    refreshListeners.add(listener);
-    return () => {
-        refreshListeners.delete(listener);
-    };
-}
+        if (message.action !== 'song') {
+            return null;
+        }
 
-export function notifyEcampDisplayRefresh() {
-    refreshListeners.forEach((listener) => listener());
-}
+        const songNumber = String(message.number ?? '').trim();
+        if (!songNumber || songNumber === '---') {
+            return null;
+        }
 
-export function parseEcampDisplayItem(
-    item: Record<string, AttributeValue> | undefined,
-): EcampDisplayState | null {
-    if (!item) {
+        return {
+            songNumber,
+            bookMedium: String(message.hymnal ?? '').trim(),
+            verses: Array.isArray(message.verses) ? message.verses : [],
+        };
+    } catch {
         return null;
     }
-
-    const songNumber = item.SONG_NUMBER?.S?.trim() ?? '';
-    const bookMedium = item.BOOK_ID?.S?.trim() ?? '';
-
-    if (!songNumber || songNumber === '---') {
-        return null;
-    }
-
-    const verses = item.VERSES?.NS?.map((value) => Number(value)) ?? [];
-
-    return {
-        songNumber,
-        bookMedium,
-        verses,
-    };
 }
 
 export function findBookForDisplayRecord(
@@ -67,11 +54,6 @@ export function findBookForDisplayRecord(
             (value) => value.trim().toLowerCase() === normalized,
         );
     });
-}
-
-export async function fetchEcampDisplayState(): Promise<EcampDisplayState | null> {
-    const response = await get(request_client(), ECAMP_CHURCH_ID);
-    return parseEcampDisplayItem(response.Item);
 }
 
 export async function resolveEcampSongTitle(

@@ -1,16 +1,15 @@
 import { useContext, useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { usePathname } from 'expo-router';
 
 import { HymnalContext } from '@/constants/context';
 import {
-    buildEcampDisplayQueryKey,
-    fetchEcampDisplayState,
+    EcampDisplayState,
     resolveEcampSongTitle,
-    subscribeEcampDisplayRefresh,
 } from '@/scripts/ecampDisplay';
-
-const ECAMP_DISPLAY_POLL_MS = 15_000;
+import {
+    startEcampDisplaySubscription,
+    subscribeEcampDisplayState,
+} from '@/scripts/ecampDisplaySubscription';
 
 function isSettingsRoute(pathname: string): boolean {
     return pathname.includes('(settings)');
@@ -19,28 +18,47 @@ function isSettingsRoute(pathname: string): boolean {
 export function useEcampDisplayState() {
     const context = useContext(HymnalContext);
     const pathname = usePathname();
-    const queryClient = useQueryClient();
     const hidden = isSettingsRoute(pathname);
     const bookData = context?.BOOK_DATA ?? {};
-
-    const displayQuery = useQuery({
-        queryKey: buildEcampDisplayQueryKey(),
-        queryFn: fetchEcampDisplayState,
-        enabled: !hidden,
-        refetchInterval: ECAMP_DISPLAY_POLL_MS,
-        refetchIntervalInBackground: false,
-    });
-
+    const [display, setDisplay] = useState<EcampDisplayState | null>(null);
     const [title, setTitle] = useState<string | null>(null);
 
     useEffect(() => {
-        return subscribeEcampDisplayRefresh(() => {
-            queryClient.invalidateQueries({ queryKey: buildEcampDisplayQueryKey() });
-        });
-    }, [queryClient]);
+        if (hidden) {
+            return;
+        }
+
+        let releaseSubscription: (() => void) | undefined;
+        let cancelled = false;
+
+        startEcampDisplaySubscription()
+            .then((release) => {
+                if (cancelled) {
+                    release();
+                    return;
+                }
+                releaseSubscription = release;
+            })
+            .catch((error) => {
+                console.warn('Failed to start ECAMP display subscription:', error);
+            });
+
+        return () => {
+            cancelled = true;
+            releaseSubscription?.();
+        };
+    }, [hidden]);
 
     useEffect(() => {
-        const display = displayQuery.data;
+        if (hidden) {
+            setDisplay(null);
+            return;
+        }
+
+        return subscribeEcampDisplayState(setDisplay);
+    }, [hidden]);
+
+    useEffect(() => {
         if (!display) {
             setTitle(null);
             return;
@@ -63,10 +81,10 @@ export function useEcampDisplayState() {
         return () => {
             cancelled = true;
         };
-    }, [displayQuery.data, bookData]);
+    }, [display, bookData]);
 
     return {
-        display: displayQuery.data ?? null,
+        display,
         title,
         hidden,
     };
