@@ -33,9 +33,11 @@ export default function EcampSingingBanner() {
         [],
     );
 
-    if (!display || hidden) {
+    if (!display) {
         return null;
     }
+
+    const isVisible = !hidden;
 
     const isLandscape = windowWidth > windowHeight;
     const horizontalPadding = 12;
@@ -53,12 +55,6 @@ export default function EcampSingingBanner() {
         }
 
         isOpeningSongRef.current = true;
-        router.replace({
-            pathname: '/(main)/(tabs)/(home)',
-            params: {
-                id: songRoute.bookId,
-            },
-        });
         router.push({
             pathname: '/display/[id]/[number]',
             params: {
@@ -123,11 +119,15 @@ export default function EcampSingingBanner() {
 
     return (
         <View
-            pointerEvents="box-none"
+            pointerEvents={isVisible ? 'box-none' : 'none'}
+            accessibilityElementsHidden={!isVisible}
+            importantForAccessibility={isVisible ? 'auto' : 'no-hide-descendants'}
+            collapsable={false}
             style={[
                 styles.outer,
                 isLandscape && styles.outerLandscape,
                 { bottom: bottomInset },
+                !isVisible && styles.visuallyHidden,
             ]}
         >
             <LinearGradient
@@ -140,8 +140,8 @@ export default function EcampSingingBanner() {
                     cardWidth != null && { width: cardWidth },
                 ]}
             >
-                <View style={styles.content}>
-                    <View style={styles.textBlock}>
+                <View style={styles.content} collapsable={false}>
+                    <View style={styles.textBlock} collapsable={false}>
                         <StyledText style={styles.eventHeader}>
                             {i18n.t('easternCamp2026')}
                         </StyledText>
@@ -149,15 +149,16 @@ export default function EcampSingingBanner() {
                             <StyledText style={styles.number}>
                                 {display.songNumber}
                             </StyledText>
-                            {hymnalLabel ? (
-                                <StyledText
-                                    style={styles.hymnal}
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                >
-                                    {hymnalLabel}
-                                </StyledText>
-                            ) : null}
+                            <StyledText
+                                style={[
+                                    styles.hymnal,
+                                    !hymnalLabel && styles.hymnalPlaceholder,
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
+                                {hymnalLabel ?? ' '}
+                            </StyledText>
                         </View>
                     </View>
                     {songRoute ? renderViewButton() : null}
@@ -182,6 +183,9 @@ const styles = StyleSheet.create({
     },
     outerLandscape: {
         alignItems: 'center',
+    },
+    visuallyHidden: {
+        opacity: 0,
     },
     card: {
         borderRadius: 12,
@@ -236,6 +240,9 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: 'LatoBold',
         lineHeight: 18,
+    },
+    hymnalPlaceholder: {
+        opacity: 0,
     },
     button: {
         flexShrink: 0,
