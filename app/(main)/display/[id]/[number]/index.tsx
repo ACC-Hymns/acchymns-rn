@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View, Image, Text, ActivityIndicator, TouchableOpacity, StyleSheet, Button, Linking, ScrollView, Platform, useWindowDimensions, InteractionManager } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Alert from '@blazejkustra/react-native-alert';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { router, Stack, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
@@ -30,6 +31,11 @@ import Ionicons from '@react-native-vector-icons/ionicons'
 import { error } from 'pdf-lib';
 import { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
+import { useEcampDisplayState } from '@/hooks/useEcampDisplayState';
+import {
+    getEcampBannerBackToTopBottom,
+    getEcampBannerBottomInset,
+} from '@/constants/ecampBanner';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Canvas, useImage, Image as SkiaImage, Paint, Skia, ColorMatrix } from '@shopify/react-native-skia';
 import StyledText from '@/components/StyledText';
@@ -127,7 +133,7 @@ export default function DisplayScreen() {
     const params = useLocalSearchParams<{ id: string, number: string, openSheet?: string, openPiano?: string }>();
     const theme = useColorScheme() ?? 'light';
     const headerHeight = useHeaderHeight();
-    const { height: windowHeight } = useWindowDimensions();
+    const { height: windowHeight, width: windowWidth } = useWindowDimensions();
     const headerHeightRatio = headerHeight / windowHeight;
     const musicSheetSnapPoints = useMemo(
         () => Platform.OS === 'android'
@@ -181,6 +187,17 @@ export default function DisplayScreen() {
     const [isSwiping, setIsSwiping] = useState(false);
 
     const i18n = useI18n();
+    const insets = useSafeAreaInsets();
+    const { display: ecampDisplay, hidden: ecampBannerHidden } = useEcampDisplayState();
+    const ecampBannerVisible = Boolean(ecampDisplay) && !ecampBannerHidden;
+    const isLandscapeLayout = windowWidth > windowHeight;
+    const ecampBannerBottomInset = getEcampBannerBottomInset(insets, {
+        isTabRoute: false,
+        mediaAccessoryVisible: false,
+    });
+    const backToTopBottom = ecampBannerVisible && !isLandscapeLayout
+        ? getEcampBannerBackToTopBottom(ecampBannerBottomInset, BACK_TO_TOP_BUTTON_MARGIN_BOTTOM)
+        : BACK_TO_TOP_BUTTON_MARGIN_BOTTOM;
     const reportAPI = useReportAPI();
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
@@ -1129,7 +1146,7 @@ export default function DisplayScreen() {
             </BottomSheetModalProvider>
             {imageData && isLiquidGlass && showBackToTop ? (
                 <GlassView
-                    style={styles.backToTopButtonContainer}
+                    style={[styles.backToTopButtonContainer, { bottom: backToTopBottom }]}
                     isInteractive
                 >
                     <TouchableOpacity
@@ -1145,7 +1162,7 @@ export default function DisplayScreen() {
             ) : null}
             {imageData && !isLiquidGlass && showBackToTop ? (
                 <View
-                    style={styles.backToTopButtonContainer}
+                    style={[styles.backToTopButtonContainer, { bottom: backToTopBottom }]}
                     pointerEvents="auto"
                 >
                     <TouchableOpacity
@@ -1248,7 +1265,6 @@ function makeStyles(theme: "light" | "dark", useSwiftUIBottomSheet: boolean) {
         backToTopButtonContainer: {
             position: 'absolute',
             right: BACK_TO_TOP_BUTTON_MARGIN_RIGHT,
-            bottom: BACK_TO_TOP_BUTTON_MARGIN_BOTTOM,
             width: BACK_TO_TOP_BUTTON_SIZE,
             height: BACK_TO_TOP_BUTTON_SIZE,
             borderRadius: BACK_TO_TOP_BUTTON_SIZE / 2,

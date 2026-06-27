@@ -17,6 +17,8 @@ import {
 
 export const IOT_APP_POLICY_NAME = 'HymnSignAppPublish';
 
+const LOG_PREFIX = '[ECAMP Subscribe]';
+
 let attachPolicyPromise: Promise<void> | null = null;
 
 async function getCognitoIdentityId(): Promise<string> {
@@ -41,15 +43,24 @@ async function getCognitoIdentityId(): Promise<string> {
 
 export async function ensureIotIdentityPolicyAttached(): Promise<void> {
     if (attachPolicyPromise) {
+        console.log(LOG_PREFIX, 'IoT policy attach already in progress');
         return attachPolicyPromise;
     }
 
     attachPolicyPromise = (async () => {
+        console.log(LOG_PREFIX, 'attaching IoT policy', {
+            policyName: IOT_APP_POLICY_NAME,
+        });
+
         const credentials = await getIotCredentialsProvider()();
         const identityId = await getCognitoIdentityId();
         const iotClient = new IoTClient({
             region: IOT_REGION,
             credentials,
+        });
+
+        console.log(LOG_PREFIX, 'resolved Cognito identity for IoT', {
+            identityId,
         });
 
         try {
@@ -59,14 +70,28 @@ export async function ensureIotIdentityPolicyAttached(): Promise<void> {
                     target: identityId,
                 }),
             );
+            console.log(LOG_PREFIX, 'IoT policy attached', {
+                policyName: IOT_APP_POLICY_NAME,
+                identityId,
+            });
         } catch (error) {
             const errorName = error instanceof Error
                 ? (error as Error & { name?: string }).name
                 : undefined;
 
             if (errorName !== 'ResourceAlreadyExistsException') {
+                console.warn(LOG_PREFIX, 'IoT policy attach failed', {
+                    policyName: IOT_APP_POLICY_NAME,
+                    identityId,
+                    error: error instanceof Error ? error.message : String(error),
+                });
                 throw error;
             }
+
+            console.log(LOG_PREFIX, 'IoT policy already attached', {
+                policyName: IOT_APP_POLICY_NAME,
+                identityId,
+            });
         }
     })();
 

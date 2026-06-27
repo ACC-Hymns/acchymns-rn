@@ -1,55 +1,133 @@
-import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { useMemo, useRef } from 'react';
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { router, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from '@react-native-vector-icons/ionicons';
 
 import StyledText from '@/components/StyledText';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { isIOS26DesignEnabled } from '@/constants/iosDesign';
 import { useEcampDisplayState } from '@/hooks/useEcampDisplayState';
 import { useI18n } from '@/hooks/useI18n';
+import { useTabBarMediaAccessoryVisible } from '@/hooks/useTabBarMediaAccessoryVisible';
+import {
+    getEcampBannerBottomInset,
+    isMainTabRoute,
+} from '@/constants/ecampBanner';
 
 const CAMP_GRADIENT = ['#6E5A72', '#A393A3', '#F0C9B8', '#FFB74D', '#9A6840'] as const;
 const CAMP_GRADIENT_LOCATIONS = [0, 0.28, 0.52, 0.78, 1] as const;
 
 export default function EcampSingingBanner() {
-    const theme = useColorScheme() ?? 'light';
     const i18n = useI18n();
+    const pathname = usePathname();
     const insets = useSafeAreaInsets();
+    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    const isOpeningSongRef = useRef(false);
+    const tabBarMediaAccessoryVisible = useTabBarMediaAccessoryVisible();
     const { display, hymnalLabel, songRoute, hidden } = useEcampDisplayState();
+    const isLiquidGlass = useMemo(
+        () => isIOS26DesignEnabled()
+            && isLiquidGlassAvailable()
+            && isGlassEffectAPIAvailable(),
+        [],
+    );
 
-    if (!display) {
+    if (!display || hidden) {
         return null;
     }
 
-    const topPadding = Math.max(insets.top, Platform.OS === 'android' ? 8 : 0) + 4;
+    const isLandscape = windowWidth > windowHeight;
+    const horizontalPadding = 12;
+    const cardWidth = isLandscape
+        ? Math.min(windowHeight, windowWidth - horizontalPadding * 2)
+        : undefined;
+    const bottomInset = getEcampBannerBottomInset(insets, {
+        isTabRoute: isMainTabRoute(pathname),
+        mediaAccessoryVisible: tabBarMediaAccessoryVisible,
+    });
 
     function openSong() {
-        if (!songRoute) {
+        if (!songRoute || isOpeningSongRef.current) {
             return;
         }
 
+        isOpeningSongRef.current = true;
+        router.replace({
+            pathname: '/(main)/(tabs)/(home)',
+            params: {
+                id: songRoute.bookId,
+            },
+        });
         router.push({
             pathname: '/display/[id]/[number]',
             params: {
                 id: songRoute.bookId,
                 number: songRoute.number,
+                ghost: '1',
             },
         });
+
+        setTimeout(() => {
+            isOpeningSongRef.current = false;
+        }, 400);
+    }
+
+    function renderViewButton() {
+        const label = i18n.t('viewCurrentSong');
+
+        if (isLiquidGlass) {
+            return (
+                <GlassView isInteractive style={styles.liquidGlassButton} glassEffectStyle={
+                    {
+                        style: 'clear',
+                        animate: true,
+                        animationDuration: 0.3,
+                    }
+                }>
+                    <Pressable
+                        onPress={openSong}
+                        style={({ pressed }) => [
+                            styles.glassButtonInner,
+                            pressed && styles.glassButtonPressed,
+                        ]}
+                    >
+                        <StyledText
+                            style={styles.buttonText}
+                            numberOfLines={1}
+                        >
+                            {label}
+                        </StyledText>
+                    </Pressable>
+                </GlassView>
+            );
+        }
+
+        return (
+            <Pressable
+                onPress={openSong}
+                style={({ pressed }) => [
+                    styles.button,
+                    pressed && styles.buttonPressed,
+                ]}
+            >
+                <StyledText
+                    style={styles.buttonText}
+                    numberOfLines={1}
+                >
+                    {label}
+                </StyledText>
+            </Pressable>
+        );
     }
 
     return (
         <View
-            pointerEvents={hidden ? 'none' : 'box-none'}
+            pointerEvents="box-none"
             style={[
                 styles.outer,
-                hidden && styles.hidden,
-                {
-                    paddingTop: hidden ? 0 : topPadding,
-                    backgroundColor: Colors[theme].background,
-                },
+                isLandscape && styles.outerLandscape,
+                { bottom: bottomInset },
             ]}
         >
             <LinearGradient
@@ -57,7 +135,10 @@ export default function EcampSingingBanner() {
                 locations={[...CAMP_GRADIENT_LOCATIONS]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={styles.card}
+                style={[
+                    styles.card,
+                    cardWidth != null && { width: cardWidth },
+                ]}
             >
                 <View style={styles.content}>
                     <View style={styles.textBlock}>
@@ -79,20 +160,7 @@ export default function EcampSingingBanner() {
                             ) : null}
                         </View>
                     </View>
-                    {songRoute ? (
-                        <Pressable
-                            onPress={openSong}
-                            style={({ pressed }) => [
-                                styles.button,
-                                pressed && styles.buttonPressed,
-                            ]}
-                        >
-                            <StyledText style={styles.buttonText}>
-                                {i18n.t('viewCurrentSong')}
-                            </StyledText>
-                            <Ionicons name="chevron-forward" size={14} color="#FFFFFF" />
-                        </Pressable>
-                    ) : null}
+                    {songRoute ? renderViewButton() : null}
                 </View>
             </LinearGradient>
         </View>
@@ -101,21 +169,19 @@ export default function EcampSingingBanner() {
 
 const styles = StyleSheet.create({
     outer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
         zIndex: 10,
         paddingHorizontal: 12,
-        paddingBottom: 6,
         ...Platform.select({
             android: {
                 elevation: 10,
             },
         }),
     },
-    hidden: {
-        height: 0,
-        maxHeight: 0,
-        overflow: 'hidden',
-        opacity: 0,
-        paddingBottom: 0,
+    outerLandscape: {
+        alignItems: 'center',
     },
     card: {
         borderRadius: 12,
@@ -174,21 +240,42 @@ const styles = StyleSheet.create({
     button: {
         flexShrink: 0,
         alignSelf: 'stretch',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
         minHeight: 28,
         paddingHorizontal: 12,
         borderRadius: 32,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: 'rgba(255, 255, 255, 0.45)',
         backgroundColor: 'rgba(255, 255, 255, 0.16)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    liquidGlassButton: {
+        flexShrink: 0,
+        alignSelf: 'stretch',
+        borderRadius: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    glassButton: {
+        flexShrink: 0,
+        alignSelf: 'stretch',
+        borderRadius: 32,
+        overflow: 'hidden',
+    },
+    glassButtonInner: {
+        minHeight: 28,
+        paddingHorizontal: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    glassButtonPressed: {
+        opacity: 0.85,
     },
     buttonPressed: {
         backgroundColor: 'rgba(255, 255, 255, 0.28)',
     },
     buttonText: {
+        flexShrink: 1,
         color: '#FFFFFF',
         fontSize: 13,
         fontFamily: 'LatoBold',

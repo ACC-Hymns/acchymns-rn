@@ -14,17 +14,20 @@ export default function HomeLayout() {
             />
             <Stack.Screen
                 name="selection/[id]"
-                options={{
+                options={({ route }) => ({
                     title: 'Selection',
                     headerShown: true,
                     headerTitleAlign: 'center',
                     headerBackVisible: false,
                     headerShadowVisible: false,
+                    animation: (route.params as { ghost?: string } | undefined)?.ghost === '1'
+                        ? 'none'
+                        : 'default',
                     headerStyle: {
                         backgroundColor: Colors[theme ?? 'light'].background,
                     },
                     headerTintColor: Colors[theme ?? 'light'].tint,
-                }}
+                })}
             />
         </Stack>
     );

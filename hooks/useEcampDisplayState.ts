@@ -17,21 +17,29 @@ import {
     subscribeEcampDisplayState,
 } from '@/scripts/ecampDisplaySubscription';
 import { getSongData } from '@/scripts/hymnals';
+import { isEcampBannerRoute } from '@/constants/ecampBanner';
+
+const LOG_PREFIX = '[ECAMP Subscribe]';
+
+function logHook(message: string, details?: Record<string, unknown>) {
+    if (details) {
+        console.log(LOG_PREFIX, message, details);
+        return;
+    }
+
+    console.log(LOG_PREFIX, message);
+}
 
 export type EcampSongRoute = {
     bookId: string;
     number: string;
 };
 
-function isSettingsRoute(pathname: string): boolean {
-    return pathname.includes('(settings)');
-}
-
 export function useEcampDisplayState() {
     const context = useContext(HymnalContext);
     const pathname = usePathname();
     const routeParams = useGlobalSearchParams<{ id?: string; number?: string }>();
-    const settingsHidden = isSettingsRoute(pathname);
+    const routeHidden = !isEcampBannerRoute(pathname);
     const bannerEnabled = context?.recommendedHymnBannerEnabled ?? true;
     const [display, setDisplay] = useState<EcampDisplayState | null>(null);
     const [book, setBook] = useState<BookSummary | undefined>();
@@ -41,6 +49,16 @@ export function useEcampDisplayState() {
     const displayKey = ecampDisplayStateKey(display);
 
     const handleDisplayUpdate = useCallback((state: EcampDisplayState | null) => {
+        logHook('hook received display update', {
+            state: state
+                ? {
+                    songNumber: state.songNumber,
+                    bookMedium: state.bookMedium,
+                    key: ecampDisplayStateKey(state),
+                }
+                : null,
+        });
+
         if (state === null) {
             setDisplay(null);
             return;
@@ -49,9 +67,16 @@ export function useEcampDisplayState() {
         setDisplay((previous) => {
             const merged = mergeEcampDisplayState(previous, state);
             if (ecampDisplayStatesEqual(previous, merged)) {
+                logHook('hook display unchanged after merge', {
+                    key: ecampDisplayStateKey(merged),
+                });
                 return previous;
             }
 
+            logHook('hook display updated', {
+                previousKey: ecampDisplayStateKey(previous),
+                nextKey: ecampDisplayStateKey(merged),
+            });
             return merged;
         });
     }, []);
@@ -88,42 +113,69 @@ export function useEcampDisplayState() {
             return false;
         }
 
-        return isViewingEcampSong(pathname, routeParams, display, songRoute, book);
-    }, [book, display, pathname, routeParams, songRoute]);
+        return isViewingEcampSong(
+            pathname,
+            routeParams,
+            display,
+            songRoute,
+            book,
+            context?.BOOK_DATA,
+        );
+    }, [book, context?.BOOK_DATA, display, pathname, routeParams, songRoute]);
 
     useEffect(() => {
-        if (settingsHidden || !bannerEnabled) {
+        logHook('hook mount/update', {
+            bannerEnabled,
+            routeHidden,
+            pathname,
+            displayKey,
+        });
+    }, [bannerEnabled, displayKey, pathname, routeHidden]);
+
+    useEffect(() => {
+        if (!bannerEnabled) {
+            logHook('subscription not started, banner disabled');
             return;
         }
 
+        logHook('starting MQTT subscription');
         let releaseSubscription: (() => void) | undefined;
         let cancelled = false;
 
         startEcampDisplaySubscription()
             .then((release) => {
                 if (cancelled) {
+                    logHook('subscription started after unmount, releasing immediately');
                     release();
                     return;
                 }
                 releaseSubscription = release;
+                logHook('subscription started');
             })
             .catch((error) => {
-                console.warn('Failed to start ECAMP display subscription:', error);
+                logHook('subscription start failed', {
+                    error: error instanceof Error ? error.message : String(error),
+                });
             });
 
         return () => {
             cancelled = true;
-            releaseSubscription?.();
+            if (releaseSubscription) {
+                logHook('releasing MQTT subscription');
+                releaseSubscription();
+            }
         };
-    }, [bannerEnabled, settingsHidden]);
+    }, [bannerEnabled]);
 
     useEffect(() => {
-        if (settingsHidden || !bannerEnabled) {
+        if (!bannerEnabled) {
+            logHook('state listener not registered, banner disabled');
             return;
         }
 
+        logHook('registering state listener');
         return subscribeEcampDisplayState(handleDisplayUpdate);
-    }, [bannerEnabled, handleDisplayUpdate, settingsHidden]);
+    }, [bannerEnabled, handleDisplayUpdate]);
 
     useEffect(() => {
         if (!display) {
@@ -170,6 +222,7 @@ export function useEcampDisplayState() {
         book,
         hymnalLabel,
         songRoute,
-        hidden: settingsHidden || viewingSameSong || !bannerEnabled,
+        viewingSameSong,
+        hidden: routeHidden || !bannerEnabled || viewingSameSong,
     };
 }

@@ -1,7 +1,7 @@
 import { BroadcastTarget, DisplayCommand } from '@/constants/displayCommand';
 import { parseEcampCommandPayload } from '@/scripts/ecampDisplay';
 import { applyLocalEcampDisplayState } from '@/scripts/ecampDisplaySubscription';
-import { HymnSignConnectionError, publishToHymnSign } from '@/scripts/iotPublish';
+import { HymnSignConnectionError, hymnSignCommandTopic, publishToHymnSign } from '@/scripts/iotPublish';
 import { toDynamoFields, toIoTPayload } from '@/scripts/displayCommand';
 import { request_client, set } from '@/scripts/broadcast';
 
@@ -64,15 +64,30 @@ export async function publishDisplayCommand(
             result.errors.push(new HymnSignConnectionError('Church is not configured for HymnSign'));
         } else {
             try {
-                await publishToHymnSign(options.churchId, command);
+                const topic = hymnSignCommandTopic(options.churchId);
                 const payload = toIoTPayload(command);
+                console.log('[ECAMP Subscribe] publishing hymn to IoT', {
+                    topic,
+                    payload,
+                });
+
+                await publishToHymnSign(options.churchId, command);
+
+                console.log('[ECAMP Subscribe] publish succeeded', { topic });
+
                 if (payload) {
+                    // Optimistic update for this device; all other devices receive
+                    // the same state via MQTT on hymnsign/{churchId}/command.
                     applyLocalEcampDisplayState(
                         parseEcampCommandPayload(JSON.stringify(payload)),
                     );
                 }
                 result.hymnSign = 'success';
             } catch (error) {
+                console.warn('[ECAMP Subscribe] publish failed', {
+                    churchId: options.churchId,
+                    error: error instanceof Error ? error.message : String(error),
+                });
                 result.hymnSign = 'failed';
                 result.errors.push(error instanceof Error ? error : new Error(String(error)));
             }

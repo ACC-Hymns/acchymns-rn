@@ -132,19 +132,38 @@ export function normalizeSongNumber(songNumber: string): string {
     return songNumber.replace(/^0+/, '') || '0';
 }
 
+export function parseDisplayRouteFromPathname(pathname: string): {
+    id?: string;
+    number?: string;
+} {
+    const match = pathname.match(/\/display\/([^/]+)\/([^/?#]+)/);
+    if (!match) {
+        return {};
+    }
+
+    return {
+        id: decodeURIComponent(match[1]),
+        number: decodeURIComponent(match[2]),
+    };
+}
+
 export function isViewingEcampSong(
     pathname: string,
     routeParams: { id?: string | string[]; number?: string | string[] },
     display: EcampDisplayState,
     songRoute: { bookId: string; number: string } | null,
     book?: BookSummary,
+    bookData?: Record<string, BookSummary>,
 ): boolean {
     if (!pathname.includes('/display/')) {
         return false;
     }
 
-    const id = Array.isArray(routeParams.id) ? routeParams.id[0] : routeParams.id;
-    const number = Array.isArray(routeParams.number) ? routeParams.number[0] : routeParams.number;
+    const fromPath = parseDisplayRouteFromPathname(pathname);
+    const id = fromPath.id
+        ?? (Array.isArray(routeParams.id) ? routeParams.id[0] : routeParams.id);
+    const number = fromPath.number
+        ?? (Array.isArray(routeParams.number) ? routeParams.number[0] : routeParams.number);
 
     if (!id || !number) {
         return false;
@@ -153,13 +172,23 @@ export function isViewingEcampSong(
     const normalizedRouteNumber = normalizeSongNumber(number);
     const normalizedDisplayNumber = normalizeSongNumber(display.songNumber);
 
-    if (songRoute) {
-        return id === songRoute.bookId
-            && normalizedRouteNumber === normalizeSongNumber(songRoute.number);
+    if (normalizedRouteNumber !== normalizedDisplayNumber) {
+        return false;
+    }
+
+    if (songRoute && id === songRoute.bookId) {
+        return true;
     }
 
     if (book && id === book.name.short) {
-        return normalizedRouteNumber === normalizedDisplayNumber;
+        return true;
+    }
+
+    if (bookData) {
+        const matchedBook = findBookForDisplayRecord(display.bookMedium, bookData);
+        if (matchedBook && id === matchedBook.name.short) {
+            return true;
+        }
     }
 
     return false;
