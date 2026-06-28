@@ -4,6 +4,7 @@ import type { EdgeInsets } from 'react-native-safe-area-context';
 export const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 49 }) ?? 49;
 export const TAB_BAR_MEDIA_ACCESSORY_HEIGHT = 52;
 export const ECAMP_BANNER_GAP = 12;
+export const ECAMP_BANNER_ANDROID_TAB_EXTRA_GAP = 20;
 export const ECAMP_BANNER_MEDIA_ACCESSORY_GAP = 0;
 export const ECAMP_BANNER_ESTIMATED_HEIGHT = 72;
 export const ECAMP_BANNER_BACK_TO_TOP_GAP = 8;
@@ -61,6 +62,9 @@ export function getEcampBannerBottomInset(
     let bottom = insets.bottom + TAB_BAR_HEIGHT + ECAMP_BANNER_GAP;
     if (options.mediaAccessoryVisible) {
         bottom += TAB_BAR_MEDIA_ACCESSORY_HEIGHT + ECAMP_BANNER_MEDIA_ACCESSORY_GAP;
+    }
+    if (Platform.OS === 'android') {
+        bottom += ECAMP_BANNER_ANDROID_TAB_EXTRA_GAP;
     }
 
     return bottom;
