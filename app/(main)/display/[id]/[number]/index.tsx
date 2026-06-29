@@ -17,6 +17,7 @@ import {
 } from '@expo/ui/community/bottom-sheet';
 import SegmentedControl from '@expo/ui/community/segmented-control';
 import { DisplayMoreMenu } from '@/components/DisplayMoreMenu';
+import { useDisplayMoreMenu } from '@/hooks/useDisplayMoreMenu';
 import { showReportIssuePrompt } from '@/components/ReportIssuePrompt';
 import NoteButton from '@/components/NoteButton';
 import { getNoteMp3, Note, notePngs } from '@/constants/assets';
@@ -91,6 +92,14 @@ function DisplayHeaderToolbar({
 }: DisplayHeaderToolbarProps) {
     const iconColor = Colors[theme].icon;
     const hidden = !isHeaderVisible;
+    const {
+        i18n,
+        isBookmarked,
+        toggleBookmark,
+        shareSong,
+        openReportIssueAfterMenuCloses,
+        bookmarkLabel,
+    } = useDisplayMoreMenu({ bookId, songId, onReportIssuePress });
 
     return (
         <>
@@ -115,15 +124,27 @@ function DisplayHeaderToolbar({
                     hidden={hidden || !hasBroadcasting}
                     tintColor={iconColor}
                 />
-                <Stack.Toolbar.View hidden={hidden}>
-                    <View style={{ width: 24, height: 24, justifyContent: 'center', alignItems: 'center' }}>
-                        <DisplayMoreMenu
-                            bookId={bookId}
-                            songId={songId}
-                            onReportIssuePress={onReportIssuePress}
-                        />
-                    </View>
-                </Stack.Toolbar.View>
+                <Stack.Toolbar.Menu icon="ellipsis" hidden={hidden} tintColor={iconColor}>
+                    <Stack.Toolbar.MenuAction
+                        icon="bookmark"
+                        onPress={toggleBookmark}
+                    >
+                        {bookmarkLabel}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                        icon="square.and.arrow.up"
+                        onPress={shareSong}
+                    >
+                        {i18n.t('share')}
+                    </Stack.Toolbar.MenuAction>
+                    <Stack.Toolbar.MenuAction
+                        icon="exclamationmark.bubble"
+                        destructive
+                        onPress={openReportIssueAfterMenuCloses}
+                    >
+                        {i18n.t('reportIssue')}
+                    </Stack.Toolbar.MenuAction>
+                </Stack.Toolbar.Menu>
             </Stack.Toolbar>
         </>
     );

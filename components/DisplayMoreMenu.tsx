@@ -1,126 +1,40 @@
 import { InteractionManager, Platform, TouchableOpacity } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { Colors } from '@/constants/Colors';
-import { useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Bookmark, Song } from '@/constants/types';
-import { Share } from 'react-native';
-import { getSongData } from '@/scripts/hymnals';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import * as SwiftUI from '@expo/ui/swift-ui';
 import { RNHostView } from '@expo/ui/swift-ui';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { HymnalContext } from '@/constants/context';
+import { useDisplayMoreMenu } from '@/hooks/useDisplayMoreMenu';
 
 interface DisplayMoreMenuProps {
     bookId: string;
     songId?: string;
     onReportIssuePress?: () => void;
+    tintColor?: string;
 }
 
-export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayMoreMenuProps) {
+export function DisplayMoreMenu({
+    bookId,
+    songId,
+    onReportIssuePress,
+    tintColor,
+}: DisplayMoreMenuProps) {
     const theme = useColorScheme() ?? 'light';
-    const context = useContext(HymnalContext);
-    const BOOKMARKS_KEY = 'bookmarks';
-    const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
-    const [isBookmarked, setIsBookmarked] = useState(false);
-    /**
-     * iOS (react-native-ios-context-menu / Zeego): the bookmark row calls setState inside onSelect,
-     * so the native menu is rebuilt and does not keep a bogus "selected" checkmark. Share and
-     * report do not otherwise update this component — bump this key after those actions so the
-     * menu remounts like a bookmark tap would.
-     */
-    const [nativeMenuKey, setNativeMenuKey] = useState(0);
-    const [menuInstanceId, setMenuInstanceId] = useState(0);
-    const reportOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const {
+        i18n,
+        isBookmarked,
+        nativeMenuKey,
+        menuInstanceId,
+        toggleBookmark,
+        shareSong,
+        openReportIssueAfterMenuCloses,
+        bumpNativeMenuKey,
+        bumpMenuInstanceId,
+        bookmarkLabel,
+    } = useDisplayMoreMenu({ bookId, songId, onReportIssuePress });
 
-    const i18n = useI18n();
-
-    const addBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Check if the bookmark already exists
-            const exists = bookmarks.some(b => b.book === bookmark.book && b.number === bookmark.number);
-            if (exists) {
-                removeBookmark(bookmark);
-                return;
-            }
-            bookmarks.push(bookmark);
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-            setExistingBookmarks(bookmarks); // Update the current bookmarks
-            setIsBookmarked(true); // Set the bookmark state to true
-        } catch (error) {
-            console.error("Error saving bookmarks:", error);
-        }
-    };
-
-    const removeBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Filter out the bookmark to be removed
-            const updatedBookmarks = bookmarks.filter(b => !(b.book === bookmark.book && b.number === bookmark.number));
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
-            setIsBookmarked(false); // Set the bookmark state to false
-        } catch (error) {
-            console.error("Error removing bookmark:", error);
-        }
-    };
-
-
-
-    const clearPendingReportOpen = useCallback(() => {
-        if (reportOpenTimeoutRef.current) {
-            clearTimeout(reportOpenTimeoutRef.current);
-            reportOpenTimeoutRef.current = null;
-        }
-    }, []);
-
-    const broadcast = async () => {
-
-    }
-
-    const [songData, setSongData] = useState<Song | null>(null);
-    useLayoutEffect(() => {
-        if (songId) {
-            getSongData(bookId).then((data) => {
-                if(!data)
-                    return;
-                setSongData(data[songId]);
-            });
-
-            AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
-                setExistingBookmarks(JSON.parse(data || '[]'));
-            });
-        }
-    }, [bookId, songId]);
-
-    useEffect(() => {
-        if (songData && existingBookmarks) {
-            const isBookmarked = existingBookmarks.some(b => b.book === bookId && b.number === songId);
-            setIsBookmarked(isBookmarked);
-        }
-    }, [songData, existingBookmarks, bookId, songId]);
-
-    const openReportIssueAfterMenuCloses = useCallback(() => {
-        InteractionManager.runAfterInteractions(() => {
-            clearPendingReportOpen();
-            setNativeMenuKey((k) => k + 1);
-            // Native menus must finish closing or the next Modal won't receive touches.
-            const delay = Platform.OS === 'ios' ? 350 : 120;
-            reportOpenTimeoutRef.current = setTimeout(() => {
-                reportOpenTimeoutRef.current = null;
-                onReportIssuePress?.();
-            }, delay);
-        });
-    }, [clearPendingReportOpen, onReportIssuePress]);
-
-    useEffect(() => {
-        return () => {
-            clearPendingReportOpen();
-        };
-    }, [clearPendingReportOpen]);
+    const iconColor = tintColor ?? (theme === 'light' ? Colors.light.icon : Colors.dark.icon);
 
     return (
         <>
@@ -132,30 +46,20 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                                 <Ionicons
                                     name="ellipsis-horizontal"
                                     size={24}
-                                    color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                                    color={iconColor}
                                 />
                             </RNHostView>
                         }
                     >
                         <SwiftUI.Button
-                            label={isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
+                            label={bookmarkLabel}
                             systemImage="bookmark"
-                            onPress={async () => {
-                                await addBookmark({
-                                    book: bookId,
-                                    number: songId ?? '',
-                                });
-                            }}
+                            onPress={toggleBookmark}
                         />
                         <SwiftUI.Button
                             label="Share"
                             systemImage="square.and.arrow.up"
-                            onPress={async () => {
-                                await Share.share({
-                                    title: `${songData?.title}`,
-                                    message: `https://acchymns.app/display/${bookId}/${songId}`,
-                                });
-                            }}
+                            onPress={shareSong}
                         />
                         <SwiftUI.Button
                             label={i18n.t('reportIssue')}
@@ -170,7 +74,7 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                     key={nativeMenuKey}
                     onOpenChange={(isOpen) => {
                         if (isOpen) {
-                            setMenuInstanceId((id) => id + 1);
+                            bumpMenuInstanceId();
                         }
                     }}
                 >
@@ -179,19 +83,14 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                             <Ionicons
                                 name="ellipsis-horizontal"
                                 size={24}
-                                color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
+                                color={iconColor}
                             />
                         </TouchableOpacity>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content>
-                        <DropdownMenu.Item key={`bookmark-${menuInstanceId}`} onSelect={async () => {
-                            await addBookmark({
-                                book: bookId,
-                                number: songId ?? '',
-                            })
-                        }}>
+                        <DropdownMenu.Item key={`bookmark-${menuInstanceId}`} onSelect={toggleBookmark}>
                             <DropdownMenu.ItemTitle>
-                                {isBookmarked ? i18n.t('removeBookmark') : i18n.t('saveBookmark')}
+                                {bookmarkLabel}
                             </DropdownMenu.ItemTitle>
                             <DropdownMenu.ItemIcon ios={{ name: 'bookmark' }}>
                                 <Ionicons name='bookmark-outline' size={16} color={theme === 'light' ? Colors.light.icon : Colors.dark.icon} />
@@ -199,13 +98,10 @@ export function DisplayMoreMenu({ bookId, songId, onReportIssuePress }: DisplayM
                         </DropdownMenu.Item>
                         <DropdownMenu.Item key={`share-${menuInstanceId}`} onSelect={async () => {
                             try {
-                                await Share.share({
-                                    title: `${songData?.title}`,
-                                    message: `https://acchymns.app/display/${bookId}/${songId}`,
-                                });
+                                await shareSong();
                             } finally {
                                 InteractionManager.runAfterInteractions(() => {
-                                    setNativeMenuKey((k) => k + 1);
+                                    bumpNativeMenuKey();
                                 });
                             }
                         }}>
