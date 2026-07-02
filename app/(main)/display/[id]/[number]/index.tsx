@@ -156,13 +156,18 @@ export default function DisplayScreen() {
     const headerHeight = useHeaderHeight();
     const { height: windowHeight, width: windowWidth } = useWindowDimensions();
     const headerHeightRatio = headerHeight / windowHeight;
+    const isAndroidLandscape = Platform.OS === 'android' && windowWidth > windowHeight;
     const musicSheetSnapPoints = useMemo(
-        () => Platform.OS === 'android'
-            // Android ModalBottomSheet only supports 0%, ~50%, and 100%; two snap points
-            // are required so index 0 opens at partial (~50%) instead of full screen.
-            ? ['0%', '50%']
-            : [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))],
-        [windowHeight],
+        () => {
+            if (Platform.OS !== 'android') {
+                return [Math.min(MUSIC_SHEET_BASE_HEIGHT, Math.floor(windowHeight * 0.25))];
+            }
+            // Android ModalBottomSheet only supports partial (~50%) and expanded (100%).
+            // Portrait uses two snap points so index 0 opens at partial; landscape uses one
+            // snap point so the sheet skips partial and opens full screen.
+            return isAndroidLandscape ? ['100%'] : ['0%', '50%'];
+        },
+        [windowHeight, isAndroidLandscape],
     );
     const ios26DesignEnabled = isIOS26DesignEnabled();
     const isLiquidGlass = ios26DesignEnabled
@@ -251,11 +256,16 @@ export default function DisplayScreen() {
     const [musicSheetOpen, setMusicSheetOpen] = useState(false);
     const [isHorizontal, setIsHorizontal] = useState(false);
     const sheetCloseButtonPosition = useMemo(
-        () => ({
+        () => {
+            if (!isHorizontal) {
+                return { top: 0, right: 16 };
+            }
+            if (Platform.OS === 'android') {
+                return { top: -4, right: 16 };
+            }
             // @expo/ui BottomSheet.ios already adds paddingTop: 16 for the drag indicator.
-            top: 0,
-            right: isHorizontal ? 0 : 16,
-        }),
+            return { top: 0, right: 0 };
+        },
         [isHorizontal],
     );
     const lastHandledOpenSheetTokenRef = useRef<string | null>(null);
@@ -277,9 +287,22 @@ export default function DisplayScreen() {
     }, [useSwiftUIBottomSheet]);
 
     const handleSheetChanges = useCallback((index: number) => {
-        isModalOpenRef.current = index === 0;
+        isModalOpenRef.current = index >= 0;
         setMusicSheetOpen(index >= 0);
     }, []);
+
+    const prevAndroidLandscapeRef = useRef(isAndroidLandscape);
+    useEffect(() => {
+        const prev = prevAndroidLandscapeRef.current;
+        prevAndroidLandscapeRef.current = isAndroidLandscape;
+        if (Platform.OS !== 'android' || prev === isAndroidLandscape || !musicSheetOpen) {
+            return;
+        }
+        // Remounting via key closes the native sheet; re-open at the new snap point.
+        requestAnimationFrame(() => {
+            bottomSheetModalRef.current?.present();
+        });
+    }, [isAndroidLandscape, musicSheetOpen]);
 
     const handleCloseSheet = useCallback(() => {
         bottomSheetModalRef.current?.dismiss();
@@ -1117,11 +1140,13 @@ export default function DisplayScreen() {
             <BottomSheetModalProvider>
                 <BottomSheetModal
                     ref={bottomSheetModalRef}
+                    key={isAndroidLandscape ? 'landscape' : 'portrait'}
                     onChange={handleSheetChanges}
                     style={isLiquidGlass ? undefined : styles.bottomSheet}
                     backgroundStyle={isLiquidGlass ? undefined : styles.bottomSheet}
+                    handleComponent={isAndroidLandscape ? null : undefined}
                     handleIndicatorStyle={styles.handleIndicator}
-                    enablePanDownToClose={true}
+                    enablePanDownToClose={!isAndroidLandscape}
                     enableContentPanningGesture={false}
                     enableDynamicSizing={false}
                     snapPoints={musicSheetSnapPoints}

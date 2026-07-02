@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    AccessibilityInfo,
+    LayoutChangeEvent,
+    Platform,
+    Pressable,
+    StyleSheet,
+    View,
+    useWindowDimensions,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { router, usePathname } from 'expo-router';
@@ -47,13 +55,67 @@ export default function EcampSingingBanner() {
         dismissBanner,
     } = useEcampDisplayState();
     const translateY = useSharedValue(0);
-    const isLiquidGlass = useMemo(
+    const liquidGlassCapable = useMemo(
         () => isIOS26DesignEnabled()
             && isLiquidGlassAvailable()
             && isGlassEffectAPIAvailable(),
         [],
     );
+    const [useLiquidGlass, setUseLiquidGlass] = useState(liquidGlassCapable);
+    const glassLayoutConfirmedRef = useRef(false);
     const isVisible = Boolean(display) && !hidden;
+
+    useEffect(() => {
+        setUseLiquidGlass(liquidGlassCapable);
+        glassLayoutConfirmedRef.current = false;
+    }, [liquidGlassCapable, songKey]);
+
+    useEffect(() => {
+        if (!liquidGlassCapable) {
+            return;
+        }
+
+        let cancelled = false;
+        AccessibilityInfo.isReduceTransparencyEnabled()
+            .then((reduceTransparency) => {
+                if (!cancelled && reduceTransparency) {
+                    setUseLiquidGlass(false);
+                }
+            })
+            .catch(() => undefined);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [liquidGlassCapable, songKey]);
+
+    const requestLiquidGlassFallback = useCallback(() => {
+        setUseLiquidGlass(false);
+    }, []);
+
+    const handleGlassButtonLayout = useCallback((event: LayoutChangeEvent) => {
+        const { width, height } = event.nativeEvent.layout;
+        if (width >= 1 && height >= 1) {
+            glassLayoutConfirmedRef.current = true;
+            return;
+        }
+
+        requestLiquidGlassFallback();
+    }, [requestLiquidGlassFallback]);
+
+    useEffect(() => {
+        if (!useLiquidGlass || !isVisible) {
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            if (!glassLayoutConfirmedRef.current) {
+                requestLiquidGlassFallback();
+            }
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [useLiquidGlass, isVisible, songKey, requestLiquidGlassFallback]);
 
     useEffect(() => {
         if (isVisible) {
@@ -135,9 +197,13 @@ export default function EcampSingingBanner() {
     function renderViewButton() {
         const label = i18n.t('viewCurrentSong');
 
-        if (isLiquidGlass) {
+        if (useLiquidGlass) {
             return (
-                <GlassView isInteractive style={styles.liquidGlassButton} glassEffectStyle={
+                <GlassView
+                    isInteractive
+                    onLayout={handleGlassButtonLayout}
+                    style={styles.liquidGlassButton}
+                    glassEffectStyle={
                     {
                         style: 'clear',
                         animate: true,
@@ -336,6 +402,7 @@ const styles = StyleSheet.create({
     liquidGlassButton: {
         flexShrink: 0,
         alignSelf: 'stretch',
+        minHeight: 28,
         borderRadius: 32,
         alignItems: 'center',
         justifyContent: 'center',

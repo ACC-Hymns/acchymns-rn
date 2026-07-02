@@ -13,7 +13,6 @@ import { router, useFocusEffect } from 'expo-router';
 import {
     useCallback,
     useContext,
-    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
@@ -24,7 +23,6 @@ import {
     View,
     Platform,
     TouchableOpacity,
-    Keyboard,
     FlatList,
 } from 'react-native';
 import { Pressable, TextInput } from 'react-native-gesture-handler';
@@ -38,13 +36,7 @@ import StyledText from '@/components/StyledText';
 import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';
 import { ConicGradientRenderer } from '@/components/ConicGradient';
-import Animated, {
-    KeyboardState,
-    useAnimatedKeyboard,
-    useAnimatedStyle,
-    useDerivedValue,
-} from 'react-native-reanimated';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
 
 export default function DiscoverScreen() {
     const theme = useColorScheme() ?? 'light';
@@ -145,6 +137,13 @@ export default function DiscoverScreen() {
         isModalOpenRef.current = index === 0;
     }, []);
 
+    const handleSuggestionPress = useCallback((item: string) => {
+        promptInputRef.current?.blur();
+        void KeyboardController.dismiss().then(() => {
+            setPrompt(item);
+        });
+    }, []);
+
     const [selectedHymnals, setSelectedHymnals] = useState<string[]>([]);
 
     const ACCHYMNS_KEY = process.env.EXPO_PUBLIC_ACCHYMNS_KEY;
@@ -236,11 +235,7 @@ export default function DiscoverScreen() {
                         renderItem={({ item }) => (
                             <Pressable
                                 style={styles.suggestionButton}
-                                onPress={() => {
-                                    promptInputRef.current?.blur();
-                                    Keyboard.dismiss();
-                                    setPrompt(item);
-                                }}
+                                onPress={() => handleSuggestionPress(item)}
                             >
                                 <StyledText style={styles.suggestionButtonText}>
                                     {item}
@@ -290,7 +285,7 @@ export default function DiscoverScreen() {
                         <TouchableOpacity
                             style={[styles.filterButton, { flexDirection: 'row', alignItems: 'center' }]}
                             onPress={() => {
-                                Keyboard.dismiss();
+                                void KeyboardController.dismiss();
                                 handlePress();
                             }}
                         >
@@ -306,8 +301,9 @@ export default function DiscoverScreen() {
                                 <TouchableOpacity
                                     style={styles.promptButton}
                                     onPress={() => {
-                                        Keyboard.dismiss();
-                                        sendPrompt(prompt);
+                                        void KeyboardController.dismiss().then(() => {
+                                            sendPrompt(prompt);
+                                        });
                                     }}
                                 >
                                     <Ionicons
@@ -329,7 +325,7 @@ export default function DiscoverScreen() {
                 <View style={{ flex: 1 }}>
                     {hymnalsAvailable.length > 0 && (
                         <KeyboardStickyView
-                            style={[styles.footerContainer]}
+                            style={styles.footerContainer}
                             offset={footerOffset}
                         >
                             {promptFooter}
