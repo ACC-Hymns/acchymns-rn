@@ -27,6 +27,14 @@ export default function MainStackLayout() {
             >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
+                name="feature-intro"
+                options={{
+                    headerShown: false,
+                    presentation: 'fullScreenModal',
+                    gestureEnabled: false,
+                }}
+            />
+            <Stack.Screen
                 name="hymnal_importer"
                 options={{
                     headerShown: true,

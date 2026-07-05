@@ -5,6 +5,8 @@ interface HymnalContextType {
     BOOK_DATA: Record<string, BookSummary>;
     SET_BOOK_DATA: (bookData: Record<string, BookSummary>) => void;
 
+    featureIntroSeenVersion: string | null;
+    setFeatureIntroSeenVersion: (version: string | null) => void;
     discoverPageVisited: boolean | null;
     setDiscoverPageVisited: (discoverPageVisited: boolean | null) => void;
     legacyNumberGrouping: boolean | null;

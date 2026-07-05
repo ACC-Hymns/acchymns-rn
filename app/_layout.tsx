@@ -127,6 +127,8 @@ export default function RootLayout() {
     }, []);
 
     const {
+        featureIntroSeenVersion,
+        setFeatureIntroSeenVersion,
         discoverPageVisited,
         setDiscoverPageVisited,
         legacyNumberGrouping,
@@ -247,6 +249,8 @@ export default function RootLayout() {
             clearDismissedHymnalPackage,
             clearAllDismissedHymnalPackages,
             completeHymnalPackage,
+            featureIntroSeenVersion,
+            setFeatureIntroSeenVersion,
             discoverPageVisited,
             setDiscoverPageVisited,
             legacyNumberGrouping,
@@ -284,6 +288,8 @@ export default function RootLayout() {
         clearDismissedHymnalPackage,
         clearAllDismissedHymnalPackages,
         completeHymnalPackage,
+        featureIntroSeenVersion,
+        setFeatureIntroSeenVersion,
         discoverPageVisited,
         setDiscoverPageVisited,
         legacyNumberGrouping,

@@ -13,6 +13,7 @@ import { useTabBarMediaTrack } from '@/hooks/useTabBarMediaTrack';
 import TrackPlayer, { MediaItem, useIsPlaying } from '@rntp/player';
 import { useFeatureFlag } from 'posthog-react-native';
 import Ionicons from '@react-native-vector-icons/ionicons'
+import { shouldShowFeatureIntro } from '@/hooks/useFeatureIntro';
 
 function parseMediaId(mediaId?: string) {
     if (!mediaId) return null;
@@ -212,6 +213,22 @@ export default function TabLayout() {
     const showBottomAccessory =
         ios26DesignEnabled && tabBarMediaTrack && !isDiscoverRoute && bottomAccessoryMounted;
     const discoverPageFlagEnabled = useFeatureFlag('discover-page');
+    const featureIntroNavigationAttemptedRef = useRef(false);
+
+    useEffect(() => {
+        if (featureIntroNavigationAttemptedRef.current) {
+            return;
+        }
+        if (!context) {
+            return;
+        }
+        if (!shouldShowFeatureIntro(context.featureIntroSeenVersion)) {
+            return;
+        }
+
+        featureIntroNavigationAttemptedRef.current = true;
+        router.replace('/(main)/feature-intro');
+    }, [context, context?.featureIntroSeenVersion]);
 
     const i18n = useI18n();
     const { data: hymnalUpdates } = useHymnalUpdates();

@@ -42,6 +42,10 @@ export function usePreferences() {
         }
     }, []);
 
+    const setFeatureIntroSeenVersion = useCallback(
+        (value: string | null) => setPreference('featureIntroSeenVersion', value),
+        [setPreference],
+    );
     const setDiscoverPageVisited = useCallback(
         (value: boolean | null) => setPreference('discoverPageVisited', value),
         [setPreference],
@@ -94,6 +98,7 @@ export function usePreferences() {
     return {
         ...preferences,
         isPreferencesLoaded: isLoaded,
+        setFeatureIntroSeenVersion,
         setDiscoverPageVisited,
         setLegacyNumberGrouping,
         setLanguageOverride,

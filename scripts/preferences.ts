@@ -8,6 +8,7 @@ import {
 } from '@/constants/broadcastAuth';
 
 export const PREFERENCE_KEYS = {
+    featureIntroSeenVersion: 'featureIntroSeenVersion',
     discoverPageVisited: 'discoverPageVisited',
     legacyNumberGrouping: 'legacyNumberGrouping',
     languageOverride: 'languageOverride',
@@ -25,6 +26,7 @@ export const PREFERENCE_KEYS = {
 export type PreferenceKey = keyof typeof PREFERENCE_KEYS;
 
 export type PreferencesState = {
+    featureIntroSeenVersion: string | null;
     discoverPageVisited: boolean | null;
     legacyNumberGrouping: boolean | null;
     languageOverride: string | null;
@@ -40,6 +42,7 @@ export type PreferencesState = {
 };
 
 export const INITIAL_PREFERENCES: PreferencesState = {
+    featureIntroSeenVersion: null,
     discoverPageVisited: null,
     legacyNumberGrouping: null,
     languageOverride: null,

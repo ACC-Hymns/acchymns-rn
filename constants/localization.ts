@@ -178,6 +178,23 @@ const translations = {
         customReleaseTagPlaceholder: 'e.g. 42',
         failedToLoadReleaseTags: 'Failed to load release tags.',
         prerelease: 'pre-release',
+
+        // Feature intro
+        featureIntroSkip: 'Skip',
+        featureIntroNext: 'Next',
+        featureIntroGetStarted: 'Get Started',
+        featureIntroRewriteTitle: 'A Fresh New Hymnal',
+        featureIntroRewriteBody: 'We rebuilt the app from the ground up for faster performance and a cleaner, more beautiful reading experience.',
+        featureIntroLanguagesTitle: 'Your Language',
+        featureIntroLanguagesBody: 'Choose from 8 languages in Settings → Preferences → Language. The app follows your device language by default.',
+        featureIntroSwipeTitle: 'Swipe to Turn Pages',
+        featureIntroSwipeBody: 'When viewing sheet music, swipe left or right to jump to the next or previous hymn — just like flipping pages in a book.',
+        featureIntroHymnalsTitle: 'Keep Hymnals Updated',
+        featureIntroHymnalsBody: 'Download hymnals for offline use and get notified when updates are available. Tap Add Hymnal from Home or Settings.',
+        featureIntroCampTitle: 'Live Camp Recommendations',
+        featureIntroCampBody: 'During Eastern Camp, see what hymn is being sung and jump to it instantly. You can turn this banner on or off below.',
+        featureIntroDiscoverTitle: 'Discover Hymns',
+        featureIntroDiscoverBody: 'Search by topic, theme, or lyrics with AI-powered Discover. Find hymns that match what you are looking for.',
     },
     es: {
         // Generic
@@ -295,6 +312,23 @@ const translations = {
         availableHymnals: 'Disponibles para descargar',
         updateAvailable: 'Actualización disponible',
         allHymnalsUpToDate: 'Todos tus himnarios están actualizados.',
+
+        // Feature intro
+        featureIntroSkip: 'Omitir',
+        featureIntroNext: 'Siguiente',
+        featureIntroGetStarted: 'Comenzar',
+        featureIntroRewriteTitle: 'Un Himnario Renovado',
+        featureIntroRewriteBody: 'Reconstruimos la aplicación desde cero para un rendimiento más rápido y una experiencia de lectura más limpia y hermosa.',
+        featureIntroLanguagesTitle: 'Tu Idioma',
+        featureIntroLanguagesBody: 'Elige entre 8 idiomas en Ajustes → Preferencias → Idioma. La app usa el idioma de tu dispositivo por defecto.',
+        featureIntroSwipeTitle: 'Desliza para Cambiar de Página',
+        featureIntroSwipeBody: 'Al ver la partitura, desliza a la izquierda o derecha para ir al himno anterior o siguiente — como pasar páginas en un libro.',
+        featureIntroHymnalsTitle: 'Mantén los Himnarios Actualizados',
+        featureIntroHymnalsBody: 'Descarga himnarios para uso sin conexión y recibe avisos cuando haya actualizaciones. Toca Añadir Himnario desde Inicio o Ajustes.',
+        featureIntroCampTitle: 'Recomendaciones en Vivo del Campamento',
+        featureIntroCampBody: 'Durante el Campamento del Este, ve qué himno se está cantando y ábrelo al instante. Puedes activar o desactivar este banner abajo.',
+        featureIntroDiscoverTitle: 'Descubre Himnos',
+        featureIntroDiscoverBody: 'Busca por tema, asunto o letra con Descubrir impulsado por IA. Encuentra himnos que coincidan con lo que buscas.',
     },
     fr: {
         // Generic
@@ -413,6 +447,23 @@ const translations = {
         availableHymnals: 'Disponibles au téléchargement',
         updateAvailable: 'Mise à jour disponible',
         allHymnalsUpToDate: 'Tous vos hymnaires sont à jour.',
+
+        // Feature intro
+        featureIntroSkip: 'Passer',
+        featureIntroNext: 'Suivant',
+        featureIntroGetStarted: 'Commencer',
+        featureIntroRewriteTitle: 'Un Nouveau Livre de Hymnes',
+        featureIntroRewriteBody: 'Nous avons reconstruit l\'application pour des performances plus rapides et une expérience de lecture plus claire et plus belle.',
+        featureIntroLanguagesTitle: 'Votre Langue',
+        featureIntroLanguagesBody: 'Choisissez parmi 8 langues dans Paramètres → Préférences → Langue. L\'app suit la langue de votre appareil par défaut.',
+        featureIntroSwipeTitle: 'Glissez pour Tourner les Pages',
+        featureIntroSwipeBody: 'En consultant la partition, glissez à gauche ou à droite pour passer à l\'hymne précédent ou suivant — comme tourner les pages d\'un livre.',
+        featureIntroHymnalsTitle: 'Gardez les Hymnaires à Jour',
+        featureIntroHymnalsBody: 'Téléchargez des hymnaires pour une utilisation hors ligne et soyez averti des mises à jour. Appuyez sur Ajouter un Hymnaire depuis l\'accueil ou les paramètres.',
+        featureIntroCampTitle: 'Recommandations du Camp en Direct',
+        featureIntroCampBody: 'Pendant le Camp de l\'Est, voyez quel hymne est chanté et ouvrez-le instantanément. Vous pouvez activer ou désactiver cette bannière ci-dessous.',
+        featureIntroDiscoverTitle: 'Découvrir des Hymnes',
+        featureIntroDiscoverBody: 'Recherchez par thème, sujet ou paroles avec Découvrir, propulsé par l\'IA. Trouvez des hymnes qui correspondent à ce que vous cherchez.',
     },
     de: {
         // Generic
@@ -530,6 +581,23 @@ const translations = {
         availableHymnals: 'Zum Download verfügbar',
         updateAvailable: 'Update verfügbar',
         allHymnalsUpToDate: 'Alle Hymnals sind auf dem neuesten Stand.',
+
+        // Feature intro
+        featureIntroSkip: 'Überspringen',
+        featureIntroNext: 'Weiter',
+        featureIntroGetStarted: 'Loslegen',
+        featureIntroRewriteTitle: 'Ein Frisches Gesangbuch',
+        featureIntroRewriteBody: 'Wir haben die App von Grund auf neu gebaut — für schnellere Leistung und ein klareres, schöneres Leseerlebnis.',
+        featureIntroLanguagesTitle: 'Ihre Sprache',
+        featureIntroLanguagesBody: 'Wählen Sie aus 8 Sprachen unter Einstellungen → Einstellungen → Sprache. Standardmäßig folgt die App der Gerätesprache.',
+        featureIntroSwipeTitle: 'Wischen zum Blättern',
+        featureIntroSwipeBody: 'Beim Anzeigen der Noten wischen Sie nach links oder rechts, um zum vorherigen oder nächsten Lied zu wechseln — wie das Umblättern in einem Buch.',
+        featureIntroHymnalsTitle: 'Gesangbücher Aktuell Halten',
+        featureIntroHymnalsBody: 'Laden Sie Gesangbücher für die Offline-Nutzung herunter und erhalten Sie Benachrichtigungen bei Updates. Tippen Sie auf Gesangbuch hinzufügen auf der Startseite oder in den Einstellungen.',
+        featureIntroCampTitle: 'Live-Camp-Empfehlungen',
+        featureIntroCampBody: 'Während des Eastern Camp sehen Sie, welches Lied gesungen wird, und springen sofort dorthin. Sie können dieses Banner unten ein- oder ausschalten.',
+        featureIntroDiscoverTitle: 'Lieder Entdecken',
+        featureIntroDiscoverBody: 'Suchen Sie nach Thema oder Text mit KI-gestütztem Entdecken. Finden Sie Lieder, die zu Ihrer Suche passen.',
     },
     sr: {
         // Generic
@@ -647,6 +715,23 @@ const translations = {
         availableHymnals: 'Dostupno za preuzimanje',
         updateAvailable: 'Ažuriranje dostupno',
         allHymnalsUpToDate: 'Svi vaši himnari su ažurirani.',
+
+        // Feature intro
+        featureIntroSkip: 'Preskoči',
+        featureIntroNext: 'Dalje',
+        featureIntroGetStarted: 'Započni',
+        featureIntroRewriteTitle: 'Novi Pesmarica',
+        featureIntroRewriteBody: 'Aplikaciju smo izgradili iznova za brži rad i čistije, lepše iskustvo čitanja.',
+        featureIntroLanguagesTitle: 'Vaš Jezik',
+        featureIntroLanguagesBody: 'Izaberite jedan od 8 jezika u Podešavanja → Podešavanja → Jezik. Aplikacija podrazumevano prati jezik uređaja.',
+        featureIntroSwipeTitle: 'Prevucite za Okretanje Stranica',
+        featureIntroSwipeBody: 'Dok gledate notni zapis, prevucite levo ili desno za prethodnu ili sledeću pesmu — kao okretanje stranica u knjizi.',
+        featureIntroHymnalsTitle: 'Ažurirajte Pesmarice',
+        featureIntroHymnalsBody: 'Preuzmite pesmarice za offline korišćenje i budite obavešteni o ažuriranjima. Dodirnite Dodaj pesmaricu sa početne ili iz podešavanja.',
+        featureIntroCampTitle: 'Preporuke sa Kampa Uživo',
+        featureIntroCampBody: 'Tokom Istočnog kampa vidite koja se pesma peva i odmah je otvorite. Ovaj baner možete uključiti ili isključiti ispod.',
+        featureIntroDiscoverTitle: 'Otkrijte Pesme',
+        featureIntroDiscoverBody: 'Pretražujte po temi ili tekstu pomoću Otkrij, pokretanog veštačkom inteligencijom. Pronađite pesme koje odgovaraju onome što tražite.',
     },
     hu: {
         // Generic
@@ -764,6 +849,23 @@ const translations = {
         availableHymnals: 'Letölthető',
         updateAvailable: 'Frissítés elérhető',
         allHymnalsUpToDate: 'Minden énekárja naprakész.',
+
+        // Feature intro
+        featureIntroSkip: 'Kihagyás',
+        featureIntroNext: 'Következő',
+        featureIntroGetStarted: 'Kezdés',
+        featureIntroRewriteTitle: 'Egy Új Énekeskönyv',
+        featureIntroRewriteBody: 'Az alkalmazást a nulláról építettük újra — gyorsabb teljesítményért és tisztább, szebb olvasási élményért.',
+        featureIntroLanguagesTitle: 'Az Ön Nyelve',
+        featureIntroLanguagesBody: 'Válasszon 8 nyelv közül a Beállítások → Beállítások → Nyelv menüben. Az alkalmazás alapértelmezetten a készülék nyelvét követi.',
+        featureIntroSwipeTitle: 'Lapozás Csúsztatással',
+        featureIntroSwipeBody: 'A kotta megtekintésekor csúsztasson balra vagy jobbra az előző vagy következő énekhez — mint egy könyv lapjainak forgatása.',
+        featureIntroHymnalsTitle: 'Tartsa Naprakészen az Énekeskönyveket',
+        featureIntroHymnalsBody: 'Töltse le az énekeskönyveket offline használatra, és kapjon értesítést a frissítésekről. Érintse meg az Énekeskönyv hozzáadása gombot a kezdőképernyőn vagy a beállításokban.',
+        featureIntroCampTitle: 'Élő Tábori Ajánlások',
+        featureIntroCampBody: 'A Keleti Tábor alatt láthatja, melyik éneket éneklik, és azonnal megnyithatja. Az alábbi kapcsolóval be- vagy kikapcsolhatja ezt a bannert.',
+        featureIntroDiscoverTitle: 'Énekek Felfedezése',
+        featureIntroDiscoverBody: 'Keressen téma vagy dalszöveg alapján a mesterséges intelligenciával működő Felfedezés funkcióval. Találjon énekeket, amelyek megfelelnek keresésének.',
     },
     ja: {
         // Generic
@@ -881,6 +983,23 @@ const translations = {
         availableHymnals: 'ダウンロード可能',
         updateAvailable: '更新が利用可能',
         allHymnalsUpToDate: 'すべての賛美歌集は最新です。',
+
+        // Feature intro
+        featureIntroSkip: 'スキップ',
+        featureIntroNext: '次へ',
+        featureIntroGetStarted: '始める',
+        featureIntroRewriteTitle: '新しい賛美歌アプリ',
+        featureIntroRewriteBody: 'パフォーマンスと見た目を向上させるため、アプリを一から作り直しました。より速く、より美しい読書体験をお楽しみください。',
+        featureIntroLanguagesTitle: 'あなたの言語',
+        featureIntroLanguagesBody: '設定 → 環境設定 → 言語から8つの言語を選択できます。デフォルトでは端末の言語に従います。',
+        featureIntroSwipeTitle: 'スワイプでページめくり',
+        featureIntroSwipeBody: '楽譜を表示中、左右にスワイプすると前後の賛美歌に移動できます — 本のページをめくるように。',
+        featureIntroHymnalsTitle: '賛美歌集を最新に保つ',
+        featureIntroHymnalsBody: 'オフライン用に賛美歌集をダウンロードし、更新があると通知を受け取れます。ホームまたは設定から賛美歌集を追加をタップしてください。',
+        featureIntroCampTitle: 'キャンプのライブおすすめ',
+        featureIntroCampBody: 'イースタンキャンプ中、現在歌われている賛美歌を確認してすぐに開けます。下のスイッチでこのバナーのオン/オフを切り替えられます。',
+        featureIntroDiscoverTitle: '賛美歌を発見',
+        featureIntroDiscoverBody: 'AI搭載の発見機能で、テーマや歌詞から検索できます。お探しの内容に合う賛美歌を見つけましょう。',
     },
     pt: {
         // Generic
@@ -998,6 +1117,23 @@ const translations = {
         availableHymnals: 'Disponíveis para download',
         updateAvailable: 'Atualização disponível',
         allHymnalsUpToDate: 'Todos os seus hinários estão atualizados.',
+
+        // Feature intro
+        featureIntroSkip: 'Pular',
+        featureIntroNext: 'Próximo',
+        featureIntroGetStarted: 'Começar',
+        featureIntroRewriteTitle: 'Um Hinário Renovado',
+        featureIntroRewriteBody: 'Reconstruímos o aplicativo do zero para melhor desempenho e uma experiência de leitura mais limpa e bonita.',
+        featureIntroLanguagesTitle: 'Seu Idioma',
+        featureIntroLanguagesBody: 'Escolha entre 8 idiomas em Configurações → Preferências → Idioma. O app segue o idioma do dispositivo por padrão.',
+        featureIntroSwipeTitle: 'Deslize para Virar Páginas',
+        featureIntroSwipeBody: 'Ao ver a partitura, deslize para a esquerda ou direita para ir ao hino anterior ou seguinte — como folhear um livro.',
+        featureIntroHymnalsTitle: 'Mantenha os Hinários Atualizados',
+        featureIntroHymnalsBody: 'Baixe hinários para uso offline e receba avisos quando houver atualizações. Toque em Adicionar Hinário na Início ou Configurações.',
+        featureIntroCampTitle: 'Recomendações ao Vivo do Acampamento',
+        featureIntroCampBody: 'Durante o Acampamento do Leste, veja qual hino está sendo cantado e abra-o instantaneamente. Você pode ligar ou desligar este banner abaixo.',
+        featureIntroDiscoverTitle: 'Descubra Hinos',
+        featureIntroDiscoverBody: 'Pesquise por tema ou letra com o Descubra impulsionado por IA. Encontre hinos que correspondam ao que você procura.',
     }
 }
 
