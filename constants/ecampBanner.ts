@@ -37,6 +37,7 @@ export function isEcampBannerRoute(pathname: string): boolean {
         isSettingsRoute(pathname)
         || isDiscoverRoute(pathname)
         || pathname.includes('hymnal_importer')
+        || pathname.includes('feature-intro')
     ) {
         return false;
     }
