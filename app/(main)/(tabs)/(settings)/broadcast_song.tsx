@@ -203,6 +203,7 @@ export default function BroadcastOptionsScreen() {
                                 placeholder="#"
                                 placeholderTextColor={Colors[theme]['fadedText']}
                                 keyboardType="numeric"
+                                maxLength={3}
                                 style={{
                                     backgroundColor: Colors[theme]['settingsButton'],
                                     borderRadius: 12,
@@ -285,7 +286,7 @@ export default function BroadcastOptionsScreen() {
 
                         <View style={styles.actionButtonRow}>
                             <TouchableOpacity
-                                style={styles.actionButton}
+                                style={[styles.actionButton, { opacity: selectedHymnal.length < 1 || songInput.length < 1 ? 0.5 : 1 }]}
                                 onPress={() => {
                                     if(selectedHymnal.length < 1)
                                         return;
