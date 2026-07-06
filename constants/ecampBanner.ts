@@ -77,3 +77,17 @@ export function getEcampBannerBackToTopBottom(
 ): number {
     return bannerBottomInset + ECAMP_BANNER_ESTIMATED_HEIGHT + ECAMP_BANNER_BACK_TO_TOP_GAP;
 }
+
+export const ECAMP_BANNER_SCROLL_CONTENT_GAP = 12;
+
+export function getEcampBannerScrollContentInset(
+    bannerVisible: boolean,
+    isLandscape: boolean,
+    baseInset = 0,
+): number {
+    if (!bannerVisible || isLandscape) {
+        return baseInset;
+    }
+
+    return baseInset + ECAMP_BANNER_ESTIMATED_HEIGHT + ECAMP_BANNER_SCROLL_CONTENT_GAP;
+}
