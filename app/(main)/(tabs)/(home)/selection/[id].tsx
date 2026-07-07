@@ -15,6 +15,7 @@ import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { getKeypadColumns, getKeypadGridWidth } from '@/scripts/keypadGrid';
+import { useEcampBannerScrollContentInset } from '@/hooks/useEcampBannerScrollContentInset';
 
 const SONG_NUMBER_ITEM_SIZE = 60;
 const SONG_NUMBER_ITEM_MARGIN = 6;
@@ -118,7 +119,7 @@ export default function SelectionScreen() {
     // get book data from context
     const context = useContext(HymnalContext);
     const i18n = useI18n();
-
+    const listBottomInset = useEcampBannerScrollContentInset(140);
 
     const book = useBookData(id as string, context);
     const { songs, topicalIndex, loading, error } = useSongListData(book);
@@ -197,7 +198,7 @@ export default function SelectionScreen() {
                                     keyExtractor={(item) => item}
                                     key={`legacy-${numColumns}`}
                                     numColumns={numColumns}
-                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    contentContainerStyle={{ paddingBottom: listBottomInset }}
                                     columnWrapperStyle={{ justifyContent: 'center' }}
                                     style={{ flex: 1, width: songNumberGridWidth, alignSelf: 'center', paddingTop: 20 }}
                                     renderItem={({ item }) => (
@@ -259,7 +260,7 @@ export default function SelectionScreen() {
                                         return ranges;
                                     }, [] as number[])}
                                     key={`new-${numColumns}`}
-                                    contentContainerStyle={{ paddingBottom: 120 }}
+                                    contentContainerStyle={{ paddingBottom: listBottomInset }}
                                     keyExtractor={(rangeStart) => rangeStart.toString()}
                                     renderItem={({ item: rangeStart, index }) => {
                                         // Find the highest song number in this range
@@ -374,7 +375,7 @@ export default function SelectionScreen() {
                                     contentContainerStyle={{
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                        paddingBottom: listBottomInset,
                                     }}
                                     style={{ flex: 1, width: '100%', paddingTop: 20 }}
                                     renderItem={({ item }) => (
@@ -417,7 +418,7 @@ export default function SelectionScreen() {
                                     keyExtractor={(number) => number}
                                     key='new'
                                     contentContainerStyle={{
-                                        paddingBottom: 120 // Add padding to the bottom to ensure all items are scrollable
+                                        paddingBottom: listBottomInset,
                                     }}
                                     renderItem={({ item: number, index }) => (
                                         <TouchableOpacity
@@ -467,7 +468,7 @@ export default function SelectionScreen() {
                         <View style={{ flex: 1 }}>
                             <FlatList
                                 data={Object.keys(topicalIndex || {})}
-                                contentContainerStyle={{ paddingBottom: 120 }}
+                                contentContainerStyle={{ paddingBottom: listBottomInset }}
                                 keyExtractor={(key) => key}
                                 renderItem={({ item: key, index }) => {
 

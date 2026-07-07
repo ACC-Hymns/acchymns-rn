@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, View, TouchableHighlight, ListRenderItemInfo, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { Text, StyleSheet, View, TouchableHighlight, ListRenderItemInfo, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
@@ -17,6 +17,8 @@ import { BookSummary } from '@/constants/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
 import { createClearCommand, createSongCommand } from '@/scripts/displayCommand';
+import { findSongNumberInList } from '@/scripts/ecampDisplay';
+import { getSongData } from '@/scripts/hymnals';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import { getKeypadGridWidth } from '@/scripts/keypadGrid';
 
@@ -127,7 +129,12 @@ export default function BroadcastOptionsScreen() {
             return;
         }
 
-        const number = songInput.replace(/^0+/, '');
+        const songData = await getSongData(book.name.short);
+        const number = findSongNumberInList(songData ?? {}, songInput);
+        if (!number) {
+            Alert.alert(i18n.t('broadcastSongNotFound'), i18n.t('broadcastSongNotFoundMessage'));
+            return;
+        }
 
         await publishFromContext(
             context,

@@ -68,7 +68,7 @@ export default function EcampSingingBanner() {
     useEffect(() => {
         setUseLiquidGlass(liquidGlassCapable);
         glassLayoutConfirmedRef.current = false;
-    }, [liquidGlassCapable, songKey]);
+    }, [liquidGlassCapable, displayKey]);
 
     useEffect(() => {
         if (!liquidGlassCapable) {
@@ -87,7 +87,7 @@ export default function EcampSingingBanner() {
         return () => {
             cancelled = true;
         };
-    }, [liquidGlassCapable, songKey]);
+    }, [liquidGlassCapable, displayKey]);
 
     const requestLiquidGlassFallback = useCallback(() => {
         setUseLiquidGlass(false);
@@ -97,14 +97,11 @@ export default function EcampSingingBanner() {
         const { width, height } = event.nativeEvent.layout;
         if (width >= 1 && height >= 1) {
             glassLayoutConfirmedRef.current = true;
-            return;
         }
-
-        requestLiquidGlassFallback();
-    }, [requestLiquidGlassFallback]);
+    }, []);
 
     useEffect(() => {
-        if (!useLiquidGlass || !isVisible) {
+        if (!useLiquidGlass || !isVisible || !songRoute) {
             return;
         }
 
@@ -115,7 +112,7 @@ export default function EcampSingingBanner() {
         }, 400);
 
         return () => clearTimeout(timeout);
-    }, [useLiquidGlass, isVisible, songKey, requestLiquidGlassFallback]);
+    }, [useLiquidGlass, isVisible, displayKey, songRoute, requestLiquidGlassFallback]);
 
     useEffect(() => {
         if (isVisible) {
@@ -200,6 +197,7 @@ export default function EcampSingingBanner() {
         if (useLiquidGlass) {
             return (
                 <GlassView
+                    key={displayKey}
                     isInteractive
                     onLayout={handleGlassButtonLayout}
                     style={styles.liquidGlassButton}

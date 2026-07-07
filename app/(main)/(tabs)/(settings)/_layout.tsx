@@ -20,7 +20,7 @@ export default function HomeLayout() {
                 <Stack.Screen
                     name="preferences"
                     options={{
-                        title: 'Preferences',
+                        title: i18n.t('preferences'),
                         headerShown: true,
                         headerTitleAlign: 'center',
                         headerBackTitle: i18n.t('settings'),
