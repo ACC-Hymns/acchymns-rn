@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 import { router } from 'expo-router';
-import { useFeatureFlag } from 'posthog-react-native';
+import { useAppFeatureFlag, isFeatureFlagEnabled } from '@/hooks/useAppFeatureFlag';
 
 import { FeatureIntroPager } from '@/components/feature-intro/FeatureIntroPager';
 import { HymnalContext } from '@/constants/context';
@@ -11,8 +11,8 @@ import {
 
 export default function FeatureIntroScreen() {
     const context = useContext(HymnalContext);
-    const discoverPageFlagEnabled = useFeatureFlag('discover-page');
-    const slides = useFeatureIntroSlides(Boolean(discoverPageFlagEnabled));
+    const discoverPageFlagEnabled = isFeatureFlagEnabled(useAppFeatureFlag('discover-page'));
+    const slides = useFeatureIntroSlides(discoverPageFlagEnabled);
 
     const includesDiscoverSlide = useMemo(
         () => slides.some((slide) => slide.id === 'discover'),

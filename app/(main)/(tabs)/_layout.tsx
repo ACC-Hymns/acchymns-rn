@@ -11,7 +11,7 @@ import { router, usePathname } from 'expo-router';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
 import { useTabBarMediaTrack } from '@/hooks/useTabBarMediaTrack';
 import TrackPlayer, { MediaItem, useIsPlaying } from '@rntp/player';
-import { useFeatureFlag } from 'posthog-react-native';
+import { useAppFeatureFlag, isFeatureFlagEnabled } from '@/hooks/useAppFeatureFlag';
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { shouldShowFeatureIntro } from '@/hooks/useFeatureIntro';
 
@@ -212,7 +212,7 @@ export default function TabLayout() {
         useBottomAccessoryRemountOnResize(Platform.OS === 'ios' && Platform.isPad);
     const showBottomAccessory =
         ios26DesignEnabled && tabBarMediaTrack && !isDiscoverRoute && bottomAccessoryMounted;
-    const discoverPageFlagEnabled = useFeatureFlag('discover-page');
+    const discoverPageFlagEnabled = isFeatureFlagEnabled(useAppFeatureFlag('discover-page'));
     const featureIntroNavigationAttemptedRef = useRef(false);
 
     useEffect(() => {

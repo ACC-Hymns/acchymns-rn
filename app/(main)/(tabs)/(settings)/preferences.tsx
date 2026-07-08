@@ -12,8 +12,6 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { isDevelopmentOrPreviewBuild } from '@/constants/build';
-import { formatHymnalReleaseTagPreference } from '@/scripts/hymnalUpdates';
 
 export default function PreferencesScreen() {
 
@@ -130,32 +128,6 @@ export default function PreferencesScreen() {
                             </View>
                         </TouchableHighlight>
                     </View>
-                    {isDevelopmentOrPreviewBuild() && (
-                        <>
-                            <View style={{ marginTop: 24 }}>
-                                <StyledText style={styles.settingsLabel}>{i18n.t('hymnals')}</StyledText>
-                            </View>
-                            <View style={[styles.settingsContainer]}>
-                                <TouchableHighlight
-                                    onPress={() => push('/(main)/(tabs)/(settings)/release_tag')}
-                                    underlayColor={Colors[theme].divider}
-                                >
-                                    <View style={styles.settingsItem}>
-                                        <StyledText style={styles.settingsText}>{i18n.t('hymnalReleaseTag')}</StyledText>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                            <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>
-                                                {formatHymnalReleaseTagPreference(
-                                                    context?.hymnalReleaseTag,
-                                                    i18n.t('hymnalReleaseTagLatest'),
-                                                )}
-                                            </StyledText>
-                                            <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
-                                        </View>
-                                    </View>
-                                </TouchableHighlight>
-                            </View>
-                        </>
-                    )}
                 </ScrollView>
             </View>
         </>

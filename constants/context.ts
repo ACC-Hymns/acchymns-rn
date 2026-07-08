@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import { BookSummary, SortMode } from './types';
+import type { FeatureFlagOverrides } from '@/scripts/preferences';
 
 interface HymnalContextType {
     BOOK_DATA: Record<string, BookSummary>;
@@ -31,6 +32,11 @@ interface HymnalContextType {
     setHymnalReleaseTag: (tag: string | null) => void;
     recommendedHymnBannerEnabled: boolean | null;
     setRecommendedHymnBannerEnabled: (enabled: boolean | null) => void;
+    developerMode: boolean | null;
+    setDeveloperMode: (enabled: boolean | null) => void;
+    featureFlagOverrides: FeatureFlagOverrides | null;
+    setFeatureFlagOverride: (flagKey: string, value: boolean | null) => void;
+    clearFeatureFlagOverrides: () => void;
 
     onLayoutHomeView: () => void;
     openDetailsBottomSheet?: () => void;

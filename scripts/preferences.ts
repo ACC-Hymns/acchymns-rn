@@ -21,7 +21,11 @@ export const PREFERENCE_KEYS = {
     hymnSignPort: 'hymnSignPort',
     hymnalReleaseTag: 'hymnalReleaseTag',
     recommendedHymnBannerEnabled: 'recommendedHymnBannerEnabled',
+    developerMode: 'developerMode',
+    featureFlagOverrides: 'featureFlagOverrides',
 } as const;
+
+export type FeatureFlagOverrides = Record<string, boolean>;
 
 export type PreferenceKey = keyof typeof PREFERENCE_KEYS;
 
@@ -39,6 +43,8 @@ export type PreferencesState = {
     hymnSignPort: number;
     hymnalReleaseTag: string | null;
     recommendedHymnBannerEnabled: boolean | null;
+    developerMode: boolean | null;
+    featureFlagOverrides: FeatureFlagOverrides | null;
 };
 
 export const INITIAL_PREFERENCES: PreferencesState = {
@@ -55,6 +61,8 @@ export const INITIAL_PREFERENCES: PreferencesState = {
     hymnSignPort: DEFAULT_HYMNSIGN_PORT,
     hymnalReleaseTag: null,
     recommendedHymnBannerEnabled: true,
+    developerMode: null,
+    featureFlagOverrides: null,
 };
 
 const BOOLEAN_PREFERENCE_KEYS = new Set<PreferenceKey>([
@@ -63,7 +71,36 @@ const BOOLEAN_PREFERENCE_KEYS = new Set<PreferenceKey>([
     'postHogOptedIn',
     'invertSheetMusic',
     'recommendedHymnBannerEnabled',
+    'developerMode',
 ]);
+
+function parseFeatureFlagOverrides(value: string): FeatureFlagOverrides | null {
+    try {
+        const parsed = JSON.parse(value) as unknown;
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return null;
+        }
+
+        const overrides: FeatureFlagOverrides = {};
+        for (const [key, flagValue] of Object.entries(parsed)) {
+            if (typeof flagValue === 'boolean') {
+                overrides[key] = flagValue;
+            }
+        }
+
+        return Object.keys(overrides).length > 0 ? overrides : null;
+    } catch {
+        return null;
+    }
+}
+
+function serializeFeatureFlagOverrides(overrides: FeatureFlagOverrides | null): string | null {
+    if (!overrides || Object.keys(overrides).length === 0) {
+        return null;
+    }
+
+    return JSON.stringify(overrides);
+}
 
 function parseStoredValue<K extends PreferenceKey>(
     key: K,
@@ -111,6 +148,13 @@ export async function loadPreferences(): Promise<PreferencesState> {
             continue;
         }
 
+        if (key === 'featureFlagOverrides') {
+            Object.assign(preferences, {
+                featureFlagOverrides: parseFeatureFlagOverrides(storedValue),
+            });
+            continue;
+        }
+
         Object.assign(preferences, { [key]: parseStoredValue(key, storedValue) });
     }
 
@@ -147,6 +191,13 @@ export async function savePreferences(preferences: PreferencesState): Promise<vo
             keysToRemove.push(PREFERENCE_KEYS[key]);
         } else if (key === 'hymnSignPort') {
             entries.push([PREFERENCE_KEYS[key], serializeValue(value as number)]);
+        } else if (key === 'featureFlagOverrides') {
+            const serialized = serializeFeatureFlagOverrides(value as FeatureFlagOverrides);
+            if (serialized === null) {
+                keysToRemove.push(PREFERENCE_KEYS[key]);
+            } else {
+                entries.push([PREFERENCE_KEYS[key], serialized]);
+            }
         } else {
             entries.push([PREFERENCE_KEYS[key], serializeValue(value as boolean | string)]);
         }

@@ -146,7 +146,20 @@ export default function HomeLayout() {
                         title: i18n.t('hymnalReleaseTag'),
                         headerShown: true,
                         headerTitleAlign: 'center',
-                        headerBackTitle: i18n.t('preferences'),
+                        headerBackTitle: i18n.t('developerSettings'),
+                        headerBackButtonDisplayMode: 'minimal',
+                        headerTransparent: true,
+                        headerShadowVisible: false,
+                        headerTintColor: Colors[theme].tint
+                    }}
+                />
+                <Stack.Screen
+                    name="developer"
+                    options={{
+                        title: i18n.t('developerSettings'),
+                        headerShown: true,
+                        headerTitleAlign: 'center',
+                        headerBackTitle: i18n.t('settings'),
                         headerBackButtonDisplayMode: 'minimal',
                         headerTransparent: true,
                         headerShadowVisible: false,

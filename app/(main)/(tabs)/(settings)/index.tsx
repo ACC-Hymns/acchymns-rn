@@ -1,17 +1,20 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, TouchableWithoutFeedback } from 'react-native';
-import { TouchableOpacity } from 'react-native';
-import React, { useContext } from 'react';
+import { StyleSheet, ScrollView, View, TouchableHighlight, Pressable, Alert } from 'react-native';
+import React, { useCallback, useContext } from 'react';
 import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
 import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
+import * as Haptics from 'expo-haptics';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
+import { isDeveloperSettingsEnabled } from '@/constants/build';
+
+const DEVELOPER_MODE_HOLD_MS = 5000;
 
 export default function SettingsScreen() {
 
@@ -22,6 +25,20 @@ export default function SettingsScreen() {
 
     const i18n = useI18n();
     const updateIdSegment = Updates.updateId?.split('-')[0];
+    const developerModeEnabled = isDeveloperSettingsEnabled(context?.developerMode);
+
+    const handleToggleDeveloperMode = useCallback(() => {
+        const nextValue = !developerModeEnabled;
+        context?.setDeveloperMode(nextValue);
+        Haptics.notificationAsync(
+            nextValue
+                ? Haptics.NotificationFeedbackType.Success
+                : Haptics.NotificationFeedbackType.Warning,
+        );
+        Alert.alert(
+            nextValue ? i18n.t('developerModeEnabled') : i18n.t('developerModeDisabled'),
+        );
+    }, [context, developerModeEnabled, i18n]);
 
     return (
         <View style={{ flex: 1, backgroundColor: Colors[theme]['background'] }}>
@@ -35,14 +52,15 @@ export default function SettingsScreen() {
                     <StyledText style={styles.settingsLabel}>{i18n.t('info')}</StyledText>
                 </View>
                 <View style={[styles.settingsContainer]}>
-                    <TouchableHighlight
-                        underlayColor={Colors[theme].divider}
+                    <Pressable
+                        onLongPress={handleToggleDeveloperMode}
+                        delayLongPress={DEVELOPER_MODE_HOLD_MS}
                     >
                         <View style={styles.settingsItem}>
                             <StyledText style={styles.settingsText}>{i18n.t('appVersion')}</StyledText>
                             <StyledText style={[styles.settingsText, { color: Colors[theme].fadedText }]}>{Constants.expoConfig?.version}</StyledText>
                         </View>
-                    </TouchableHighlight>
+                    </Pressable>
                     <Divider width={1} color={Colors[theme].divider} style={{ width: '95%', marginLeft: 'auto' }} />
                     <TouchableHighlight
                         underlayColor={Colors[theme].divider}
@@ -95,6 +113,24 @@ export default function SettingsScreen() {
                         </View>
                     </TouchableHighlight>
                 </View>
+                {developerModeEnabled && (
+                    <>
+                        <View style={{ marginTop: 24 }}>
+                            <StyledText style={styles.settingsLabel}>{i18n.t('developer')}</StyledText>
+                        </View>
+                        <View style={[styles.settingsContainer]}>
+                            <TouchableHighlight
+                                onPress={() => push('/(main)/(tabs)/(settings)/developer')}
+                                underlayColor={Colors[theme].divider}
+                            >
+                                <View style={styles.settingsItem}>
+                                    <StyledText style={styles.settingsText}>{i18n.t('developerSettings')}</StyledText>
+                                    <Ionicons name="chevron-forward-outline" size={14} color={Colors[theme].fadedIcon} />
+                                </View>
+                            </TouchableHighlight>
+                        </View>
+                    </>
+                )}
             </ScrollView>
         </View>
     );

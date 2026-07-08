@@ -153,6 +153,11 @@ export default function RootLayout() {
         setHymnalReleaseTag,
         recommendedHymnBannerEnabled,
         setRecommendedHymnBannerEnabled,
+        developerMode,
+        setDeveloperMode,
+        featureFlagOverrides,
+        setFeatureFlagOverride,
+        clearFeatureFlagOverrides,
         resetPreferences,
         isPreferencesLoaded,
     } = usePreferences();
@@ -275,6 +280,11 @@ export default function RootLayout() {
             setHymnalReleaseTag,
             recommendedHymnBannerEnabled,
             setRecommendedHymnBannerEnabled,
+            developerMode,
+            setDeveloperMode,
+            featureFlagOverrides,
+            setFeatureFlagOverride,
+            clearFeatureFlagOverrides,
             resetPreferences,
             deleteHymnal
         };
@@ -314,6 +324,11 @@ export default function RootLayout() {
         setHymnalReleaseTag,
         recommendedHymnBannerEnabled,
         setRecommendedHymnBannerEnabled,
+        developerMode,
+        setDeveloperMode,
+        featureFlagOverrides,
+        setFeatureFlagOverride,
+        clearFeatureFlagOverrides,
         resetPreferences,
         deleteHymnal,
     ]);

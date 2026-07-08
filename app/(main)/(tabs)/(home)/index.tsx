@@ -18,7 +18,7 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { Animated as RNAnimated } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
-import { useFeatureFlag } from 'posthog-react-native';
+import { useAppFeatureFlag, isFeatureFlagEnabled } from '@/hooks/useAppFeatureFlag';
 import { useEcampBannerScrollContentInset } from '@/hooks/useEcampBannerScrollContentInset';
 
 function parseStoredOrder(raw: string | null): { order: string[]; isValid: boolean } {
@@ -52,7 +52,7 @@ export default function HomeScreen() {
     const router = useRouter();
 
     const i18n = useI18n();
-    const hymnalCoverImagesEnabled = useFeatureFlag('hymnal-cover-images');
+    const hymnalCoverImagesEnabled = isFeatureFlagEnabled(useAppFeatureFlag('hymnal-cover-images'));
     const addHymnalBottomInset = useEcampBannerScrollContentInset(30);
 
     // before rendering, check if the user has any books

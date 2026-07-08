@@ -1,7 +1,7 @@
 import StyledText from '@/components/StyledText';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
-import { isDevelopmentOrPreviewBuild } from '@/constants/build';
+import { isDeveloperSettingsEnabled } from '@/constants/build';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useI18n } from '@/hooks/useI18n';
@@ -29,14 +29,14 @@ export default function ReleaseTagScreen() {
     const i18n = useI18n();
     const navigation = useNavigation();
     const queryClient = useQueryClient();
-    const showReleaseTagSettings = isDevelopmentOrPreviewBuild();
+    const showReleaseTagSettings = isDeveloperSettingsEnabled(context?.developerMode);
 
     const [selectedTag, setSelectedTag] = useState(GITHUB_LATEST_RELEASE);
     const [customTag, setCustomTag] = useState('');
 
     useEffect(() => {
         if (!showReleaseTagSettings) {
-            router.replace('/(main)/(tabs)/(settings)/preferences');
+            router.replace('/(main)/(tabs)/(settings)/developer');
         }
     }, [showReleaseTagSettings]);
 

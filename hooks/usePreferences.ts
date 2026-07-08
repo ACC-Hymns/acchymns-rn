@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
     clearPreferences,
+    FeatureFlagOverrides,
     INITIAL_PREFERENCES,
     loadPreferences,
     PreferenceKey,
@@ -94,6 +95,28 @@ export function usePreferences() {
         (value: boolean | null) => setPreference('recommendedHymnBannerEnabled', value),
         [setPreference],
     );
+    const setDeveloperMode = useCallback(
+        (value: boolean | null) => setPreference('developerMode', value),
+        [setPreference],
+    );
+    const setFeatureFlagOverride = useCallback((flagKey: string, value: boolean | null) => {
+        setPreferences((current) => {
+            const nextOverrides: FeatureFlagOverrides = { ...(current.featureFlagOverrides ?? {}) };
+            if (value === null) {
+                delete nextOverrides[flagKey];
+            } else {
+                nextOverrides[flagKey] = value;
+            }
+
+            return {
+                ...current,
+                featureFlagOverrides: Object.keys(nextOverrides).length > 0 ? nextOverrides : null,
+            };
+        });
+    }, []);
+    const clearFeatureFlagOverrides = useCallback(() => {
+        setPreference('featureFlagOverrides', null);
+    }, [setPreference]);
 
     return {
         ...preferences,
@@ -111,6 +134,9 @@ export function usePreferences() {
         setHymnSignPort,
         setHymnalReleaseTag,
         setRecommendedHymnBannerEnabled,
+        setDeveloperMode,
+        setFeatureFlagOverride,
+        clearFeatureFlagOverrides,
         resetPreferences,
     };
 }

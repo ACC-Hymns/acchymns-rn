@@ -335,6 +335,7 @@ export default function DiscoverScreen() {
                     <FlatList
                         ref={scrollViewRef}
                         data={dataSource}
+                        contentInsetAdjustmentBehavior="always"
                         keyExtractor={(item, index) =>
                             [
                                 item.book?.name?.short ?? 'unknown-book',
@@ -365,7 +366,6 @@ export default function DiscoverScreen() {
                                         setTimeout(() => setIsNavigating(false), 400);
                                     }}
                                     style={{
-                                        marginHorizontal: 20,
                                         borderRadius: 12,
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -433,7 +433,7 @@ export default function DiscoverScreen() {
                                 <View style={styles.titleContainer}>
                                     <StyledText style={styles.textStyle}>{i18n.t('discover')}</StyledText>
                                     {dataSource.length > 0 && (
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 57 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                                             <StyledText style={styles.subtitleTextStyle}>
                                                 {i18n.t('discoverSubtitle')}
                                             </StyledText>
@@ -609,12 +609,13 @@ function makeStyles(theme: "light" | "dark") {
         scrollView: {
             paddingTop: 15,
             paddingBottom: 15,
+            paddingHorizontal: 20,
             backgroundColor: Colors[theme].background,
         },
         titleContainer: {
-            marginTop: 80,
-            marginBottom: 10,
-            marginLeft: 30,
+            marginTop: 18,
+            marginBottom: 15,
+            marginLeft: 10,
         },
         textStyle: {
             fontSize: 32,

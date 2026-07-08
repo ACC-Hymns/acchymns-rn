@@ -8,3 +8,7 @@ export function isDevelopmentOrPreviewBuild(): boolean {
     const channel = Updates.channel;
     return channel === 'development' || channel === 'preview';
 }
+
+export function isDeveloperSettingsEnabled(developerMode: boolean | null | undefined): boolean {
+    return isDevelopmentOrPreviewBuild() || Boolean(developerMode);
+}
