@@ -177,6 +177,10 @@ export default function EcampSingingBanner() {
         }
 
         isOpeningSongRef.current = true;
+
+        // Ghost to the home main menu so back from the song lands there
+        // instead of an intermediate selection/display stack.
+        router.dismissTo('/(main)/(tabs)/(home)');
         router.push({
             pathname: '/display/[id]/[number]',
             params: {

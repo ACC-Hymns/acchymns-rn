@@ -1,12 +1,14 @@
 import { Colors } from '@/constants/Colors';
-import { Text, StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Alert, Text, StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
 import Ionicons from '@react-native-vector-icons/ionicons'
-import { Pressable } from 'react-native-gesture-handler';
+import { Pressable, TextInput } from 'react-native-gesture-handler';
 import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
 import { createSongCommand } from '@/scripts/displayCommand';
+import { findSongNumberInList } from '@/scripts/ecampDisplay';
+import { getSongData } from '@/scripts/hymnals';
 import { useBookData } from '@/hooks/useBookData';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { isIOS26DesignEnabled } from '@/constants/iosDesign';
@@ -29,6 +31,7 @@ export default function BroadcastPanel() {
     const isLiquidGlass = isIOS26DesignEnabled();
     const i18n = useI18n();
 
+    const [songInput, setSongInput] = useState('');
     const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
     async function broadcast_song_number() {
@@ -36,10 +39,21 @@ export default function BroadcastPanel() {
             return;
         }
 
+        let number = params.number;
+        if (songInput.length > 0) {
+            const songData = await getSongData(book.name.short);
+            const matchedNumber = findSongNumberInList(songData ?? {}, songInput);
+            if (!matchedNumber) {
+                Alert.alert(i18n.t('broadcastSongNotFound'), i18n.t('broadcastSongNotFoundMessage'));
+                return;
+            }
+            number = matchedNumber;
+        }
+
         await publishFromContext(
             context,
             createSongCommand({
-                number: params.number,
+                number,
                 bookMedium: book.name?.medium || '',
                 verses: selectedVerses,
                 bookColor: book.primaryColor || '#000000',
@@ -69,6 +83,20 @@ export default function BroadcastPanel() {
                     </TouchableOpacity>
                 </View>
             )}
+            <View style={styles.songInputContainer}>
+                <TextInput
+                    placeholder={params.number || '#'}
+                    placeholderTextColor={Colors[theme]['fadedText']}
+                    keyboardType="numeric"
+                    maxLength={3}
+                    style={styles.songInput}
+                    onChangeText={text => {
+                        const numericText = text.replace(/[^0-9]/g, '');
+                        setSongInput(numericText);
+                    }}
+                    value={songInput}
+                />
+            </View>
             <Pressable
                 key="all"
                 style={[styles.verseBubble, styles.topVerseBubble, selectedVerses[0] === -2 && styles.selectedVerseBubble]}
@@ -161,6 +189,19 @@ function makeStyles(theme: "light" | "dark", isHorizontal: boolean) {
         },
         sendButtonHorizontal: {
             margin: 16,
+        },
+        songInputContainer: {
+            width: '25%',
+            marginTop: isHorizontal ? 8 : 16,
+        },
+        songInput: {
+            backgroundColor: Colors[theme]['settingsButton'],
+            borderRadius: 12,
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            fontSize: 18,
+            color: Colors[theme]['text'],
+            textAlign: 'center',
         },
         verseGrid: {
             flexDirection: 'row',
