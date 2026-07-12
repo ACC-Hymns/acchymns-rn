@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/Colors';
-import { Alert, Text, StyleSheet, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { Alert, Keyboard, Text, StyleSheet, View, TouchableOpacity, TouchableWithoutFeedback, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
 import { HymnalContext } from '@/constants/context';
@@ -64,91 +64,95 @@ export default function BroadcastPanel() {
     };
 
     return (
-
-        <View style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            flex: 1,
-            backgroundColor: isLiquidGlass ? 'transparent' : Colors[theme]['background'],
-        }}>
-            {isHorizontal && (
-                <View style={styles.sheetCloseButtonContainer} pointerEvents="box-none">
-                    <TouchableOpacity
-                        style={styles.sheetCloseButton}
-                        onPress={() => router.back()}
-                        activeOpacity={0.9}
-                        hitSlop={8}
-                    >
-                        <Ionicons name="close" size={22} color={Colors[theme].icon} />
-                    </TouchableOpacity>
-                </View>
-            )}
-            <View style={styles.songInputContainer}>
-                <TextInput
-                    placeholder={params.number || '#'}
-                    placeholderTextColor={Colors[theme]['fadedText']}
-                    keyboardType="numeric"
-                    maxLength={3}
-                    style={styles.songInput}
-                    onChangeText={text => {
-                        const numericText = text.replace(/[^0-9]/g, '');
-                        setSongInput(numericText);
-                    }}
-                    value={songInput}
-                />
-            </View>
-            <Pressable
-                key="all"
-                style={[styles.verseBubble, styles.topVerseBubble, selectedVerses[0] === -2 && styles.selectedVerseBubble]}
-                onPress={() => {
-                    if (selectedVerses[0] === -2) {
-                        setSelectedVerses([]);
-                    } else {
-                        setSelectedVerses([-2]);
-                    }
-                }}
-            >
-                <Text style={styles.verseText}>
-                    All Verses
-                </Text>
-            </Pressable>
-            <View style={styles.verseGrid}>
-                {Array.from({ length: 15 }, (_, i) => (
-                    <Pressable
-                        key={i + 1}
-                        style={[styles.verseBubble, selectedVerses.includes(i + 1) && styles.selectedVerseBubble]}
-                        onPress={() => {
-                            let verses = selectedVerses;
-                            if (verses[0] === -2) {
-                                verses = [];
-                            }
-
-                            if (verses.includes(i + 1)) {
-                                setSelectedVerses(verses.filter(x => x !== i + 1));
-                            } else {
-                                setSelectedVerses([...verses, i + 1]);
-                            }
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                flex: 1,
+                backgroundColor: isLiquidGlass ? 'transparent' : Colors[theme]['background'],
+            }}>
+                {isHorizontal && (
+                    <View style={styles.sheetCloseButtonContainer} pointerEvents="box-none">
+                        <TouchableOpacity
+                            style={styles.sheetCloseButton}
+                            onPress={() => router.back()}
+                            activeOpacity={0.9}
+                            hitSlop={8}
+                        >
+                            <Ionicons name="close" size={22} color={Colors[theme].icon} />
+                        </TouchableOpacity>
+                    </View>
+                )}
+                <View style={styles.songInputContainer}>
+                    <TextInput
+                        placeholder={params.number || '#'}
+                        placeholderTextColor={Colors[theme]['fadedText']}
+                        keyboardType="numeric"
+                        maxLength={3}
+                        style={styles.songInput}
+                        onChangeText={text => {
+                            const numericText = text.replace(/[^0-9]/g, '');
+                            setSongInput(numericText);
                         }}
-                    >
-                        <Text style={styles.verseNumberText}>{i + 1}</Text>
-                    </Pressable>
-                ))}
-            </View>
+                        value={songInput}
+                    />
+                </View>
+                <Pressable
+                    key="all"
+                    style={[styles.verseBubble, styles.topVerseBubble, selectedVerses[0] === -2 && styles.selectedVerseBubble]}
+                    onPress={() => {
+                        Keyboard.dismiss();
+                        if (selectedVerses[0] === -2) {
+                            setSelectedVerses([]);
+                        } else {
+                            setSelectedVerses([-2]);
+                        }
+                    }}
+                >
+                    <Text style={styles.verseText}>
+                        All Verses
+                    </Text>
+                </Pressable>
+                <View style={styles.verseGrid}>
+                    {Array.from({ length: 15 }, (_, i) => (
+                        <Pressable
+                            key={i + 1}
+                            style={[styles.verseBubble, selectedVerses.includes(i + 1) && styles.selectedVerseBubble]}
+                            onPress={() => {
+                                Keyboard.dismiss();
+                                let verses = selectedVerses;
+                                if (verses[0] === -2) {
+                                    verses = [];
+                                }
 
-            <TouchableOpacity
-                style={[styles.sendButton, isHorizontal && styles.sendButtonHorizontal]}
-                onPress={() => {
-                    broadcast_song_number();
-                }}
-            >
-                <Ionicons
-                    name='send'
-                    size={18}
-                    color='white'
-                />
-                <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
-            </TouchableOpacity>
-        </View>
+                                if (verses.includes(i + 1)) {
+                                    setSelectedVerses(verses.filter(x => x !== i + 1));
+                                } else {
+                                    setSelectedVerses([...verses, i + 1]);
+                                }
+                            }}
+                        >
+                            <Text style={styles.verseNumberText}>{i + 1}</Text>
+                        </Pressable>
+                    ))}
+                </View>
+
+                <TouchableOpacity
+                    style={[styles.sendButton, isHorizontal && styles.sendButtonHorizontal]}
+                    onPress={() => {
+                        Keyboard.dismiss();
+                        broadcast_song_number();
+                    }}
+                >
+                    <Ionicons
+                        name='send'
+                        size={18}
+                        color='white'
+                    />
+                    <StyledText style={styles.actionButtonLabel}>{i18n.t('send')}</StyledText>
+                </TouchableOpacity>
+            </View>
+        </TouchableWithoutFeedback>
     );
 }
 
