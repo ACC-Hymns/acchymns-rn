@@ -207,11 +207,16 @@ export default function TabLayout() {
     const pathname = usePathname();
     const isDiscoverRoute = pathname === '/discover';
     const ios26DesignEnabled = isIOS26DesignEnabled();
-    const tabBarMediaTrack = useTabBarMediaTrack(ios26DesignEnabled);
+    const bottomAccessoryFlagEnabled = isFeatureFlagEnabled(useAppFeatureFlag('bottom-accessory'));
+    const tabBarMediaTrack = useTabBarMediaTrack(ios26DesignEnabled && bottomAccessoryFlagEnabled);
     const { mounted: bottomAccessoryMounted, mountKey: bottomAccessoryMountKey } =
         useBottomAccessoryRemountOnResize(Platform.OS === 'ios' && Platform.isPad);
     const showBottomAccessory =
-        ios26DesignEnabled && tabBarMediaTrack && !isDiscoverRoute && bottomAccessoryMounted;
+        bottomAccessoryFlagEnabled
+        && ios26DesignEnabled
+        && tabBarMediaTrack
+        && !isDiscoverRoute
+        && bottomAccessoryMounted;
     const discoverPageFlagEnabled = isFeatureFlagEnabled(useAppFeatureFlag('discover-page'));
     const featureIntroNavigationAttemptedRef = useRef(false);
 
