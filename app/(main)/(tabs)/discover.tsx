@@ -1,19 +1,14 @@
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
 import {
-    BookSummary,
     DiscoverMatch,
     DiscoverResult,
     DiscoverSongInfo,
-    Song,
-    SongSearchInfo,
 } from '@/constants/types';
-import { getSongData } from '@/scripts/hymnals';
 import { router, useFocusEffect } from 'expo-router';
 import {
     useCallback,
     useContext,
-    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -24,8 +19,10 @@ import {
     Platform,
     TouchableOpacity,
     FlatList,
+    TextInput,
+    type TextInputInstance,
 } from 'react-native';
-import { Pressable, TextInput } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -37,6 +34,9 @@ import { fontFamily } from '@/constants/assets';
 import GenericGradientButton from '@/components/GenericGradientButton';
 import { ConicGradientRenderer } from '@/components/ConicGradient';
 import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useSongSearchIndex } from '@/hooks/useSongSearchIndex';
+
+const DISCOVER_HYMNALS = ["ZH", "GH", "JH", "CH"];
 
 export default function DiscoverScreen() {
     const theme = useColorScheme() ?? 'light';
@@ -44,22 +44,20 @@ export default function DiscoverScreen() {
 
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
+    const [promptError, setPromptError] = useState(false);
     const context = useContext(HymnalContext);
-    const [songList, setSongList] = useState<SongSearchInfo[]>([]);
+    const songIndex = useSongSearchIndex(context?.BOOK_DATA);
+    const songList = songIndex.data ?? [];
     const [isNavigating, setIsNavigating] = useState(false);
 
     const i18n = useI18n();
     const selectedLanguageCode = (i18n.locale ?? 'en').split('-')[0].toLowerCase();
     const showEnglishOnlyNotice = selectedLanguageCode !== 'en';
 
-    function stripSearchText(text: string) {
-        return text
-            .replace(/[.,/#!$%^&*;:{}=\-_'’"`~()]/g, "")
-            .replace(/s{2,}/g, " ")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/\p{Diacritic}/gu, "");
-    }
+    const hymnalsAvailable = useMemo(
+        () => DISCOVER_HYMNALS.filter((hymnal) => context?.BOOK_DATA?.[hymnal] != undefined),
+        [context?.BOOK_DATA],
+    );
 
     useFocusEffect(
         useCallback(() => {
@@ -69,47 +67,9 @@ export default function DiscoverScreen() {
         }, [])
     );
 
-    useLayoutEffect(() => {
-        if (!context) return;
-
-        const fetchData = async () => {
-            try {
-                setHymnalsAvailable(
-                    supportedHymnals.filter((h) => context.BOOK_DATA[h] != undefined)
-                );
-
-                let songList: SongSearchInfo[] = [];
-                for (const id in context.BOOK_DATA) {
-                    const songData = await getSongData(id);
-                    if (!songData) return;
-                    Object.keys(songData).forEach((key: string) => {
-                        const song: Song = songData[key];
-                        const book: BookSummary = context.BOOK_DATA[id];
-                        const searchInfo: SongSearchInfo = {
-                            stripped_title: stripSearchText(song.title ?? ""),
-                            stripped_first_line: stripSearchText(song.first_line ?? ""),
-                            title: song.title,
-                            first_line: song.first_line,
-                            number: key,
-                            book: book,
-                        };
-                        songList.push(searchInfo);
-                    });
-                }
-                setSongList(songList);
-            } catch (error) {
-                console.error("Error loading song data:", error);
-            }
-        };
-
-        fetchData();
-    }, [context?.BOOK_DATA]);
-
     const scrollViewRef = useRef<FlatList>(null);
     const [dataSource, setDataSource] = useState<DiscoverSongInfo[]>([]);
-    const [hymnalsAvailable, setHymnalsAvailable] = useState<string[]>([]);
 
-    const supportedHymnals = ["ZH", "GH", "JH", "CH"];
     const promptSuggestions = [
         "God's Faithfulness",
         "Forgiveness and Grace",
@@ -121,7 +81,7 @@ export default function DiscoverScreen() {
 
     // Reanimated Keyboard Logic
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const promptInputRef = useRef<TextInput>(null);
+    const promptInputRef = useRef<TextInputInstance>(null);
     const isModalOpenRef = useRef(false);
 
     const handlePress = useCallback(() => {
@@ -150,61 +110,70 @@ export default function DiscoverScreen() {
     async function sendPrompt(input: string) {
         if (input.trim().length === 0) return;
         setLoading(true);
-        const data = await fetch('https://api.acchymns.app/discover', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-API-Key': ACCHYMNS_KEY ?? '',
-            },
-            body: JSON.stringify({
-                prompt: input,
-                hymnals:
-                    selectedHymnals.length > 0 ? selectedHymnals : hymnalsAvailable,
-                search_type: 'both',
-                top_k: 10,
-            }),
-        });
-        setLoading(false);
-        setPrompt('');
-        setLatestPrompt(input);
+        setPromptError(false);
+        try {
+            const data = await fetch('https://api.acchymns.app/discover', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-API-Key': ACCHYMNS_KEY ?? '',
+                },
+                body: JSON.stringify({
+                    prompt: input,
+                    hymnals:
+                        selectedHymnals.length > 0 ? selectedHymnals : hymnalsAvailable,
+                    search_type: 'both',
+                    top_k: 10,
+                }),
+            });
+            setPrompt('');
+            setLatestPrompt(input);
 
-        if (!data.ok) {
-            console.error("Error sending prompt:", data.statusText);
-            return;
-        }
+            if (!data.ok) {
+                console.error("Error sending prompt:", data.statusText);
+                setPromptError(true);
+                return;
+            }
 
-        const response = (await data.json()) as DiscoverResult;
-        if (
-            !response ||
-            !response.top_matches ||
-            response.top_matches.length === 0
-        ) {
-            console.warn("No matches found for the prompt:", input);
-            return;
-        }
+            const response = (await data.json()) as DiscoverResult;
+            if (
+                !response ||
+                !response.top_matches ||
+                response.top_matches.length === 0
+            ) {
+                console.warn("No matches found for the prompt:", input);
+                setDataSource([]);
+                return;
+            }
 
-        if (context?.BOOK_DATA === undefined) return;
-        let results = response.top_matches.filter(
-            (r) => context.BOOK_DATA[r.hymnal_id] != undefined
-        );
-        const dataSource: DiscoverSongInfo[] = results.map((item: DiscoverMatch) => {
-            const normalizedIncomingNumber = String(item.hymn_number ?? '').trim();
-            const song = songList.find(
-                (s) =>
-                    s.book.name.short === item.hymnal_id &&
-                    String(s.number ?? '').trim() === normalizedIncomingNumber
+            if (context?.BOOK_DATA === undefined) return;
+            let results = response.top_matches.filter(
+                (r) => context.BOOK_DATA[r.hymnal_id] != undefined
             );
-            return {
-                title: song?.title ?? item.hymn_title,
-                number: song?.number ?? normalizedIncomingNumber,
-                book: context?.BOOK_DATA[item.hymnal_id],
-                type: item.type,
-                verses: item.verses?.sort((a, b) => a.verse_number - b.verse_number),
-            } as DiscoverSongInfo;
-        });
+            const nextResults: DiscoverSongInfo[] = results.map((item: DiscoverMatch) => {
+                const normalizedIncomingNumber = String(item.hymn_number ?? '').trim();
+                const song = songList.find(
+                    (s) =>
+                        s.book.name.short === item.hymnal_id &&
+                        String(s.number ?? '').trim() === normalizedIncomingNumber
+                );
+                return {
+                    title: song?.title ?? item.hymn_title,
+                    number: song?.number ?? normalizedIncomingNumber,
+                    book: context?.BOOK_DATA[item.hymnal_id],
+                    type: item.type,
+                    verses: item.verses?.sort((a, b) => a.verse_number - b.verse_number),
+                } as DiscoverSongInfo;
+            });
 
-        setDataSource(dataSource);
+            setDataSource(nextResults);
+        } catch (error) {
+            console.error("Error sending prompt:", error);
+            setPromptError(true);
+        } finally {
+            setLoading(false);
+        }
     }
 
     useFocusEffect(
@@ -225,6 +194,23 @@ export default function DiscoverScreen() {
 
     const promptFooter = (
         <>
+            {(promptError || songIndex.isError) && (
+                <Pressable
+                    onPress={() => {
+                        if (songIndex.isError) {
+                            void songIndex.refetch();
+                        }
+                        if (promptError && latestPrompt) {
+                            void sendPrompt(latestPrompt);
+                        }
+                    }}
+                    style={styles.suggestionsSlot}
+                >
+                    <StyledText style={styles.suggestionButtonText}>
+                        {i18n.t('oops')} {i18n.t('retry')}
+                    </StyledText>
+                </Pressable>
+            )}
             {showSuggestions && (
                 <View style={styles.suggestionsSlot}>
                     <FlatList

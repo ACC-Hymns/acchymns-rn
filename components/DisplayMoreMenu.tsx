@@ -1,11 +1,10 @@
-import { InteractionManager, Platform, TouchableOpacity } from 'react-native'
+import { Platform, TouchableOpacity } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import * as SwiftUI from '@expo/ui/swift-ui';
-import { RNHostView } from '@expo/ui/swift-ui';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useDisplayMoreMenu } from '@/hooks/useDisplayMoreMenu';
+import { IosDisplayMoreMenu } from '@/components/IosDisplayMoreMenu';
 
 interface DisplayMoreMenuProps {
     bookId: string;
@@ -39,36 +38,15 @@ export function DisplayMoreMenu({
     return (
         <>
             {Platform.OS === 'ios' ? (
-                <SwiftUI.Host key={nativeMenuKey} matchContents>
-                    <SwiftUI.Menu
-                        label={
-                            <RNHostView matchContents>
-                                <Ionicons
-                                    name="ellipsis-horizontal"
-                                    size={24}
-                                    color={iconColor}
-                                />
-                            </RNHostView>
-                        }
-                    >
-                        <SwiftUI.Button
-                            label={bookmarkLabel}
-                            systemImage="bookmark"
-                            onPress={toggleBookmark}
-                        />
-                        <SwiftUI.Button
-                            label="Share"
-                            systemImage="square.and.arrow.up"
-                            onPress={shareSong}
-                        />
-                        <SwiftUI.Button
-                            label={i18n.t('reportIssue')}
-                            systemImage="exclamationmark.bubble"
-                            role="destructive"
-                            onPress={openReportIssueAfterMenuCloses}
-                        />
-                    </SwiftUI.Menu>
-                </SwiftUI.Host>
+                <IosDisplayMoreMenu
+                    nativeMenuKey={nativeMenuKey}
+                    iconColor={iconColor}
+                    bookmarkLabel={bookmarkLabel}
+                    reportIssueLabel={i18n.t('reportIssue')}
+                    onToggleBookmark={toggleBookmark}
+                    onShare={shareSong}
+                    onReportIssue={openReportIssueAfterMenuCloses}
+                />
             ) : (
                 <DropdownMenu.Root
                     key={nativeMenuKey}
@@ -100,7 +78,7 @@ export function DisplayMoreMenu({
                             try {
                                 await shareSong();
                             } finally {
-                                InteractionManager.runAfterInteractions(() => {
+                                requestIdleCallback(() => {
                                     bumpNativeMenuKey();
                                 });
                             }

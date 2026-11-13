@@ -1,46 +1,46 @@
-import { BookIndex, BookSummary, SongList } from "@/constants/types";
-import { getBookIndex, getSongData } from "@/scripts/hymnals";
-import { useEffect, useState } from "react";
+import { BookIndex, BookSummary, SongList } from '@/constants/types';
+import { getBookIndex, getSongData } from '@/scripts/hymnals';
+import { bookIndexQueryKey, songDataQueryKey } from '@/scripts/songSearch';
+import { useQuery } from '@tanstack/react-query';
 
 export function useSongListData(bookData: BookSummary | undefined): {
     songs: SongList | undefined,
     topicalIndex?: BookIndex,
     loading: boolean,
-    error?: string 
+    error?: string,
+    refetch: () => void,
 } {
-    const [data, setData] = useState<SongList | undefined>();
-    const [indexData, setIndexData] = useState<BookIndex | undefined>();
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | undefined>();
+    const bookId = bookData?.name.short;
+    const songsQuery = useQuery({
+        queryKey: songDataQueryKey(bookId ?? ''),
+        queryFn: () => getSongData(bookId!),
+        enabled: Boolean(bookData && bookId),
+    });
+    const indexQuery = useQuery({
+        queryKey: bookIndexQueryKey(bookId ?? ''),
+        queryFn: () => getBookIndex(bookId!),
+        enabled: Boolean(bookData?.indexAvailable && bookId),
+    });
 
-    useEffect(() => {
-        if (!bookData) {
-            setLoading(false);
-            setError("bookData is undefined");
-            return;
+    const refetch = () => {
+        void songsQuery.refetch();
+        if (bookData?.indexAvailable) {
+            void indexQuery.refetch();
         }
-
-        const fetchData = async () => {
-            try {
-                const data = await getSongData(bookData.name.short);
-                setData(data);
-                if (bookData.indexAvailable) {
-                    const index = await getBookIndex(bookData.name.short);
-                    setIndexData(index);
-                }
-            } catch (error) {
-                setError(error as string);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [bookData]);
+    };
 
     if (!bookData) {
-        return { songs: undefined, loading: false, error: "bookData is undefined" };
+        return { songs: undefined, loading: false, error: 'bookData is undefined', refetch };
     }
 
-    return { songs: data, topicalIndex: indexData, loading: loading, error: error }
+    const error = songsQuery.error ?? indexQuery.error;
+    const loading = songsQuery.isLoading || (Boolean(bookData.indexAvailable) && indexQuery.isLoading);
+
+    return {
+        songs: songsQuery.data ?? undefined,
+        topicalIndex: indexQuery.data,
+        loading,
+        error: error ? (error instanceof Error ? error.message : String(error)) : undefined,
+        refetch,
+    };
 }

@@ -1,17 +1,13 @@
 import React from 'react';
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
-import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
-import { getSongData } from '@/scripts/hymnals';
+import { Bookmark, SongSearchInfo } from '@/constants/types';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, Keyboard, TouchableWithoutFeedback, TextInput, Pressable } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
-import DefaultPreference from 'react-native-default-preference';
 import SwipeableItem, { SwipeableItemImperativeRef, useSwipeableItemParams } from 'react-native-swipeable-item';
-import { store } from 'expo-router/build/global-state/router-store';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { padStart } from 'pdf-lib';
@@ -21,6 +17,10 @@ import StyledText from '@/components/StyledText';
 import GenericGradientButton from '@/components/GenericGradientButton';
 import * as ContextMenu from 'zeego/context-menu'
 import { fontFamily } from '@/constants/assets';
+import { useSongSearchIndex } from '@/hooks/useSongSearchIndex';
+import { filterSongSearch, sortSongsByTitle } from '@/scripts/songSearch';
+import { removeBookmark } from '@/scripts/bookmarks';
+import { loadBookmarks, saveBookmarks } from '@/scripts/bookmarkStorage';
 
 
 export default function BookmarkScreen() {
@@ -29,145 +29,46 @@ export default function BookmarkScreen() {
     const styles = makeStyles(theme as any);
 
     const [search, setSearch] = useState("");
-    const [loading, setLoading] = useState(true);
     const context = useContext(HymnalContext);
-    const [songList, setSongList] = useState<SongSearchInfo[]>([]);
+    const songIndex = useSongSearchIndex(context?.BOOK_DATA);
     const [isNavigating, setIsNavigating] = useState(false);
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+    const [bookmarksLoaded, setBookmarksLoaded] = useState(false);
 
     const i18n = useI18n();
 
-
-    function stripSearchText(text: string) {
-        if (!text)
-            return "";
-        return text
-            .replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-            .replace(/s{2,}/g, " ")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/\p{Diacritic}/gu, "");
-    }
-    const BOOKMARKS_KEY = 'bookmarks';
-    const saveBookmarks = async (searches: Bookmark[]) => {
-        try {
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(searches));
-        } catch (error) {
-            console.error("Error saving bookmarks:", error);
-        }
-    };
-    const loadBookmarks = async () => {
-        try {
-            const storedBookmarks = await AsyncStorage.getItem(BOOKMARKS_KEY);
-            if (storedBookmarks !== null) {
-                const parsedBookmarks = JSON.parse(storedBookmarks) as Bookmark[];
-                setBookmarks(parsedBookmarks);
-            } else {
-                const oldBookmarks = await DefaultPreference.get("CapacitorStorage.bookmarks");
-                if (oldBookmarks) {
-                    const parsedBookmarks = JSON.parse(oldBookmarks) as Bookmark[];
-                    setBookmarks(parsedBookmarks);
-                    await saveBookmarks(parsedBookmarks);
-                } else {
-                    setBookmarks([]);
-                }
-            }
-        } catch (error) {
-            console.error("Error loading bookmarks:", error);
-        }
-    };
+    const refreshBookmarks = useCallback(() => {
+        loadBookmarks().then((loaded) => {
+            setBookmarks(loaded);
+            setBookmarksLoaded(true);
+        });
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
-            // This runs every time the screen comes into focus
-            loadBookmarks(); // or any other logic
+            refreshBookmarks();
 
             return () => {
-                // Optional cleanup when screen loses focus
                 setIsNavigating(false);
             };
-        }, [])
+        }, [refreshBookmarks])
     );
 
-    useLayoutEffect(() => {
-        if (!context) return;
+    const songList = useMemo(() => {
+        return bookmarks.flatMap((bookmark) => {
+            const match = (songIndex.data ?? []).find(
+                (song) => song.book.name.short === bookmark.book && song.number === bookmark.number,
+            );
+            return match ? [match] : [];
+        });
+    }, [bookmarks, songIndex.data]);
 
-        const fetchData = async () => {
-            try {
-                // Load recent searches from AsyncStorage
-                await loadBookmarks();
-            } catch (error) {
-                console.error("Error loading song data:", error);
-            } finally {
-            }
-        };
-
-        fetchData();
-    }, [context?.BOOK_DATA]);
-
-    useEffect(() => {
-        if (!context) return;
-        const fetch = async () => {
-            // Process bookmarks in chunks to avoid blocking JS thread
-            const chunkSize = 10;
-            const allSongs: (SongSearchInfo | null)[] = [];
-            
-            for (let i = 0; i < bookmarks.length; i += chunkSize) {
-                const chunk = bookmarks.slice(i, i + chunkSize);
-                
-                const chunkResults = await Promise.all(
-                    chunk.map(async (bookmark) => {
-                        const bookData = context.BOOK_DATA[bookmark.book];
-                        const songData = await getSongData(bookmark.book);
-                        if (songData && bookData) {
-                            const song = songData[bookmark.number];
-                            if (song) {
-                                return {
-                                    ...song,
-                                    book: bookData,
-                                    number: bookmark.number,
-                                    stripped_title: stripSearchText(song.title),
-                                    stripped_first_line: stripSearchText(song.first_line || "")
-                                } as SongSearchInfo;
-                            } else {
-                                console.warn(`Song number ${bookmark.number} not found in book ${bookmark.book}`);
-                            }
-                        } else {
-                            console.warn(`Book data for ${bookmark.book} not found`);
-                        }
-                        return null;
-                    })
-                );
-                
-                allSongs.push(...chunkResults);
-                
-                // Yield to JS thread after each chunk
-                if (i + chunkSize < bookmarks.length) {
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                }
-            }
-
-            const validSongs = allSongs.filter((s): s is SongSearchInfo => s !== null);
-            setSongList(validSongs);
-            setLoading(false);
-        }
-        fetch();
-    }, [bookmarks]);
+    const loading = !bookmarksLoaded || songIndex.isLoading;
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const filteredData = useMemo(() => {
-        return songList
-            .filter((s) =>
-                s.stripped_title?.includes(stripSearchText(search)) ||
-                s?.stripped_first_line?.includes(stripSearchText(search)) ||
-                s?.number == stripSearchText(search)
-            )
-            .sort((a, b) =>
-                a.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "").localeCompare(
-                    b.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-                )
-            );
+        return sortSongsByTitle(filterSongSearch(songList, search));
     }, [search, songList]);
 
     const renderItem = ({ item, index }: { item: SongSearchInfo, index: number }) => {
@@ -216,16 +117,9 @@ export default function BookmarkScreen() {
                         const number = item.number;
                         if (!number)
                             return;
-                        const bookData = context?.BOOK_DATA[bookShort];
-                        if (!bookData) {
-                            console.error(`Book data for ${bookShort} not found`);
-                            return;
-                        }
-                        const songData = await getSongData(bookShort);
-                        const song = songData?.[number];
 
                         Alert.alert(
-                            i18n.t('remove') + ` "${song?.title}"`,
+                            i18n.t('remove') + ` "${item.title}"`,
                             i18n.t('removeMessage'),
                             [
                                 {
@@ -236,10 +130,12 @@ export default function BookmarkScreen() {
                                     text: i18n.t('remove'),
                                     style: 'destructive',
                                     onPress: () => {
-                                        // Remove the item from the bookmarks
                                         setBookmarks((prev) => {
-                                            const newBookmarks = prev.filter(b => b.book + ',' + b.number !== bookShort + ',' + number);
-                                            saveBookmarks(newBookmarks);
+                                            const newBookmarks = removeBookmark(prev, {
+                                                book: bookShort,
+                                                number,
+                                            });
+                                            void saveBookmarks(newBookmarks);
                                             return newBookmarks;
                                         });
                                     }
@@ -260,7 +156,14 @@ export default function BookmarkScreen() {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
-                {loading ? (
+                {songIndex.isError ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+                        <StyledText style={styles.textStyle}>{i18n.t('oops')}</StyledText>
+                        <Pressable onPress={() => { void songIndex.refetch(); }}>
+                            <StyledText style={styles.textStyle}>{i18n.t('retry')}</StyledText>
+                        </Pressable>
+                    </View>
+                ) : loading ? (
                     <ActivityIndicator size="large" color={Colors[theme]['text']} />
                 ) : (
                     <FlatList

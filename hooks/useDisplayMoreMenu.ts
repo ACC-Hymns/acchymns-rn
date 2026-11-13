@@ -1,12 +1,11 @@
-import { InteractionManager, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { Share } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Bookmark, Song } from '@/constants/types';
 import { getSongData } from '@/scripts/hymnals';
 import { useI18n } from '@/hooks/useI18n';
-
-const BOOKMARKS_KEY = 'bookmarks';
+import { hasBookmark, toggleBookmark } from '@/scripts/bookmarks';
+import { loadBookmarks, saveBookmarks } from '@/scripts/bookmarkStorage';
 
 type UseDisplayMoreMenuOptions = {
     bookId: string;
@@ -27,44 +26,15 @@ export function useDisplayMoreMenu({
     const [songData, setSongData] = useState<Song | null>(null);
     const reportOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const addBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            const exists = bookmarks.some(
-                (b) => b.book === bookmark.book && b.number === bookmark.number,
-            );
-            if (exists) {
-                await removeBookmark(bookmark);
-                return;
-            }
-            bookmarks.push(bookmark);
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-            setExistingBookmarks(bookmarks);
-            setIsBookmarked(true);
-        } catch (error) {
-            console.error('Error saving bookmarks:', error);
-        }
-    };
-
-    const removeBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            const updatedBookmarks = bookmarks.filter(
-                (b) => !(b.book === bookmark.book && b.number === bookmark.number),
-            );
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-            setExistingBookmarks(updatedBookmarks);
-            setIsBookmarked(false);
-        } catch (error) {
-            console.error('Error removing bookmark:', error);
-        }
-    };
-
-    const toggleBookmark = useCallback(async () => {
-        await addBookmark({
+    const toggleSavedBookmark = useCallback(async () => {
+        const bookmark = {
             book: bookId,
             number: songId ?? '',
-        });
+        };
+        const nextBookmarks = toggleBookmark(existingBookmarks, bookmark);
+        setExistingBookmarks(nextBookmarks);
+        setIsBookmarked(hasBookmark(nextBookmarks, bookmark));
+        await saveBookmarks(nextBookmarks);
     }, [bookId, songId, existingBookmarks]);
 
     const shareSong = useCallback(async () => {
@@ -82,7 +52,7 @@ export function useDisplayMoreMenu({
     }, []);
 
     const openReportIssueAfterMenuCloses = useCallback(() => {
-        InteractionManager.runAfterInteractions(() => {
+        requestIdleCallback(() => {
             clearPendingReportOpen();
             setNativeMenuKey((k) => k + 1);
             const delay = Platform.OS === 'ios' ? 350 : 120;
@@ -105,9 +75,7 @@ export function useDisplayMoreMenu({
             setSongData(data[songId]);
         });
 
-        AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
-            setExistingBookmarks(JSON.parse(data || '[]'));
-        });
+        loadBookmarks().then(setExistingBookmarks);
     }, [bookId, songId]);
 
     useEffect(() => {
@@ -139,7 +107,7 @@ export function useDisplayMoreMenu({
         songData,
         nativeMenuKey,
         menuInstanceId,
-        toggleBookmark,
+        toggleBookmark: toggleSavedBookmark,
         shareSong,
         openReportIssueAfterMenuCloses,
         bumpNativeMenuKey,

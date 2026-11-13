@@ -1,7 +1,7 @@
 import { Alert, Platform, useColorScheme } from 'react-native'
 import * as DropdownMenu from 'zeego/dropdown-menu'
 import { Colors } from '@/constants/Colors';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { HymnalContext } from '@/constants/context';
 import { BookSummary, SortMode } from '@/constants/types';
 import { router } from 'expo-router';
@@ -13,18 +13,17 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 
 interface HymnalMoreMenuProps {
     bookSummary: BookSummary;
+    sortMode: SortMode;
+    onSortModeChange: (mode: SortMode) => void;
 }
 
-export function HymnalMoreMenu({ bookSummary }: HymnalMoreMenuProps) {
+export function HymnalMoreMenu({ bookSummary, sortMode, onSortModeChange }: HymnalMoreMenuProps) {
     const theme = useColorScheme() ?? 'light';
     const context = useContext(HymnalContext);
     const i18n = useI18n();
 
-    const [sortMode, setSortMode] = useState<SortMode>(SortMode.NUMERICAL);
-
     const handleSortModeChange = (mode: SortMode) => {
-        setSortMode(mode);
-        context?.setSortMode?.(mode);
+        onSortModeChange(mode);
     }
 
     return (

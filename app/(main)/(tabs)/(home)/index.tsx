@@ -6,7 +6,6 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
 import { useCallback, useContext, useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { useI18n } from '@/hooks/useI18n';
@@ -20,29 +19,8 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import HymnalUpdateBadge from '@/components/HymnalUpdateBadge';
 import { useAppFeatureFlag, isFeatureFlagEnabled } from '@/hooks/useAppFeatureFlag';
 import { useEcampBannerScrollContentInset } from '@/hooks/useEcampBannerScrollContentInset';
-
-function parseStoredOrder(raw: string | null): { order: string[]; isValid: boolean } {
-    if (!raw) {
-        return { order: [], isValid: true };
-    }
-
-    try {
-        const parsed: unknown = JSON.parse(raw);
-        if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== 'string')) {
-            return { order: [], isValid: false };
-        }
-        return { order: [...new Set(parsed)], isValid: true };
-    } catch {
-        return { order: [], isValid: false };
-    }
-}
-
-function reconcileOrder(savedOrder: string[], currentKeys: string[]): string[] {
-    const currentKeySet = new Set(currentKeys);
-    const normalizedSaved = [...new Set(savedOrder)].filter((key) => currentKeySet.has(key));
-    const missingKeys = currentKeys.filter((key) => !normalizedSaved.includes(key));
-    return [...normalizedSaved, ...missingKeys];
-}
+import { reconcileHymnalOrder } from '@/scripts/hymnalSort';
+import { loadHymnalSortOrder, saveHymnalSortOrder } from '@/scripts/hymnalSortStorage';
 
 export default function HomeScreen() {
 
@@ -62,25 +40,7 @@ export default function HomeScreen() {
     const [sortOrder, setSortOrder] = useState<string[]>([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [canPersistOrder, setCanPersistOrder] = useState(false);
-    const HYMNAL_SORT_KEY = 'hymnal_sort_order';
     const bookKeys = useMemo(() => Object.keys(context?.BOOK_DATA ?? {}), [context?.BOOK_DATA]);
-
-    const saveOrder = async (order: string[]) => {
-        try {
-            await AsyncStorage.setItem(HYMNAL_SORT_KEY, JSON.stringify(order));
-        } catch (error) {
-            console.error("Error saving sort order:", error);
-        }
-    };
-    const loadOrder = async () => {
-        try {
-            const stored = await AsyncStorage.getItem(HYMNAL_SORT_KEY);
-            return parseStoredOrder(stored);
-        } catch (error) {
-            console.error("Error loading sort order:", error);
-            return { order: [], isValid: false };
-        }
-    };
 
     useEffect(() => {
         if (!context?.BOOK_DATA || !isInitialLoad) {
@@ -89,11 +49,11 @@ export default function HomeScreen() {
 
         let cancelled = false;
         const loadInitialData = async () => {
-            const { order, isValid } = await loadOrder();
+            const { order, isValid } = await loadHymnalSortOrder();
             if (cancelled) {
                 return;
             }
-            setSortOrder(reconcileOrder(order, bookKeys));
+            setSortOrder(reconcileHymnalOrder(order, bookKeys));
             setCanPersistOrder(isValid);
             setIsInitialLoad(false);
         };
@@ -107,7 +67,7 @@ export default function HomeScreen() {
     useEffect(() => {
         if (!context?.BOOK_DATA || isInitialLoad) return;
 
-        const reconciledOrder = reconcileOrder(sortOrder, bookKeys);
+        const reconciledOrder = reconcileHymnalOrder(sortOrder, bookKeys);
         if (
             reconciledOrder.length !== sortOrder.length ||
             reconciledOrder.some((key, index) => key !== sortOrder[index])
@@ -127,7 +87,7 @@ export default function HomeScreen() {
         }
 
         const save = async () => {
-            await saveOrder(sortOrder)
+            await saveHymnalSortOrder(sortOrder)
         }
         save();
     }, [sortOrder, isInitialLoad, canPersistOrder, bookKeys.length])

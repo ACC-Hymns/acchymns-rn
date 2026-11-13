@@ -1,7 +1,6 @@
 import { BookIndex, BookSummary, SongList } from '@/constants/types';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystem from 'expo-file-system/legacy';
-import { unzip } from 'react-native-zip-archive';
 import { hashFileSha256 } from './fileHash';
 import {
     clearInstalledDigests,
@@ -226,6 +225,7 @@ async function downloadHymnal(
         await yieldToEventLoop();
 
         const destination = FileSystem.documentDirectory + `${HYMNAL_FOLDER}/`;
+        const { unzip } = await import('react-native-zip-archive');
         await unzip(result.uri, destination);
 
         await FileSystem.deleteAsync(result.uri, { idempotent: true });
@@ -286,8 +286,9 @@ async function cachedReadFile(filePath: string): Promise<string> {
 async function getSongData(book: string) {
     const hymnalFolder = new Directory(Paths.document, `${HYMNAL_FOLDER}/${book}/`);
     const songsFile = new File(hymnalFolder, `songs.json`);
-    if (!songsFile.exists)
-        return undefined;
+    if (!songsFile.exists) {
+        return null;
+    }
     const songsContent = await cachedReadFile(songsFile.info().uri || "");
     const songsList = JSON.parse(songsContent) as SongList;
     return songsList;

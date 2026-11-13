@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useContext } from 'react';
 import { I18n } from 'i18n-js';
 import { getLocales } from 'expo-localization';
 import { translations } from '@/constants/localization';
-import { useContext } from 'react';
-import { HymnalContext } from '@/constants/context';
+import { PreferencesContext } from '@/hooks/usePreferences';
 
 // Create a singleton I18n instance to avoid recreating it on every render
 let i18nInstance: I18n | null = null;
@@ -17,14 +16,13 @@ function getI18nInstance(): I18n {
 }
 
 export function useI18n() {
-    const context = useContext(HymnalContext);
+    const preferences = useContext(PreferencesContext);
     
     const i18n = useMemo(() => {
         const instance = getI18nInstance();
-        // Update locale based on context or system locale
-        instance.locale = context?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en';
+        instance.locale = preferences?.languageOverride ?? getLocales()[0]?.languageCode ?? 'en';
         return instance;
-    }, [context?.languageOverride]);
+    }, [preferences?.languageOverride]);
     
     return i18n;
 }

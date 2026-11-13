@@ -1,12 +1,10 @@
 import { Colors } from '@/constants/Colors';
 import { HymnalContext } from '@/constants/context';
-import { Bookmark, BookSummary, Song, SongList, SongSearchInfo } from '@/constants/types';
-import { getSongData } from '@/scripts/hymnals';
+import { Bookmark, SongSearchInfo } from '@/constants/types';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, StyleSheet, SafeAreaView, ScrollView, View, Platform, ActivityIndicator, TouchableOpacity, Dimensions, Button, Alert, TouchableWithoutFeedback, Keyboard, Pressable, TextInput } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchHistoryItem } from '@/components/SearchHistoryItem';
 import React from 'react';
 import { useI18n } from '@/hooks/useI18n';
@@ -18,6 +16,12 @@ import * as ContextMenu from 'zeego/context-menu'
 import { BottomSheetModal } from '@expo/ui/community/bottom-sheet';
 import Ionicons from '@react-native-vector-icons/ionicons'
 import { DiscoverFiltersBottomSheet } from '@/components/DiscoverFiltersBottomSheet';
+import { useSongSearchIndex } from '@/hooks/useSongSearchIndex';
+import { filterSongSearch, sortSongsByTitle } from '@/scripts/songSearch';
+import { hasBookmark, toggleBookmark } from '@/scripts/bookmarks';
+import { loadBookmarks, saveBookmarks } from '@/scripts/bookmarkStorage';
+import { addRecentSearch } from '@/scripts/recentSearches';
+import { loadRecentSearches, saveRecentSearches } from '@/scripts/recentSearchStorage';
 
 interface SongItemWithMenuProps {
     item: SongSearchInfo;
@@ -83,224 +87,96 @@ export default function SearchScreen() {
     const styles = makeStyles(theme as any);
 
     const [search, setSearch] = useState("");
-    const [loading, setLoading] = useState(true);
     const context = useContext(HymnalContext);
-    const [songList, setSongList] = useState<SongSearchInfo[]>([]);
+    const songIndex = useSongSearchIndex(context?.BOOK_DATA);
+    const songList = songIndex.data ?? [];
+    const loading = songIndex.isLoading;
     const [isNavigating, setIsNavigating] = useState(false);
     const i18n = useI18n();
 
     const [selectedHymnals, setSelectedHymnals] = useState<string[]>([]);
 
     const hymnalsAvailable = useMemo(() => {
-        if (!context) return [];
-        let hymnals = Object.keys(context?.BOOK_DATA ?? {}).filter((h) => context?.BOOK_DATA[h] != undefined);
-        
-        // remove selected hymnals from the list that are not in the context.BOOK_DATA
-        let currentSelectedHymnals = selectedHymnals.filter((h) => hymnals.includes(h));
-        setSelectedHymnals(currentSelectedHymnals);
+        if (!context?.BOOK_DATA) return [];
 
-        return hymnals;
-    }, [context?.BOOK_DATA]);
+        return Object.keys(context.BOOK_DATA).filter((hymnal) => context.BOOK_DATA[hymnal] != undefined);
+    }, [context.BOOK_DATA]);
 
-    function stripSearchText(text: string) {
-        return text
-            .replace(/[.,/#!$%^&*;:{}=\-_'’"`~()]/g, "")
-            .replace(/s{2,}/g, " ")
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/\p{Diacritic}/gu, "");
-    }
-    const RECENT_SEARCHES_KEY = 'recent_searches';
-    const saveSearches = async (searches: string[]) => {
-        try {
-            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
-        } catch (error) {
-            console.error("Error saving searches:", error);
-        }
-    };
-    const loadSearches = async () => {
-        try {
-            const searches = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
-            if (searches !== null) {
-                setSearchHistory(JSON.parse(searches));
-            }
-        } catch (error) {
-            console.error("Error loading searches:", error);
-        }
-    };
+    const activeHymnals = selectedHymnals.filter((hymnal) =>
+        hymnalsAvailable.includes(hymnal)
+    );
+
     useFocusEffect(
         useCallback(() => {
-
             return () => {
-                // Optional cleanup when screen loses focus
                 setIsNavigating(false);
             };
         }, [])
     );
 
-    useLayoutEffect(() => {
-        if (!context) return;
-
-        const fetchData = async () => {
-            try {
-                
-                let songList: SongSearchInfo[] = [];
-                for (const id in context.BOOK_DATA) {
-                    const songData = await getSongData(id);
-                    if (!songData)
-                        continue;
-
-                    // Process songs in batches to avoid blocking JS thread
-                    const songKeys = Object.keys(songData);
-                    const batchSize = 100;
-                    for (let i = 0; i < songKeys.length; i += batchSize) {
-                        const batch = songKeys.slice(i, i + batchSize);
-                        for (const key of batch) {
-                            const song: Song = songData[key];
-                            const book: BookSummary = context.BOOK_DATA[id];
-                            const searchInfo: SongSearchInfo = {
-                                stripped_title: stripSearchText(song.title ?? ""),
-                                stripped_first_line: stripSearchText(song.first_line ?? ""),
-                                title: song.title,
-                                first_line: song.first_line,
-                                number: key,
-                                book: book,
-                            };
-                            songList.push(searchInfo);
-                        }
-                        // Yield to JS thread after each batch
-                        if (i + batchSize < songKeys.length) {
-                            await new Promise(resolve => setTimeout(resolve, 0));
-                        }
-                    }
-                }
-                setSongList(songList);
-
-                // Load recent searches from AsyncStorage
-                await loadSearches();
-                setLoading(false);
-            } catch (error) {
-                console.error("Error loading song data:", error);
-            } finally {
-            }
-        };
-
-        fetchData();
-    }, [context?.BOOK_DATA]);
-
-
     const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-    function addToSearchHistory(search: string) {
-        setSearchHistory((prevHistory) => {
-            const newHistory = [...prevHistory];
-            if (newHistory.includes(search)) {
-                // remove the search from the history if it exists
-                newHistory.splice(newHistory.indexOf(search), 1);
+    useEffect(() => {
+        let active = true;
+        loadRecentSearches().then((searches) => {
+            if (active) {
+                setSearchHistory(searches);
             }
+        });
+        return () => {
+            active = false;
+        };
+    }, []);
 
-            // move the search to the top
-            newHistory.unshift(search);
-
-            saveSearches(newHistory); // Save the updated search history to AsyncStorage
-
-            return newHistory.slice(0, 5); // Limit to 5 items
+    function addToSearchHistory(nextSearch: string) {
+        setSearchHistory((prevHistory) => {
+            const newHistory = addRecentSearch(prevHistory, nextSearch);
+            void saveRecentSearches(newHistory);
+            return newHistory;
         });
     }
 
     const scrollViewRef = useRef<FlatList>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    const [dataSource, setDataSource] = useState<SongSearchInfo[]>(songList);
-    // Memoize filtered and sorted data to avoid blocking on every render
-    const filteredData = useMemo(() => {
+    const dataSource = useMemo(() => {
         if (!search.trim()) return [];
+        return sortSongsByTitle(filterSongSearch(songList, search, activeHymnals));
+    }, [search, songList, activeHymnals]);
 
-        const stripped_search = stripSearchText(search);
-        const filtered = songList.filter((s) =>
-            (s.stripped_title?.includes(stripped_search) ||
-                s?.stripped_first_line?.includes(stripped_search) ||
-                s?.number == stripped_search) &&
-            (selectedHymnals.length === 0 || selectedHymnals.includes(s.book.name.short))
-        );
-
-        // Pre-compute cleaned titles to avoid repeated .replace() calls in sort
-        const cleaned = filtered.map(s => ({
-            ...s,
-            cleanedTitle: s.title.replace(/[.,/#!$%^&*;:{}=\-_'"`~()]/g, "")
-        }));
-
-        return cleaned.sort((a, b) =>
-            a.cleanedTitle.localeCompare(b.cleanedTitle)
-        ).map(({ cleanedTitle, ...rest }) => rest);
-    }, [search, songList, selectedHymnals]);
-
-    useEffect(() => {
-        setDataSource(filteredData);
-    }, [filteredData]);
-
-    // Memoize featuredList to avoid random sort on every render
-    const featuredList = useMemo(() => {
-        if (songList.length === 0) return [];
-        // Use Fisher-Yates shuffle for better performance than sort with random
-        const shuffled = [...songList];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled.slice(0, 10);
-    }, [songList.length]); // Only recalculate when songList length changes
-
-    const BOOKMARKS_KEY = 'bookmarks';
     const [existingBookmarks, setExistingBookmarks] = useState<Bookmark[]>([]);
-    useLayoutEffect(() => {
-        // Remove existingBookmarks from deps to avoid infinite loop
-        AsyncStorage.getItem(BOOKMARKS_KEY).then((data) => {
-            setExistingBookmarks(JSON.parse(data || '[]'));
-        });
-    }, []); // Only run once on mount
-    const addBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Check if the bookmark already exists
-            const exists = bookmarks.some(b => b.book === bookmark.book && b.number === bookmark.number);
-            if (exists) {
-                removeBookmark(bookmark);
-                return;
+    useEffect(() => {
+        let active = true;
+        loadBookmarks().then((bookmarks) => {
+            if (active) {
+                setExistingBookmarks(bookmarks);
             }
-            const updatedBookmarks = [...bookmarks, bookmark]; // Create a new array instead of mutating
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
-        } catch (error) {
-            console.error("Error saving bookmarks:", error);
-        }
-    };
-    const removeBookmark = async (bookmark: Bookmark) => {
-        try {
-            const bookmarks: Bookmark[] = existingBookmarks ?? [];
-            // Filter out the bookmark to be removed
-            const updatedBookmarks = bookmarks.filter(b => !(b.book === bookmark.book && b.number === bookmark.number));
-            await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-            setExistingBookmarks(updatedBookmarks); // Update the current bookmarks
-        } catch (error) {
-            console.error("Error removing bookmark:", error);
-        }
-    };
-
-    const [clearPressed, setClearPressed] = useState<boolean>(false);
+        });
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const handleBookmarkToggle = useCallback(async (item: SongSearchInfo) => {
-        await addBookmark({
+        const bookmark = {
             book: item.book.name.short,
             number: item.number ?? '',
-        });
-    }, [addBookmark, existingBookmarks]);
+        };
+        const updatedBookmarks = toggleBookmark(existingBookmarks, bookmark);
+        setExistingBookmarks(updatedBookmarks);
+        await saveBookmarks(updatedBookmarks);
+    }, [existingBookmarks]);
+
+    const [clearPressed, setClearPressed] = useState<boolean>(false);
 
     const keyExtractor = useCallback((item: SongSearchInfo) => {
         return `${item.book.name.short}-${item.number}`;
     }, []);
 
     const renderItem = useCallback(({ item, index }: { item: SongSearchInfo; index: number }) => {
-        const isBookmarked = existingBookmarks.some(b => b.book === item.book.name.short && b.number === item.number);
+        const isBookmarked = hasBookmark(existingBookmarks, {
+            book: item.book.name.short,
+            number: item.number ?? '',
+        });
 
         return (
             <SongItemWithMenu
@@ -330,7 +206,14 @@ export default function SearchScreen() {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            {loading ? (
+            {songIndex.isError ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+                    <StyledText style={styles.textStyle}>{i18n.t('oops')}</StyledText>
+                    <Pressable onPress={() => { void songIndex.refetch(); }}>
+                        <StyledText style={styles.textStyle}>{i18n.t('retry')}</StyledText>
+                    </Pressable>
+                </View>
+            ) : loading ? (
                 <ActivityIndicator size="large" color={Colors[theme]['text']} />
             ) : (
                 <View style={{ flex: 1 }}>
@@ -400,7 +283,7 @@ export default function SearchScreen() {
                                             handlePress();
                                         }}
                                     >
-                                        <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters') + (selectedHymnals.length > 0 ? ` (${selectedHymnals.length})` : '')}</StyledText>
+                                        <StyledText style={[styles.filterText, { marginRight: 8 }]}>{i18n.t('filters') + (activeHymnals.length > 0 ? ` (${activeHymnals.length})` : '')}</StyledText>
                                         <Ionicons
                                             name="filter"
                                             size={18}
@@ -416,7 +299,7 @@ export default function SearchScreen() {
                                     </View>
                                 )}
                                 {
-                                    (hymnalsAvailable.length > 0 && searchHistory.length > 0 && search.trim().length == 0) && (
+                                    (hymnalsAvailable.length > 0 && searchHistory.length > 0 && search.trim().length === 0) && (
                                         <View style={styles.searchHistoryContainer}>
                                             <View style={styles.searchHistoryHeader}>
                                                 <StyledText style={styles.searchHistoryTitle}>{i18n.t('recent')}</StyledText>
@@ -436,7 +319,7 @@ export default function SearchScreen() {
                                                                 text: i18n.t('clearAll'),
                                                                 onPress: () => {
                                                                     setSearchHistory([]);
-                                                                    saveSearches([]);
+                                                                    void saveRecentSearches([]);
                                                                 },
                                                                 style: 'destructive'
                                                             },
@@ -478,7 +361,7 @@ export default function SearchScreen() {
                                                                 const newHistory = [...prevHistory];
                                                                 newHistory.splice(newHistory.indexOf(item), 1);
 
-                                                                saveSearches(newHistory); // Save the updated search history to AsyncStorage
+                                                                void saveRecentSearches(newHistory);
                                                                 return newHistory;
                                                             });
                                                         }}
@@ -497,7 +380,7 @@ export default function SearchScreen() {
                     <DiscoverFiltersBottomSheet
                         bottomSheetModalRef={bottomSheetModalRef}
                         hymnalsAvailable={hymnalsAvailable}
-                        selectedHymnals={selectedHymnals}
+                        selectedHymnals={activeHymnals}
                         setSelectedHymnals={setSelectedHymnals}
                         onSheetChanges={handleSheetChanges}
                     />

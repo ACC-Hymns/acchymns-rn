@@ -1,6 +1,5 @@
 import { File } from 'expo-file-system';
 import * as FileSystem from 'expo-file-system/legacy';
-import { fileHash } from '@preeternal/react-native-file-hash';
 import { sha256 } from 'js-sha256';
 import { Platform } from 'react-native';
 
@@ -84,6 +83,7 @@ export async function hashFileSha256(
     if (Platform.OS !== 'web') {
         try {
             onProgress?.(0);
+            const { fileHash } = await import('@preeternal/react-native-file-hash');
             const digest = await fileHash(fileUri, { algorithm: 'SHA-256' });
             onProgress?.(1);
             return digest;

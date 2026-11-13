@@ -1,3 +1,7 @@
+jest.mock('mqtt', () => ({
+    connect: jest.fn(),
+}));
+
 import { canPublishBroadcast, getBroadcastPublishOptions } from '@/scripts/broadcastPublish';
 import { HymnalContextType } from '@/constants/context';
 import { ECAMP_CHURCH_ID } from '@/constants/broadcastAuth';

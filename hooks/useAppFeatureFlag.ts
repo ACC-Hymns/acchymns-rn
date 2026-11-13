@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { useFeatureFlag } from 'posthog-react-native';
 
 import { isDeveloperSettingsEnabled } from '@/constants/build';
-import { HymnalContext } from '@/constants/context';
+import { PreferencesContext } from '@/hooks/usePreferences';
 
 export function isFeatureFlagEnabled(value: boolean | string | undefined): boolean {
     if (value === undefined) {
@@ -25,11 +25,11 @@ export function isFeatureFlagEnabled(value: boolean | string | undefined): boole
 }
 
 export function useAppFeatureFlag(flagKey: string): boolean | string | undefined {
-    const context = useContext(HymnalContext);
+    const preferences = useContext(PreferencesContext);
     const remoteValue = useFeatureFlag(flagKey);
 
-    if (isDeveloperSettingsEnabled(context?.developerMode)) {
-        const override = context?.featureFlagOverrides?.[flagKey];
+    if (isDeveloperSettingsEnabled(preferences?.developerMode)) {
+        const override = preferences?.featureFlagOverrides?.[flagKey];
         if (override !== undefined) {
             return override;
         }

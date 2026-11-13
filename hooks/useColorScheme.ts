@@ -1,12 +1,12 @@
-import { HymnalContext } from '@/constants/context';
+import { PreferencesContext } from '@/hooks/usePreferences';
 import { useContext } from 'react';
 import { Appearance, useColorScheme as useSystemColorScheme } from 'react-native';
 
 export function useColorScheme(): 'light' | 'dark' {
-  const context = useContext(HymnalContext);
+  const preferences = useContext(PreferencesContext);
   const systemTheme = useSystemColorScheme();
   const initialSystemTheme = Appearance.getColorScheme();
-  const override = context?.themeOverride;
+  const override = preferences?.themeOverride;
 
   if (override === 'light' || override === 'dark') {
     return override;

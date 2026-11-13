@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { BookSummary, SortMode } from './types';
+import { BookSummary } from './types';
 import type { FeatureFlagOverrides } from '@/scripts/preferences';
 
 interface HymnalContextType {
@@ -39,8 +39,6 @@ interface HymnalContextType {
     clearFeatureFlagOverrides: () => void;
 
     onLayoutHomeView: () => void;
-    openDetailsBottomSheet?: () => void;
-    setSortMode?: (mode: SortMode) => void;
     deleteHymnal?: (book: string) => Promise<void>;
     resetPreferences: () => Promise<void>;
 

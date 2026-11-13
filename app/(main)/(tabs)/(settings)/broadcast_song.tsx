@@ -3,7 +3,6 @@ import { Text, StyleSheet, View, TouchableHighlight, ListRenderItemInfo, Touchab
 import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
@@ -14,13 +13,14 @@ import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { FlatList, Pressable, TextInput } from 'react-native-gesture-handler';
 import { BookSummary } from '@/constants/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { canPublishBroadcast, publishFromContext } from '@/scripts/broadcastPublish';
 import { createClearCommand, createSongCommand } from '@/scripts/displayCommand';
 import { findSongNumberInList } from '@/scripts/ecampDisplay';
 import { getSongData } from '@/scripts/hymnals';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import { getKeypadGridWidth } from '@/scripts/keypadGrid';
+import { reconcileHymnalOrder } from '@/scripts/hymnalSort';
+import { loadHymnalSortOrder } from '@/scripts/hymnalSortStorage';
 
 const BROADCAST_VERSE_COLUMNS = 4;
 const BROADCAST_VERSE_SIZE = 56;
@@ -30,29 +30,6 @@ const BROADCAST_VERSE_GRID_WIDTH = getKeypadGridWidth(
     BROADCAST_VERSE_SIZE,
     BROADCAST_VERSE_MARGIN,
 );
-
-function parseStoredOrder(raw: string | null): string[] {
-    if (!raw) {
-        return [];
-    }
-
-    try {
-        const parsed: unknown = JSON.parse(raw);
-        if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== 'string')) {
-            return [];
-        }
-        return [...new Set(parsed)];
-    } catch {
-        return [];
-    }
-}
-
-function reconcileOrder(savedOrder: string[], currentKeys: string[]): string[] {
-    const currentKeySet = new Set(currentKeys);
-    const normalizedSaved = [...new Set(savedOrder)].filter((key) => currentKeySet.has(key));
-    const missingKeys = currentKeys.filter((key) => !normalizedSaved.includes(key));
-    return [...normalizedSaved, ...missingKeys];
-}
 
 export default function BroadcastOptionsScreen() {
 
@@ -87,19 +64,11 @@ export default function BroadcastOptionsScreen() {
     const [bookData, setBookData] = useState<Record<string, BookSummary> | null>(null);
 
     const [sortOrder, setSortOrder] = useState<string[]>([]);
-    const HYMNAL_SORT_KEY = 'hymnal_sort_order';
-    const saveOrder = async (order: string[]) => {
-        try {
-            await AsyncStorage.setItem(HYMNAL_SORT_KEY, JSON.stringify(order));
-        } catch (error) {
-            console.error("Error saving sort order:", error);
-        }
-    };
     const loadOrder = async () => {
         try {
-            const order = await AsyncStorage.getItem(HYMNAL_SORT_KEY);
+            const { order } = await loadHymnalSortOrder();
             const bookKeys = Object.keys(context?.BOOK_DATA ?? {});
-            setSortOrder(reconcileOrder(parseStoredOrder(order), bookKeys));
+            setSortOrder(reconcileHymnalOrder(order, bookKeys));
         } catch (error) {
             console.error("Error loading sort order:", error);
             setSortOrder(Object.keys(context?.BOOK_DATA ?? {}));

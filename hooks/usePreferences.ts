@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, createContext } from 'react';
 import {
     clearPreferences,
     FeatureFlagOverrides,
@@ -118,7 +118,7 @@ export function usePreferences() {
         setPreference('featureFlagOverrides', null);
     }, [setPreference]);
 
-    return {
+    return useMemo(() => ({
         ...preferences,
         isPreferencesLoaded: isLoaded,
         setFeatureIntroSeenVersion,
@@ -138,5 +138,27 @@ export function usePreferences() {
         setFeatureFlagOverride,
         clearFeatureFlagOverrides,
         resetPreferences,
-    };
+    }), [
+        preferences,
+        isLoaded,
+        setFeatureIntroSeenVersion,
+        setDiscoverPageVisited,
+        setLegacyNumberGrouping,
+        setLanguageOverride,
+        setPostHogOptedIn,
+        setThemeOverride,
+        setInvertSheetMusic,
+        setBroadcastingToken,
+        setBroadcastingChurch,
+        setHymnSignHost,
+        setHymnSignPort,
+        setHymnalReleaseTag,
+        setRecommendedHymnBannerEnabled,
+        setDeveloperMode,
+        setFeatureFlagOverride,
+        clearFeatureFlagOverrides,
+        resetPreferences,
+    ]);
 }
+
+export const PreferencesContext = createContext<ReturnType<typeof usePreferences> | undefined>(undefined);

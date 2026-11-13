@@ -1,11 +1,11 @@
-import { HymnalContext } from '@/constants/context';
+import { PreferencesContext } from '@/hooks/usePreferences';
 import { useContext, useEffect, useState } from 'react';
 import { Appearance, useColorScheme as useSystemColorScheme } from 'react-native';
 
 export function useColorScheme(): 'light' | 'dark' {
-  const context = useContext(HymnalContext);
+  const preferences = useContext(PreferencesContext);
   const systemTheme = useSystemColorScheme();
-  const override = context?.themeOverride;
+  const override = preferences?.themeOverride;
 
   const [hasHydrated, setHasHydrated] = useState(false);
   useEffect(() => {

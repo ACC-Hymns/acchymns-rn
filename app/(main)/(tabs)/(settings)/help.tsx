@@ -3,19 +3,22 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, L
 import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useLayoutEffect } from 'react';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 import { HymnalContext } from '@/constants/context';
 import { clearCache, deleteAllHymnals, loadHymnals } from '@/scripts/hymnals';
 import PostHog, { usePostHog } from 'posthog-react-native';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearRecentSearches } from '@/scripts/recentSearchStorage';
+import { removeSongCatalog } from '@/hooks/useSongSearchIndex';
+import { useQueryClient } from '@tanstack/react-query';
 import { isIOS26DesignDisabled } from '@/constants/iosDesign';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 export default function HelpScreen() {
 
+    const queryClient = useQueryClient();
     const theme = useColorScheme() ?? 'light';
     const styles = makeStyles(theme as any);
     const router = useRouter();
@@ -179,8 +182,8 @@ export default function HelpScreen() {
                                             await deleteAllHymnals();
                                             const books = await loadHymnals();
 
-                                            const RECENT_SEARCHES_KEY = 'recent_searches';
-                                            await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify([]));
+                                            await clearRecentSearches();
+                                            removeSongCatalog(queryClient);
                                             context?.SET_BOOK_DATA(books);
                                         },
                                         style: 'destructive'

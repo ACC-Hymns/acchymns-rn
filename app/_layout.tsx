@@ -1,6 +1,5 @@
-import { DarkTheme, DefaultTheme } from 'expo-router/react-navigation';
 import { getLoadedFonts, useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,6 +9,7 @@ import { setBackgroundColorAsync } from 'expo-system-ui';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { loadHymnals, removeHymnal, setHymnalDownloadProgressUpdater } from '@/scripts/hymnals';
 import { buildHymnalUpdatesQueryKey, optimisticallyMarkHymnalUpToDate } from '@/hooks/useHymnalUpdates';
+import { invalidateSongCatalog, removeSongCatalog } from '@/hooks/useSongSearchIndex';
 import { fetchHymnalReleaseData } from '@/scripts/hymnalUpdates';
 import { DownloadProgressContext, HymnalContext, HymnalContextType } from '@/constants/context';
 import { BookSummary } from '@/constants/types';
@@ -29,13 +29,17 @@ import { BottomSheetModalProvider } from '@expo/ui/community/bottom-sheet';
 import TrackPlayer from '@rntp/player';
 import { BackgroundEvent, Event } from '@rntp/player';
 import { configureTrackPlayerCommands, registerTrackPlayerMediaSessionRefresh } from '@/constants/trackPlayer';
-import { usePreferences } from '@/hooks/usePreferences';
+import { usePreferences, PreferencesContext } from '@/hooks/usePreferences';
 
 
 global.Buffer = Buffer;
 global.process = require('process');
 global.btoa = encode;
 global.atob = decode;
+
+export const unstable_settings = {
+    anchor: '(main)',
+};
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -126,6 +130,7 @@ export default function RootLayout() {
         return () => setHymnalDownloadProgressUpdater(null);
     }, []);
 
+    const preferences = usePreferences();
     const {
         featureIntroSeenVersion,
         setFeatureIntroSeenVersion,
@@ -160,7 +165,7 @@ export default function RootLayout() {
         clearFeatureFlagOverrides,
         resetPreferences,
         isPreferencesLoaded,
-    } = usePreferences();
+    } = preferences;
 
     const effectiveTheme: 'light' | 'dark' =
         themeOverride === 'light' || themeOverride === 'dark'
@@ -204,6 +209,7 @@ export default function RootLayout() {
         );
         const loadedData = await loadHymnals();
         SET_BOOK_DATA(loadedData);
+        await invalidateSongCatalog(queryClient, book);
     }, [dismissHymnalPackage, hymnalReleaseTag]);
 
     const deleteHymnal = useCallback(async (book: string) => {
@@ -218,6 +224,7 @@ export default function RootLayout() {
 
             const updatedBooks = await loadHymnals();
             SET_BOOK_DATA(updatedBooks);
+            removeSongCatalog(queryClient, book);
         } catch (error) {
             console.error("Failed to delete hymnal:", error);
         }
@@ -401,6 +408,7 @@ export default function RootLayout() {
         }} autocapture={{ captureScreens: false }}>
             <PostHogIdentity stableUserId={stableUserId} onFeatureFlagsReady={onFeatureFlagsReady} />
             <GestureHandlerRootView style={{ flex: 1 }}>
+                <PreferencesContext.Provider value={preferences}>
                 <HymnalContext.Provider value={context}>
                     <DownloadProgressContext.Provider value={downloadProgressValues}>
                     <QueryClientProvider client={queryClient}>
@@ -415,7 +423,6 @@ export default function RootLayout() {
                                                 : DefaultTheme.colors.background,
                                         },
                                     }}
-                                    initialRouteName="(main)"
                                 >
                                     <Stack.Screen name="(main)" options={{ headerShown: false }} />
                                 </Stack>
@@ -424,6 +431,7 @@ export default function RootLayout() {
                     </QueryClientProvider>
                     </DownloadProgressContext.Provider>
                 </HymnalContext.Provider>
+                </PreferencesContext.Provider>
             </GestureHandlerRootView>
         </PostHogProvider>
     );

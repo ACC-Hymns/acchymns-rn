@@ -34,88 +34,6 @@ export default function SelectionScreen() {
     const { id } = useLocalSearchParams();
     const theme = useColorScheme() ?? 'light';
 
-    const translations = {
-        en: {
-            sortingLabel: 'Sorting Options',
-            numerical: 'Numerical',
-            alphabetical: 'Alphabetical',
-            topical: 'Topical',
-            deleteHymnal: 'Remove Hymnal',
-            deleteAlertTitle: 'Remove ',
-            deleteAlertMessage: 'You can always download the hymnal again later.',
-            cancel: 'Cancel',
-            delete: 'Remove',
-        },
-        es: {
-            sortingLabel: 'Opciones de Ordenamiento',
-            numerical: 'Numérico',
-            alphabetical: 'Alfabético',
-            topical: 'Tópico',
-            deleteHymnal: 'Borrar Himnario',
-            deleteAlertTitle: 'Borrar ',
-            deleteAlertMessage: 'Siempre puedes descargar el himnario de nuevo más tarde.',
-            cancel: 'Cancelar',
-            delete: 'Borrar',
-        },
-        fr: {
-            sortingLabel: 'Options de Tri',
-            numerical: 'Numérique',
-            alphabetical: 'Alphabétique',
-            topical: 'Topique',
-            deleteHymnal: 'Supprimer le Livre de Hymnes',
-            deleteAlertTitle: 'Supprimer ',
-            deleteAlertMessage: 'Vous pouvez toujours télécharger le livre de hymnes plus tard.',
-            cancel: 'Annuler',
-            delete: 'Supprimer',
-        },
-        de: {
-            sortingLabel: 'Sortieroptionen',
-            numerical: 'Numerisch',
-            alphabetical: 'Alphabetisch',
-            topical: 'Thematisch',
-            deleteHymnal: 'Gesangbuch löschen',
-            deleteAlertTitle: 'Löschen ',
-            deleteAlertMessage: 'Sie können das Gesangbuch später jederzeit erneut herunterladen.',
-            cancel: 'Stornieren',
-            delete: 'Löschen',
-        },
-        sr: {
-            sortingLabel: 'Sortiranje',
-            numerical: 'Numerički',
-            alphabetical: 'Abecedni',
-            topical: 'Tematički',
-            deleteHymnal: 'Obriši himnolog',
-            deleteAlertTitle: 'Obriši ',
-            deleteAlertMessage: 'Možete u ljubom trenutku ponovo preuzeti himnolog.',
-            cancel: 'Otkaži',
-            delete: 'Obriši',
-        },
-        ja: {
-            sortingLabel: '並べ替えオプション',
-            numerical: '数字順',
-            alphabetical: 'アルファベット順',
-            topical: 'トピック順',
-            deleteHymnal: '賛美歌を削除する',
-            deleteAlertTitle: '削除 ',
-            deleteAlertMessage: '賛美歌集はいつでも再ダウンロードできます。',
-            cancel: 'キャンセル',
-            delete: '削除',
-        },
-        pt: {
-            sortingLabel: 'Opções de Ordenação',
-            numerical: 'Numérico',
-            alphabetical: 'Alfabético',
-            topical: 'Tópico',
-            deleteHymnal: 'Deletar Hinário',
-            deleteAlertTitle: 'Deletar ',
-            deleteAlertMessage: 'Você pode sempre baixar o hinário novamente mais tarde.',
-            cancel: 'Cancelar',
-            delete: 'Deletar',
-        }
-    }
-
-
-
     // get book data from context
     const context = useContext(HymnalContext);
     const i18n = useI18n();
@@ -127,8 +45,12 @@ export default function SelectionScreen() {
     const [sortMode, setSortMode] = useState<SortMode>(SortMode.NUMERICAL);
     const [isNavigating, setIsNavigating] = useState(false);
     const navigation = useNavigation();
-    if (context) {
-        context.setSortMode = handleSortModeChange;
+
+    function handleSortModeChange(mode: SortMode) {
+        setSortMode(mode);
+        navigation.setOptions({
+            headerShadowVisible: false,
+        });
     }
 
     useLayoutEffect(() => {
@@ -138,7 +60,11 @@ export default function SelectionScreen() {
             title: book.name.medium,
             headerTitleAlign: 'center',
             headerRight: () => (
-                <HymnalMoreMenu bookSummary={book} />
+                <HymnalMoreMenu
+                    bookSummary={book}
+                    sortMode={sortMode}
+                    onSortModeChange={handleSortModeChange}
+                />
             ),
             headerLeft: () => (
                 <TouchableOpacity hitSlop={10} onPress={() => router.back()}>
@@ -151,14 +77,7 @@ export default function SelectionScreen() {
             )
         });
 
-    }, [book, id, navigation, context?.languageOverride, theme]);
-
-    function handleSortModeChange(mode: SortMode) {
-        setSortMode(mode);
-        navigation.setOptions({
-            headerShadowVisible: false,
-        });
-    }
+    }, [book, id, navigation, context?.languageOverride, theme, sortMode]);
 
     const [openDropdowns, setOpenDropdowns] = useState<{ [key: string]: boolean }>({});
 
@@ -179,7 +98,7 @@ export default function SelectionScreen() {
     );
 
     useEffect(() => {
-        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+        const subscription = Dimensions.addEventListener('change', ({ window }: { window: { width: number } }) => {
             setNumColumns(getSongNumberColumns(window.width));
         });
 
@@ -211,9 +130,6 @@ export default function SelectionScreen() {
                                                 backgroundColor: book.primaryColor,
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
-                                            }}
-                                            onPressIn={() => {
-                                                router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: item } });
                                             }}
                                             onPress={() => {
                                                 // check if im already navigating
@@ -332,9 +248,6 @@ export default function SelectionScreen() {
                                                                         backgroundColor: book.primaryColor,
                                                                         justifyContent: 'center',
                                                                         alignItems: 'center',
-                                                                    }}
-                                                                    onPressIn={() => {
-                                                                        router.prefetch({ pathname: '/display/[id]/[number]', params: { id: book.name.short, number: number } });
                                                                     }}
                                                                     onPress={() => {
                                                                         // check if im already navigating

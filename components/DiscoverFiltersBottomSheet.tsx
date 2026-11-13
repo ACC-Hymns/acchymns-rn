@@ -11,30 +11,8 @@ import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import { FlatList } from 'react-native-gesture-handler';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-function parseStoredOrder(raw: string | null): string[] {
-    if (!raw) {
-        return [];
-    }
-
-    try {
-        const parsed: unknown = JSON.parse(raw);
-        if (!Array.isArray(parsed) || parsed.some((item) => typeof item !== 'string')) {
-            return [];
-        }
-        return [...new Set(parsed)];
-    } catch {
-        return [];
-    }
-}
-
-function reconcileOrder(savedOrder: string[], currentKeys: string[]): string[] {
-    const currentKeySet = new Set(currentKeys);
-    const normalizedSaved = [...new Set(savedOrder)].filter((key) => currentKeySet.has(key));
-    const missingKeys = currentKeys.filter((key) => !normalizedSaved.includes(key));
-    return [...normalizedSaved, ...missingKeys];
-}
+import { reconcileHymnalOrder } from '@/scripts/hymnalSort';
+import { loadHymnalSortOrder } from '@/scripts/hymnalSortStorage';
 
 const FILTER_SHEET_CHROME_HEIGHT = 170;
 const FILTER_SHEET_MAX_HEIGHT = 560;
@@ -111,8 +89,8 @@ export function DiscoverFiltersBottomSheet({
         <BottomSheetModal
             ref={bottomSheetModalRef}
             onChange={async (index) => {
-                const order = await AsyncStorage.getItem("hymnal_sort_order");
-                const sortedHymnals = reconcileOrder(parseStoredOrder(order), hymnalsAvailable);
+                const { order } = await loadHymnalSortOrder();
+                const sortedHymnals = reconcileHymnalOrder(order, hymnalsAvailable);
                 setAvailableHymnalsSorted(sortedHymnals);
                 setQueuedChanges(selectedHymnals);
                 onSheetChanges?.(index);

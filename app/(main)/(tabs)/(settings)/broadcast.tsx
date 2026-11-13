@@ -3,14 +3,12 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, A
 import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
 import Constants from 'expo-constants';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import StyledText from '@/components/StyledText';
 import Ionicons from '@react-native-vector-icons/ionicons'
-import axios from 'axios';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { TokenAuthResponse, validate_token } from '@/scripts/broadcast';
 import {
@@ -49,13 +47,6 @@ export default function BroadcastScreen() {
             });
         }
     }, []);
-
-    async function check_code(code: string) {
-        let response = await axios.post("https://iahifuumb7zasmzuv5xqpmi7fu0pwtkt.lambda-url.us-east-2.on.aws/", {
-            code: code,
-        });
-        return response;
-    }
 
     const i18n = useI18n();
 
@@ -151,7 +142,7 @@ export default function BroadcastScreen() {
             return;
         }
 
-        let response = await check_code(code);
+        let response = await validate_token(code);
         let authorized = response.status == 200;
         if (!authorized) {
             setAuthorized(false);
