@@ -18,7 +18,7 @@ import {
     TouchableHighlight,
     View,
 } from 'react-native';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 
 const GITHUB_LATEST_RELEASE = '__github_latest__';
 

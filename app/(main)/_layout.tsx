@@ -2,8 +2,7 @@ import { Colors } from "@/constants/Colors";
 import EcampSingingBanner from "@/components/EcampSingingBanner";
 import { HymnalContext } from "@/constants/context";
 import { useI18n } from "@/hooks/useI18n";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
-import { router, Stack } from "expo-router";
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from "expo-router";
 import React, { useContext } from "react";
 import { View } from "react-native";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -16,6 +15,10 @@ function isGhostDisplayRoute(ghost: string | string[] | undefined): boolean {
     return ghost === '1';
 }
 
+export const unstable_settings = {
+    anchor: '(tabs)',
+};
+
 export default function MainStackLayout() {
     const context = useContext(HymnalContext);
     const effectiveTheme: 'light' | 'dark' = useColorScheme() === 'dark' ? 'dark' : 'light';
@@ -24,7 +27,6 @@ export default function MainStackLayout() {
         <ThemeProvider value={effectiveTheme === 'dark' ? DarkTheme : DefaultTheme}>
         <View style={{ flex: 1 }} onLayout={() => context?.onLayoutHomeView()}>
             <Stack
-                initialRouteName="(tabs)"
                 screenOptions={{ contentStyle: { flex: 1 } }}
             >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

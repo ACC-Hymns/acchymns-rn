@@ -2,6 +2,10 @@ import { HymnalMoreMenu } from "@/components/HymnalMoreMenu";
 import { Colors } from "@/constants/Colors";
 import { HymnalContext } from "@/constants/context";
 import { router, Stack } from "expo-router";
+
+export const unstable_settings = {
+    anchor: 'index',
+};
 import { useI18n } from "@/hooks/useI18n";
 import { useContext } from "react";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -11,8 +15,7 @@ export default function HomeLayout() {
     const context = useContext(HymnalContext);
     const i18n = useI18n();
     return (
-            <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}
-                initialRouteName="index">
+            <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}>
                 <Stack.Screen
                     name="index"
                     options={{ title: 'Home' }}

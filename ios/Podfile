@@ -1,10 +1,8 @@
 # Set by expo-router. This enables Fabric-only features from react-native-screens
 ENV['RNS_GAMMA_ENABLED'] ||= '1'
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-  "@rnrepo/build-tools/cocoapods-plugin/lib/plugin.rb",
-  {paths: [process.argv[1]]},
-)', __dir__]).strip
+# @preeternal/react-native-file-hash begin
+ENV['ZFH_ENGINE'] ||= 'native'
+# @preeternal/react-native-file-hash end
 
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
@@ -24,7 +22,10 @@ ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NET
 ENV['RCT_USE_RN_DEP'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
 ENV['RCT_USE_PREBUILT_RNCORE'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
 ENV['RCT_HERMES_V1_ENABLED'] ||= '0' if podfile_properties['expo.useHermesV1'] == 'false'
-ENV['EXPO_USE_PRECOMPILED_MODULES'] ||= '1' if podfile_properties['EXPO_USE_PRECOMPILED_MODULES'] != 'false'
+# An explicit `ios.usePrecompiledModules: false` must win even when the env var is already set
+# (e.g. EXPO_USE_PRECOMPILED_MODULES exported by EAS Build), so force-disable here before the default.
+ENV['EXPO_USE_PRECOMPILED_MODULES'] = '0' if podfile_properties['EXPO_USE_PRECOMPILED_MODULES'] == 'false'
+ENV['EXPO_USE_PRECOMPILED_MODULES'] ||= '1'
 platform :ios, podfile_properties['ios.deploymentTarget'] || '16.4'
 
 prepare_react_native_project!
@@ -61,8 +62,34 @@ target 'Hymnal' do
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
+  # EAS `pod install` does not pass --repo-update. Pin these away from trunk.
+  pod 'SDWebImageAVIFCoder',
+    :git => 'https://github.com/SDWebImage/SDWebImageAVIFCoder.git',
+    :tag => '0.11.1'
+  pod 'DGSwiftUtilities',
+    :git => 'https://github.com/dominicstop/DGSwiftUtilities.git',
+    :tag => '0.47.0'
+  pod 'ComputableLayout',
+    :git => 'https://github.com/dominicstop/ComputableLayout.git',
+    :tag => '0.7.0'
+  pod 'ContextMenuAuxiliaryPreview',
+    :git => 'https://github.com/dominicstop/ContextMenuAuxiliaryPreview.git',
+    :tag => '0.5.2'
+
+  # Relative :podspec paths keep Podfile.lock portable for EAS.
+  vendor_specs = './vendor/cocoapods'
+  pod 'libaom', :podspec => "#{vendor_specs}/libaom.podspec.json"
+  pod 'libavif', :podspec => "#{vendor_specs}/libavif.podspec.json"
+  pod 'libdav1d', :podspec => "#{vendor_specs}/libdav1d.podspec.json"
+  pod 'libvmaf', :podspec => "#{vendor_specs}/libvmaf.podspec.json"
+  pod 'libwebp', :podspec => "#{vendor_specs}/libwebp.podspec.json"
+  pod 'ReachabilitySwift', :podspec => "#{vendor_specs}/ReachabilitySwift.podspec.json"
+  pod 'SDWebImage', :podspec => "#{vendor_specs}/SDWebImage.podspec.json"
+  pod 'SDWebImageSVGCoder', :podspec => "#{vendor_specs}/SDWebImageSVGCoder.podspec.json"
+  pod 'SDWebImageWebPCoder', :podspec => "#{vendor_specs}/SDWebImageWebPCoder.podspec.json"
+  pod 'SSZipArchive', :podspec => "#{vendor_specs}/SSZipArchive.podspec.json"
+
   post_install do |installer|
-  rnrepo_post_install(installer)
     react_native_post_install(
       installer,
       config[:reactNativePath],

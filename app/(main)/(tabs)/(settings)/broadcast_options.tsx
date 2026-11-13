@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { StyleSheet, ScrollView, View, TouchableHighlight, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 import { HymnalContext } from '@/constants/context';
 import { isEcampHymnSignChurch } from '@/constants/broadcastAuth';
 import { useI18n } from '@/hooks/useI18n';

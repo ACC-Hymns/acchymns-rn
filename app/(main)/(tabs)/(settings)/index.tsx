@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { StyleSheet, ScrollView, View, TouchableHighlight, Pressable, Alert } from 'react-native';
 import React, { useCallback, useContext } from 'react';
 import { useRouterPushOnce } from '@/hooks/useRouterPushOnce';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 import * as Haptics from 'expo-haptics';

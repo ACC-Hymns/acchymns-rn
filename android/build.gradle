@@ -6,18 +6,10 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-        classpath 'com.google.gms:google-services:4.4.4'
-def rnrepoDir = new File(
-     providers.exec {
-       workingDir(rootDir)
-       commandLine("node", "--print", "require.resolve('@rnrepo/build-tools/package.json')")
-     }.standardOutput.asText.get().trim()
-   ).getParentFile().absolutePath
-   classpath fileTree(dir: "${rnrepoDir}/gradle-plugin/build/libs", include: ["prebuilds-plugin.jar"])
-
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    def kotlinVersion = findProperty('android.kotlinVersion')
+    classpath(kotlinVersion ? "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion" : 'org.jetbrains.kotlin:kotlin-gradle-plugin')
   }
 }
 
@@ -30,11 +22,4 @@ allprojects {
 }
 
 apply plugin: "expo-root-project"
-
-allprojects {
-    repositories {
-        maven { url "https://packages.rnrepo.org/releases" }
-    }
-}
-
 apply plugin: "com.facebook.react.rootproject"

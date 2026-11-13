@@ -3,7 +3,7 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, S
 import { TouchableOpacity } from 'react-native';
 import { router, useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 import { HymnalContext } from '@/constants/context';
 import { useI18n } from '@/hooks/useI18n';
 import { useColorScheme } from '@/hooks/useColorScheme';

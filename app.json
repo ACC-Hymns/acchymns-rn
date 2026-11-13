@@ -2,8 +2,8 @@
   "expo": {
     "name": "Hymnal",
     "slug": "acchymns",
-    "version": "5.0.0",
-    "runtimeVersion": "5.0.0",
+    "version": "5.0.1",
+    "runtimeVersion": "5.0.1",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "scheme": "acchymns",
@@ -66,8 +66,6 @@
         }
       ],
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
@@ -163,7 +161,6 @@
       "expo-image",
       "expo-sharing",
       "expo-status-bar",
-      "@rnrepo/expo-config-plugin",
       "@react-native-vector-icons/ionicons",
       "@preeternal/react-native-file-hash"
     ],

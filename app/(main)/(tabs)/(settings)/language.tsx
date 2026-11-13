@@ -3,7 +3,7 @@ import { Text, StyleSheet, SafeAreaView, ScrollView, View, TouchableHighlight, P
 import { TouchableOpacity } from 'react-native';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 import { getLocales } from 'expo-localization';
 import { supportedLanguages, getLanguageName } from '@/constants/localization';
 import { HymnalContext } from '@/constants/context';

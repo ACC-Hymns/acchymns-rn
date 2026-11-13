@@ -2,12 +2,15 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Stack } from "expo-router";
 
+export const unstable_settings = {
+    anchor: 'index',
+};
+
 export default function HomeLayout() {
     const theme = useColorScheme();
 
     return (
-        <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}
-            initialRouteName="index">
+        <Stack screenOptions={{ headerShown: false, headerTitleAlign: 'center' }}>
             <Stack.Screen
                 name="index"
                 options={{ title: 'Home' }}

@@ -19,7 +19,7 @@ import {
     TouchableHighlight,
     View,
 } from 'react-native';
-import { Divider } from 'react-native-elements';
+import { SettingsDivider as Divider } from '@/components/SettingsDivider';
 
 type OverrideMode = 'default' | 'on' | 'off';
 
