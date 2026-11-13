@@ -1,0 +1,710 @@
+diff --git a/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfModule.kt b/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfModule.kt
+--- a/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfModule.kt
+
++++ b/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfModule.kt
+
+@@ -22,7 +22,7 @@
+     // Enables the module to be used as a native view. Definition components that are accepted as part of
+     // the view definition: Prop, Events.
+     View(KJExpoPdfView::class) {
+-      Events("onLoadComplete", "onPageChanged", "onError")
++      Events("onLoadComplete", "onPageChanged", "onError", "onScroll")
+ 
+       Prop("uri") { view: KJExpoPdfView, uri: String? ->
+         view.setUri(uri)
+@@ -62,6 +62,18 @@
+ 
+       Prop("autoScale") { view: KJExpoPdfView, enabled: Boolean? ->
+          view.setAutoScaleEnabled(enabled)
++      }
++
++      AsyncFunction("scrollToTop") { view: KJExpoPdfView, animated: Boolean? ->
++        view.scrollToTop(animated ?: true)
++      }
++
++      AsyncFunction("getScrollOffset") { view: KJExpoPdfView ->
++        view.getScrollOffset()
++      }
++
++      AsyncFunction("setScrollOffset") { view: KJExpoPdfView, x: Double, y: Double, animated: Boolean? ->
++        view.setScrollOffset(x, y, animated ?: false)
+       }
+     }
+   }
+diff --git a/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfView.kt b/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfView.kt
+--- a/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfView.kt
+
++++ b/node_modules/@kishannareshpal/expo-pdf/android/src/main/java/com/kishannareshpal/expopdf/KJExpoPdfView.kt
+
+@@ -28,6 +28,7 @@
+   private val onLoadComplete by EventDispatcher()
+   private val onPageChanged by EventDispatcher()
+   private val onError by EventDispatcher()
++  private val onScroll by EventDispatcher()
+ 
+   internal enum class ErrorCode(val code: String) {
+     invalidUri("invalid_uri"),
+@@ -36,7 +37,7 @@
+     passwordIncorrect("password_incorrect")
+   }
+ 
+-  private var uri: Uri? = null
++  private var uri: Uri? = nil
+   private var password: String? = null
+   private var isPagingEnabled: Boolean = DEFAULT_PAGING_ENABLED
+   private var isDoubleTapZoomEnabled: Boolean = DEFAULT_DOUBLE_TAP_ZOOM_ENABLED
+@@ -46,6 +47,7 @@
+   private var fitMode: FitMode = DEFAULT_FIT_MODE
+   private var autoScaleEnabled: Boolean = DEFAULT_AUTO_SCALE_ENABLED
+   private var isPageColorInverted: Boolean = DEFAULT_PAGE_COLOR_INVERTED_ENABLED
++  private var isDocumentLoaded: Boolean = false
+ 
+   internal val pdfView = PDFView(context, null).apply {
+     layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+@@ -129,6 +131,7 @@
+     if (!this.pdfView.isRecycled) {
+       this.pdfView.recycle()
+     }
++    this.isDocumentLoaded = false
+ 
+     val currentUri = this.uri ?: return
+ 
+@@ -153,6 +156,7 @@
+       .nightMode(this.isPageColorInverted)
+       .spacing(this.pageGap)
+       .autoCenterOnResize(this.autoScaleEnabled)
++      .defaultPage(0)
+       .contentPadding(
+         this.contentPadding.left,
+         this.contentPadding.top,
+@@ -160,6 +164,9 @@
+         this.contentPadding.bottom
+       )
+       .onLoad { pageCount ->
++        this.isDocumentLoaded = true
++        this.scrollToTop(false)
++        this.emitScrollEvent()
+         this.onLoadComplete(
+           mapOf(
+             "pageCount" to pageCount
+@@ -174,6 +181,9 @@
+           )
+         )
+       }
++      .onPageScroll { _, _ ->
++        this.emitScrollEvent()
++      }
+ 
+     post {
+       pdfBuilder
+@@ -203,6 +213,70 @@
+         }
+         .load()
+     }
++  }
++
++  fun scrollToTop(animated: Boolean) {
++    if (!this.isDocumentLoaded || this.pdfView.isRecycled) {
++      return
++    }
++    this.pdfView.jumpTo(0, animated)
++    this.emitScrollEvent()
++  }
++
++  fun getScrollOffset(): Map<String, Any> {
++    if (!this.isDocumentLoaded || this.pdfView.isRecycled) {
++      return mapOf(
++        "x" to 0.0,
++        "y" to 0.0,
++        "atTop" to true
++      )
++    }
++
++    return mapOf(
++      "x" to this.pdfView.currentXOffset.toDouble(),
++      "y" to this.pdfView.currentYOffset.toDouble(),
++      "atTop" to this.isAtTop()
++    )
++  }
++
++  fun setScrollOffset(x: Double, y: Double, animated: Boolean) {
++    if (!this.isDocumentLoaded || this.pdfView.isRecycled) {
++      return
++    }
++
++    if (animated) {
++      // Library has no generic animated moveTo; approximate with jump when near page edges.
++      this.pdfView.moveTo(x.toFloat(), y.toFloat())
++    } else {
++      this.pdfView.moveTo(x.toFloat(), y.toFloat())
++    }
++    this.emitScrollEvent()
++  }
++
++  private fun isAtTop(): Boolean {
++    if (!this.isDocumentLoaded || this.pdfView.isRecycled) {
++      return true
++    }
++
++    return if (this.isHorizontalModeEnabled) {
++      this.pdfView.currentXOffset >= -4f
++    } else {
++      this.pdfView.currentYOffset >= -4f
++    }
++  }
++
++  private fun emitScrollEvent() {
++    if (!this.isDocumentLoaded || this.pdfView.isRecycled) {
++      return
++    }
++
++    this.onScroll(
++      mapOf(
++        "x" to this.pdfView.currentXOffset.toDouble(),
++        "y" to this.pdfView.currentYOffset.toDouble(),
++        "atTop" to this.isAtTop()
++      )
++    )
+   }
+ 
+   override fun onAttachedToWindow() {
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/index.d.ts b/node_modules/@kishannareshpal/expo-pdf/build/index.d.ts
+--- a/node_modules/@kishannareshpal/expo-pdf/build/index.d.ts
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/index.d.ts
+
+@@ -1,4 +1,4 @@
+ export { default } from './pdf-module';
+-export { PdfView, PdfViewProps } from './pdf-view';
++export { PdfView, PdfViewProps, PdfViewRef } from './pdf-view';
+ export * from './types';
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=index.d.ts.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/index.js b/node_modules/@kishannareshpal/expo-pdf/build/index.js
+--- a/node_modules/@kishannareshpal/expo-pdf/build/index.js
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/index.js
+
+@@ -2,4 +2,4 @@
+ export { default } from './pdf-module';
+ export { PdfView } from './pdf-view';
+ export * from './types';
+-//# sourceMappingURL=index.js.map
+\ No newline at end of file
++//# sourceMappingURL=index.js.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.d.ts b/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.d.ts
+--- a/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.d.ts
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.d.ts
+
+@@ -1,5 +1,5 @@
+ import * as React from 'react';
+-import { ContentPadding, FitMode, OnErrorEventPayload, OnLoadCompleteEventPayload, OnPageChangedEventPayload } from './types';
++import { ContentPadding, FitMode, OnErrorEventPayload, OnLoadCompleteEventPayload, OnPageChangedEventPayload, OnScrollEventPayload, ScrollOffset } from './types';
+ import { ViewProps } from 'react-native';
+ type BaseProps = ViewProps & {
+     /**
+@@ -60,11 +60,17 @@
+      */
+     pageColorInverted?: boolean;
+ };
++export type PdfViewRef = {
++    scrollToTop: (animated?: boolean) => Promise<void>;
++    getScrollOffset: () => Promise<ScrollOffset>;
++    setScrollOffset: (x: number, y: number, animated?: boolean) => Promise<void>;
++};
+ export type PdfViewProps = BaseProps & {
+     onLoadComplete?: (params: OnLoadCompleteEventPayload) => void;
+     onPageChanged?: (params: OnPageChangedEventPayload) => void;
+     onError?: (params: OnErrorEventPayload) => void;
++    onScroll?: (params: OnScrollEventPayload) => void;
+ };
+-export declare const PdfView: ({ style, onLoadComplete, onError, onPageChanged, ...props }: PdfViewProps) => React.JSX.Element;
++export declare const PdfView: React.ForwardRefExoticComponent<PdfViewProps & React.RefAttributes<PdfViewRef>>;
+ export {};
+-//# sourceMappingURL=pdf-view.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=pdf-view.d.ts.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.js b/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.js
+--- a/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.js
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/pdf-view.js
+
+@@ -3,12 +3,12 @@
+ import { StyleSheet } from 'react-native';
+ import { forwardNativeEventTo } from './utils';
+ const NativePdfView = requireNativeView('KJExpoPdf');
+-export const PdfView = ({ style, onLoadComplete, onError, onPageChanged, ...props }) => {
+-    return (<NativePdfView style={[styles.container, style]} uri={props.uri} doubleTapToZoom={props.doubleTapToZoom} horizontal={props.horizontal} pageGap={props.pageGap} pagingEnabled={props.pagingEnabled} password={props.password} contentPadding={props.contentPadding} fitMode={props.fitMode} autoScale={props.autoScale} pageColorInverted={props.pageColorInverted} onLoadComplete={forwardNativeEventTo(onLoadComplete)} onPageChanged={forwardNativeEventTo(onPageChanged)} onError={forwardNativeEventTo(onError)}/>);
+-};
++export const PdfView = React.forwardRef(function PdfView({ style, onLoadComplete, onError, onPageChanged, onScroll, ...props }, ref) {
++    return (<NativePdfView ref={ref} style={[styles.container, style]} uri={props.uri} doubleTapToZoom={props.doubleTapToZoom} horizontal={props.horizontal} pageGap={props.pageGap} pagingEnabled={props.pagingEnabled} password={props.password} contentPadding={props.contentPadding} fitMode={props.fitMode} autoScale={props.autoScale} pageColorInverted={props.pageColorInverted} onLoadComplete={forwardNativeEventTo(onLoadComplete)} onPageChanged={forwardNativeEventTo(onPageChanged)} onError={forwardNativeEventTo(onError)} onScroll={forwardNativeEventTo(onScroll)}/>);
++});
+ const styles = StyleSheet.create({
+     container: {
+         backgroundColor: '#eeeeee'
+     }
+ });
+-//# sourceMappingURL=pdf-view.js.map
+\ No newline at end of file
++//# sourceMappingURL=pdf-view.js.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/types.d.ts b/node_modules/@kishannareshpal/expo-pdf/build/types.d.ts
+--- a/node_modules/@kishannareshpal/expo-pdf/build/types.d.ts
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/types.d.ts
+
+@@ -5,6 +5,12 @@
+     pageIndex: number;
+     pageCount: number;
+ };
++export type OnScrollEventPayload = {
++    x: number;
++    y: number;
++    atTop: boolean;
++};
++export type ScrollOffset = OnScrollEventPayload;
+ export type ErrorCode = 'invalid_uri' | 'invalid_document' | 'password_required' | 'password_incorrect';
+ export type OnErrorEventPayload = {
+     code: ErrorCode;
+@@ -17,4 +23,4 @@
+     left?: number;
+ };
+ export type FitMode = 'width' | 'height' | 'both';
+-//# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=types.d.ts.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/build/types.js b/node_modules/@kishannareshpal/expo-pdf/build/types.js
+--- a/node_modules/@kishannareshpal/expo-pdf/build/types.js
+
++++ b/node_modules/@kishannareshpal/expo-pdf/build/types.js
+
+@@ -1,2 +1,26 @@
+-export {};
+-//# sourceMappingURL=types.js.map
+\ No newline at end of file
++export type OnLoadCompleteEventPayload = {
++    pageCount: number;
++};
++export type OnPageChangedEventPayload = {
++    pageIndex: number;
++    pageCount: number;
++};
++export type OnScrollEventPayload = {
++    x: number;
++    y: number;
++    atTop: boolean;
++};
++export type ScrollOffset = OnScrollEventPayload;
++export type ErrorCode = 'invalid_uri' | 'invalid_document' | 'password_required' | 'password_incorrect';
++export type OnErrorEventPayload = {
++    code: ErrorCode;
++    message: string;
++};
++export type ContentPadding = {
++    top?: number;
++    right?: number;
++    bottom?: number;
++    left?: number;
++};
++export type FitMode = 'width' | 'height' | 'both';
++//# sourceMappingURL=types.js.map
+diff --git a/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfModule.swift b/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfModule.swift
+--- a/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfModule.swift
+
++++ b/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfModule.swift
+
+@@ -13,7 +13,7 @@
+     // Enables the module to be used as a native view. Definition components that are accepted as part of the
+     // view definition: Prop, Events.
+     View(KJExpoPdfView.self) {
+-      Events("onLoadComplete", "onPageChanged", "onError")
++      Events("onLoadComplete", "onPageChanged", "onError", "onScroll")
+ 
+       Prop("uri") { (view: KJExpoPdfView, uri: String) in
+         view.setUri(uri)
+@@ -53,6 +53,18 @@
+ 
+       Prop("autoScale") { (view: KJExpoPdfView, enabled: Bool?) in
+         view.setAutoScaleEnabled(enabled)
++      }
++
++      AsyncFunction("scrollToTop") { (view: KJExpoPdfView, animated: Bool?) in
++        view.scrollToTop(animated: animated ?? true)
++      }
++
++      AsyncFunction("getScrollOffset") { (view: KJExpoPdfView) -> [String: Any] in
++        view.getScrollOffset()
++      }
++
++      AsyncFunction("setScrollOffset") { (view: KJExpoPdfView, x: Double, y: Double, animated: Bool?) in
++        view.setScrollOffset(x: x, y: y, animated: animated ?? false)
+       }
+     }
+   }
+diff --git a/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfView.swift b/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfView.swift
+--- a/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfView.swift
+
++++ b/node_modules/@kishannareshpal/expo-pdf/ios/KJExpoPdfView.swift
+
+@@ -17,6 +17,7 @@
+   let onLoadComplete = EventDispatcher()
+   let onPageChanged = EventDispatcher()
+   let onError = EventDispatcher()
++  let onScroll = EventDispatcher()
+ 
+   enum ErrorCode: String, Codable {
+     case invalidUri = "invalid_uri"
+@@ -29,6 +30,8 @@
+ 
+   private var lastLayoutBounds: CGRect = .zero
+   private var isFirstLayoutComplete: Bool = false
++  private var isObservingScrollOffset: Bool = false
++  private var lastEmittedAtTop: Bool? = nil
+ 
+   // - MARK: Props
+   private var documentURL: URL? = nil
+@@ -76,6 +79,7 @@
+     super.layoutSubviews()
+     self.pdfView.frame = bounds
+     self.lastLayoutBounds = bounds
++    self.ensureScrollOffsetObservation()
+ 
+     // Force auto scale the document to fit the view on the intial layout by default
+     // - Do not autoscale on subsequent layouts if the consumer has manually disabled it
+@@ -89,6 +93,7 @@
+   }
+ 
+   deinit {
++    self.removeScrollOffsetObservation()
+     NotificationCenter.default.removeObserver(self)
+   }
+ 
+@@ -154,6 +159,7 @@
+   }
+ 
+   func setContentPadding(_ padding: UIEdgeInsets?) {
++    let shouldResetScroll = self.pdfView.isAtTop() || !self.isFirstLayoutComplete
+     self.contentPadding = padding ?? Self.DEFAULT_CONTENT_PADDING
+ 
+     // PDFView pageBreakMargins not only apply insets between the pages, but also around the pages
+@@ -170,7 +176,13 @@
+       right: padding.right - margins.right
+     )
+     self.pdfView.scaleToFit(
+-      contentPadding: self.contentPadding, fitMode: self.fitMode, resetScrollOffset: false)
++      contentPadding: self.contentPadding,
++      fitMode: self.fitMode,
++      resetScrollOffset: shouldResetScroll
++    )
++    if shouldResetScroll {
++      self.emitScrollEvent()
++    }
+   }
+ 
+   func setFitMode(_ mode: FitMode?) {
+@@ -214,6 +226,10 @@
+     else { return }
+     
+     DispatchQueue.main.async {
++      self.ensureScrollOffsetObservation()
++      // Always pin newly loaded documents to the top, accounting for content insets.
++      self.pdfView.scrollToTop(animated: false)
++      self.emitScrollEvent()
+       self.onLoadComplete([
+         "pageCount": document.pageCount
+       ])
+@@ -243,8 +259,9 @@
+     }
+     self.pdfView.document = document
+ 
+-    self.autoScale(resetScrollOffset: !self.isFirstLayoutComplete)
+-
++    // Always reset scroll when loading a new document. First layout often completes before
++    // the document is assigned, so relying on that flag leaves multi-page PDFs mid-document.
++    self.autoScale(resetScrollOffset: true)
+   }
+ 
+   private func loadDocument() -> PDFDocument? {
+@@ -274,14 +291,39 @@
+   private func autoScale(resetScrollOffset: Bool) {
+     // Dispatch async to allow PDFView to finish its initial layout
+     DispatchQueue.main.async {
++      self.ensureScrollOffsetObservation()
+       self.pdfView.scaleToFit(
+         contentPadding: self.contentPadding,
+         fitMode: self.fitMode,
+         resetScrollOffset: resetScrollOffset
+       )
++      if resetScrollOffset {
++        self.emitScrollEvent()
++      }
+     }
+   }
+ 
++  // MARK: - Scroll control
++
++  func scrollToTop(animated: Bool) {
++    self.pdfView.scrollToTop(animated: animated)
++    self.emitScrollEvent()
++  }
++
++  func getScrollOffset() -> [String: Any] {
++    let offset = self.pdfView.currentScrollOffset()
++    return [
++      "x": Double(offset.x),
++      "y": Double(offset.y),
++      "atTop": self.pdfView.isAtTop(),
++    ]
++  }
++
++  func setScrollOffset(x: Double, y: Double, animated: Bool) {
++    self.pdfView.setScrollOffset(CGPoint(x: x, y: y), animated: animated)
++    self.emitScrollEvent()
++  }
++
+   private func setupListeners() {
+     NotificationCenter.default.addObserver(
+       self,
+@@ -296,6 +338,58 @@
+       name: .PDFViewDocumentChanged,
+       object: pdfView
+     )
++  }
++
++  private func ensureScrollOffsetObservation() {
++    guard let scrollView = self.pdfView.documentScrollView else {
++      return
++    }
++
++    if self.isObservingScrollOffset {
++      return
++    }
++
++    scrollView.addObserver(
++      self,
++      forKeyPath: #keyPath(UIScrollView.contentOffset),
++      options: [.new],
++      context: nil
++    )
++    self.isObservingScrollOffset = true
++  }
++
++  private func removeScrollOffsetObservation() {
++    guard self.isObservingScrollOffset, let scrollView = self.pdfView.documentScrollView else {
++      self.isObservingScrollOffset = false
++      return
++    }
++
++    scrollView.removeObserver(self, forKeyPath: #keyPath(UIScrollView.contentOffset))
++    self.isObservingScrollOffset = false
++  }
++
++  override func observeValue(
++    forKeyPath keyPath: String?,
++    of object: Any?,
++    change: [NSKeyValueChangeKey: Any]?,
++    context: UnsafeMutableRawPointer?
++  ) {
++    if keyPath == #keyPath(UIScrollView.contentOffset) {
++      self.emitScrollEvent()
++      return
++    }
++    super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
++  }
++
++  private func emitScrollEvent() {
++    let offset = self.pdfView.currentScrollOffset()
++    let atTop = self.pdfView.isAtTop()
++    self.lastEmittedAtTop = atTop
++    onScroll([
++      "x": Double(offset.x),
++      "y": Double(offset.y),
++      "atTop": atTop,
++    ])
+   }
+ 
+   private func reportError(_ code: ErrorCode, _ message: String) {
+diff --git a/node_modules/@kishannareshpal/expo-pdf/ios/extensions/PdfViewExtensions.swift b/node_modules/@kishannareshpal/expo-pdf/ios/extensions/PdfViewExtensions.swift
+--- a/node_modules/@kishannareshpal/expo-pdf/ios/extensions/PdfViewExtensions.swift
+
++++ b/node_modules/@kishannareshpal/expo-pdf/ios/extensions/PdfViewExtensions.swift
+
+@@ -9,6 +9,10 @@
+ import PDFKit
+ 
+ extension PDFView {
++  var documentScrollView: UIScrollView? {
++    self.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView
++  }
++
+   func scaleToFit(contentPadding: UIEdgeInsets, fitMode: FitMode, resetScrollOffset: Bool = false) {
+     guard let page = self.currentPage else {
+       return
+@@ -52,20 +56,50 @@
+   }
+ 
+   func applyContentPadding(_ contentPadding: UIEdgeInsets, resetScrollOffset: Bool = false) {
+-    // Iterate through the PDFView's subviews to find the scroll view
+-    if let scrollView = self.subviews.first(where: { $0 is UIScrollView }) as? UIScrollView {
+-      scrollView.contentInset = contentPadding
++    guard let scrollView = self.documentScrollView else {
++      return
++    }
+ 
+-      if resetScrollOffset {
+-        var offset = scrollView.contentOffset
+-        if self.displayDirection == .horizontal {
+-          offset.x = -contentPadding.left
+-        } else {
+-          offset.y = -contentPadding.top
+-        }
+-        scrollView.contentOffset = offset
+-      }
++    scrollView.contentInset = contentPadding
++
++    if resetScrollOffset {
++      self.scrollToTop(animated: false)
+     }
++  }
++
++  func isAtTop(threshold: CGFloat = 4) -> Bool {
++    guard let scrollView = self.documentScrollView else {
++      return true
++    }
++
++    if self.displayDirection == .horizontal {
++      return scrollView.contentOffset.x <= -scrollView.contentInset.left + threshold
++    }
++
++    return scrollView.contentOffset.y <= -scrollView.contentInset.top + threshold
++  }
++
++  func scrollToTop(animated: Bool) {
++    guard let scrollView = self.documentScrollView else {
++      return
++    }
++
++    let inset = scrollView.contentInset
++    let offset: CGPoint
++    if self.displayDirection == .horizontal {
++      offset = CGPoint(x: -inset.left, y: scrollView.contentOffset.y)
++    } else {
++      offset = CGPoint(x: scrollView.contentOffset.x, y: -inset.top)
++    }
++    scrollView.setContentOffset(offset, animated: animated)
++  }
++
++  func currentScrollOffset() -> CGPoint {
++    self.documentScrollView?.contentOffset ?? .zero
++  }
++
++  func setScrollOffset(_ offset: CGPoint, animated: Bool) {
++    self.documentScrollView?.setContentOffset(offset, animated: animated)
+   }
+ 
+   func toggleDoubleTapToZoom(_ enabled: Bool) {
+diff --git a/node_modules/@kishannareshpal/expo-pdf/src/index.ts b/node_modules/@kishannareshpal/expo-pdf/src/index.ts
+--- a/node_modules/@kishannareshpal/expo-pdf/src/index.ts
+
++++ b/node_modules/@kishannareshpal/expo-pdf/src/index.ts
+
+@@ -1,4 +1,4 @@
+ // Reexport the native module
+ export { default } from './pdf-module';
+-export { PdfView, PdfViewProps } from './pdf-view';
++export { PdfView, PdfViewProps, PdfViewRef } from './pdf-view';
+ export * from './types';
+diff --git a/node_modules/@kishannareshpal/expo-pdf/src/pdf-view.tsx b/node_modules/@kishannareshpal/expo-pdf/src/pdf-view.tsx
+--- a/node_modules/@kishannareshpal/expo-pdf/src/pdf-view.tsx
+
++++ b/node_modules/@kishannareshpal/expo-pdf/src/pdf-view.tsx
+
+@@ -1,7 +1,7 @@
+ import { requireNativeView } from 'expo';
+ import * as React from 'react';
+ 
+-import { ContentPadding, FitMode, OnErrorEventPayload, OnLoadCompleteEventPayload, OnPageChangedEventPayload } from './types';
++import { ContentPadding, FitMode, OnErrorEventPayload, OnLoadCompleteEventPayload, OnPageChangedEventPayload, OnScrollEventPayload, ScrollOffset } from './types';
+ import { NativeSyntheticEvent, StyleSheet, ViewProps } from 'react-native';
+ import { forwardNativeEventTo } from './utils';
+ 
+@@ -98,27 +98,43 @@
+   onError?: (
+     event: NativeSyntheticEvent<OnErrorEventPayload>
+   ) => void;
++
++  /**
++   * Fired when the document scroll position changes.
++   */
++  onScroll?: (
++    event: NativeSyntheticEvent<OnScrollEventPayload>
++  ) => void;
+ };
+ 
+ const NativePdfView: React.ComponentType<NativePdfViewProps> = requireNativeView('KJExpoPdf');
+ 
+ // -----------
+ 
++export type PdfViewRef = {
++  scrollToTop: (animated?: boolean) => Promise<void>;
++  getScrollOffset: () => Promise<ScrollOffset>;
++  setScrollOffset: (x: number, y: number, animated?: boolean) => Promise<void>;
++};
++
+ export type PdfViewProps = BaseProps & {
+   onLoadComplete?: (params: OnLoadCompleteEventPayload) => void,
+   onPageChanged?: (params: OnPageChangedEventPayload) => void,
+-  onError?: (params: OnErrorEventPayload) => void
++  onError?: (params: OnErrorEventPayload) => void,
++  onScroll?: (params: OnScrollEventPayload) => void,
+ };
+ 
+-export const PdfView = ({
++export const PdfView = React.forwardRef<PdfViewRef, PdfViewProps>(function PdfView({
+   style,
+   onLoadComplete,
+   onError,
+   onPageChanged,
++  onScroll,
+   ...props
+-}: PdfViewProps) => {
++}, ref) {
+   return (
+     <NativePdfView
++      ref={ref as any}
+       style={[styles.container, style]}
+       uri={props.uri}
+       doubleTapToZoom={props.doubleTapToZoom}
+@@ -133,9 +149,10 @@
+       onLoadComplete={forwardNativeEventTo(onLoadComplete)}
+       onPageChanged={forwardNativeEventTo(onPageChanged)}
+       onError={forwardNativeEventTo(onError)}
++      onScroll={forwardNativeEventTo(onScroll)}
+     />
+   )
+-}
++})
+ 
+ const styles = StyleSheet.create({
+   container: {
+diff --git a/node_modules/@kishannareshpal/expo-pdf/src/types.ts b/node_modules/@kishannareshpal/expo-pdf/src/types.ts
+--- a/node_modules/@kishannareshpal/expo-pdf/src/types.ts
+
++++ b/node_modules/@kishannareshpal/expo-pdf/src/types.ts
+
+@@ -2,6 +2,14 @@
+ 
+ export type OnPageChangedEventPayload = { pageIndex: number, pageCount: number }
+ 
++export type OnScrollEventPayload = {
++  x: number
++  y: number
++  atTop: boolean
++}
++
++export type ScrollOffset = OnScrollEventPayload
++
+ export type ErrorCode = 'invalid_uri' | 'invalid_document' | 'password_required' | 'password_incorrect'
+ 
+ export type OnErrorEventPayload = { code: ErrorCode, message: string }

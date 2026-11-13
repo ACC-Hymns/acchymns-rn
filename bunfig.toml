@@ -1,0 +1,5 @@
+[install]
+# Prevent Bun from auto-installing optional peers such as
+# react-native-vector-icons (pulled in by @futurejj/react-native-checkbox).
+# That unscoped package conflicts with @react-native-vector-icons/ionicons.
+peer = false

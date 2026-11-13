@@ -1,17 +1,293 @@
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/Deprecated/RNIImage/RNIImageRemoteURLMaker.swift b/node_modules/react-native-ios-utilities/ios/Sources/Deprecated/RNIImage/RNIImageRemoteURLMaker.swift
+--- a/node_modules/react-native-ios-utilities/ios/Sources/Deprecated/RNIImage/RNIImageRemoteURLMaker.swift
++++ b/node_modules/react-native-ios-utilities/ios/Sources/Deprecated/RNIImage/RNIImageRemoteURLMaker.swift
+@@ -104,14 +104,14 @@
+   // MARK: - Properties
+   // ------------------
+   
+-  public lazy var imageLoader: RCTImageLoaderWithAttributionProtocol? = {
++  public lazy var imageLoader: RCTImageLoaderProtocol? = {
+     guard let bridge = RCTBridge.current(),
+           let imageLoaderModuleRaw = bridge.module(forName: "ImageLoader")
+     else {
+       return nil
+     };
+     
+-    return imageLoaderModuleRaw as? RCTImageLoaderWithAttributionProtocol;
++    return imageLoaderModuleRaw as? RCTImageLoaderProtocol;
+   }();
+   
+   public var state: State = .INITIAL;
 diff --git a/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift b/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
-index 09be306..e3add2a 100644
 --- a/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
 +++ b/node_modules/react-native-ios-utilities/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
-@@ -25,8 +25,10 @@ public extension RCTView {
+@@ -25,8 +25,10 @@
      return rootView.recursivelyFindSubview(whereType: targetType);
    };
- 
+   
 -  var closestParentReactContentView: RCTRootContentView? {
 -    let targetType = RCTRootContentView.self;
 +  var closestParentReactContentView: RCTView? {
 +    guard let targetType = NSClassFromString("RCTRootContentView") as? RCTView.Type else {
 +      return nil;
 +    };
- 
+   
      if let match = self.recursivelyFindParentView(whereType: targetType) {
        return match;
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/RNIObjcUtils.mm b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/RNIObjcUtils.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/RNIObjcUtils.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/RNIObjcUtils.mm
+@@ -24,6 +24,7 @@
+ #include <react/renderer/core/LayoutMetrics.h>
+ #include <react/renderer/graphics/Rect.h>
+ #include <react/renderer/graphics/RectangleEdges.h>
++#include <mutex>
+ 
+ #import <React/RCTBridgeProxy.h>
+ #import <React/RCTBridgeProxy+Cxx.h>
+@@ -32,6 +33,15 @@
+ 
+ static BOOL SHOULD_LOG = NO;
+ 
++#if __cplusplus
++static std::mutex RNIJSCallInvokerMutex;
++static std::weak_ptr<facebook::react::CallInvoker> RNIJSCallInvoker;
++void RNIObjcUtilsSetJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> callInvoker) {
++  std::lock_guard<std::mutex> lock(RNIJSCallInvokerMutex);
++  RNIJSCallInvoker = callInvoker;
++}
++#endif
++
+ @implementation RNIObjcUtils
+ #if __cplusplus
+ + (std::string)convertToCxxStringForObjcString:(NSString *)string
+@@ -266,10 +276,20 @@
+ + (void)dispatchToJSThreadViaCallInvokerForBlock:(void (^)(void))block
+ {
+ #if __cplusplus
+-  RCTBridge *bridge = [RCTBridge currentBridge];
+-  RCTBridgeProxy *bridgeProxy = (RCTBridgeProxy *)bridge;
+-  
+-  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker = [bridgeProxy jsCallInvoker];
++  std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker;
++  {
++    std::lock_guard<std::mutex> lock(RNIJSCallInvokerMutex);
++    jsCallInvoker = RNIJSCallInvoker.lock();
++  }
++
++  if (jsCallInvoker == nullptr) {
++    RCTBridgeProxy *bridgeProxy = (RCTBridgeProxy *)[RCTBridge currentBridge];
++    jsCallInvoker = [bridgeProxy jsCallInvoker];
++  };
++
++  if (jsCallInvoker == nullptr) {
++    return;
++  };
+   
+   #if REACT_NATIVE_TARGET_VERSION <= 74
+   facebook::react::CallFunc dispatchBlock = [block]() {
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIApplication+RNIHelpers.mm b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIApplication+RNIHelpers.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIApplication+RNIHelpers.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIApplication+RNIHelpers.mm
+@@ -16,8 +16,14 @@
+ //
+ #if REACT_NATIVE_TARGET_VERSION < 78 || RCT_NEW_ARCH_ENABLED || !defined(REACT_NATIVE_TARGET_VERSION)
+ #define USE_RCT_APP_DELEGATE
++#if __has_include(<React-RCTAppDelegate/RCTAppDelegate.h>)
++#import <React-RCTAppDelegate/RCTAppDelegate.h>
++#elif __has_include(<React/RCTAppDelegate.h>)
++#import <React/RCTAppDelegate.h>
++#else
+ #import "RCTAppDelegate.h"
+ #endif
++#endif
+ 
+ #import <React/RCTSurfacePresenter.h>
+ #import <React/RCTSurfacePresenterBridgeAdapter.h>
+@@ -113,7 +119,10 @@
+ 
+ - (RCTSurfacePresenterBridgeAdapter *)reactBridgeAdapter
+ {
+-  #ifdef USE_RCT_APP_DELEGATE
++  // The bridge adapter doesn't exist without the legacy architecture (RN 0.88+)
++  #ifdef RCT_REMOVE_LEGACY_ARCH
++  return nil;
++  #elif defined(USE_RCT_APP_DELEGATE)
+   RCTAppDelegate *reactAppDelegate = [self reactAppDelegate];
+   
+   if(reactAppDelegate == nil){
+@@ -134,6 +143,9 @@
+ 
+ - (RCTSurfacePresenter *) reactSurfacePresenter
+ {
++  #ifdef RCT_REMOVE_LEGACY_ARCH
++  return nil;
++  #else
+   RCTSurfacePresenterBridgeAdapter *reactBridgeAdapter = [self reactBridgeAdapter];
+   
+   if(reactBridgeAdapter == nil){
+@@ -141,6 +153,7 @@
+   };
+   
+   return [reactBridgeAdapter surfacePresenter];
++  #endif
+ }
+ 
+ - (RCTMountingManager *)reactMountingManager
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIView+RNIPaperHelpers.mm b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIView+RNIPaperHelpers.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIView+RNIPaperHelpers.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/ObjcHelpers/UIView+RNIPaperHelpers.mm
+@@ -27,12 +27,14 @@
+ - (RCTBridge *)reactGetPaperBridge
+ {
+   #if RCT_NEW_ARCH_ENABLED
++  #ifndef RCT_REMOVE_LEGACY_ARCH
+   RCTSurfacePresenterBridgeAdapter *reactBridgeAdapter =
+     [[UIApplication sharedApplication] reactBridgeAdapter];
+     
+   if(reactBridgeAdapter != nil){
+     return reactBridgeAdapter.bridge;
+   };
++  #endif
+   #else
+   RCTRootView *reactPaperRootView = [self reactGetPaperRootView];
+   if(reactPaperRootView != nil){
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/RNIBaseView/RNIBaseView.mm b/node_modules/react-native-ios-utilities/ios/Sources/RNIBaseView/RNIBaseView.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/RNIBaseView/RNIBaseView.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/RNIBaseView/RNIBaseView.mm
+@@ -25,7 +25,11 @@
+ #include "RNIBaseViewProps.h"
+ #include "RNIBaseViewEventEmitter.h"
+ 
++#if __has_include(<React/RCTFabricComponentsPlugins.h>)
++#import <React/RCTFabricComponentsPlugins.h>
++#else
+ #import "RCTFabricComponentsPlugins.h"
++#endif
+ 
+ #import "RNIUtilitiesFollyConvert.h"
+ #import <React/RCTSurfaceTouchHandler.h>
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/RNIDetachedView/RNIDetachedViewManager.mm b/node_modules/react-native-ios-utilities/ios/Sources/RNIDetachedView/RNIDetachedViewManager.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/RNIDetachedView/RNIDetachedViewManager.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/RNIDetachedView/RNIDetachedViewManager.mm
+@@ -10,7 +10,7 @@
+ 
+ #import "RNIBaseViewUtils.h"
+ 
+-#import "RCTBridge.h"
++#import <React/RCTBridge.h>
+ #import <React/RCTViewManager.h>
+ #import <React/RCTUIManager.h>
+ 
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/RNIDummyTestView/RNIDummyTestViewManager.mm b/node_modules/react-native-ios-utilities/ios/Sources/RNIDummyTestView/RNIDummyTestViewManager.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/RNIDummyTestView/RNIDummyTestViewManager.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/RNIDummyTestView/RNIDummyTestViewManager.mm
+@@ -13,7 +13,7 @@
+ 
+ #import <React/RCTViewManager.h>
+ #import <React/RCTUIManager.h>
+-#import "RCTBridge.h"
++#import <React/RCTBridge.h>
+ 
+ 
+ @interface RNIDummyTestViewManager : RCTViewManager
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/RNIUtilitiesModule/RNIUtilitiesModule.mm b/node_modules/react-native-ios-utilities/ios/Sources/RNIUtilitiesModule/RNIUtilitiesModule.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/RNIUtilitiesModule/RNIUtilitiesModule.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/RNIUtilitiesModule/RNIUtilitiesModule.mm
+@@ -23,6 +23,10 @@
+ 
+ #include <jsi/jsi.h>
+ #include <string>
++#if __has_include(<ReactCommon/RCTTurboModuleWithJSIBindings.h>)
++#import <ReactCommon/RCTTurboModuleWithJSIBindings.h>
++#define RNI_HAS_JSI_BINDINGS 1
++#endif
+ 
+ #if DEBUG
+ #include <iostream>
+@@ -35,6 +39,16 @@
+ 
+ static BOOL SHOULD_LOG = NO;
+ 
++#if __cplusplus
++static jsi::Runtime *RNIUtilitiesJSIRuntime = nullptr;
++void RNIObjcUtilsSetJSCallInvoker(std::shared_ptr<facebook::react::CallInvoker> callInvoker);
++#endif
++
++#ifdef RNI_HAS_JSI_BINDINGS
++@interface RNIUtilitiesModule () <RCTTurboModuleWithJSIBindings>
++@end
++#endif
++
+ @implementation RNIUtilitiesModule {
+   BOOL _didInstallHostObject;
+ }
+@@ -75,15 +89,16 @@
+     return;
+   };
+   
+-  RCTBridge *bridge = [RCTBridge currentBridge];
+-  
+-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)bridge;
+-  if (cxxBridge == nil) {
+-    return;
++  jsi::Runtime *jsiRuntime = RNIUtilitiesJSIRuntime;
++
++  #ifndef RCT_REMOVE_LEGACY_ARCH
++  if (jsiRuntime == nullptr) {
++    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)[RCTBridge currentBridge];
++    jsiRuntime = (jsi::Runtime *)cxxBridge.runtime;
+   };
+-  
+-  auto jsiRuntime = (jsi::Runtime *)cxxBridge.runtime;
+-  if (jsiRuntime == nil) {
++  #endif
++
++  if (jsiRuntime == nullptr) {
+     return;
+   };
+     
+@@ -250,6 +265,21 @@
+   self->_didInstallHostObject = YES;
+ }
+ 
++#ifdef RNI_HAS_JSI_BINDINGS
++- (void)installJSIBindingsWithRuntime:(jsi::Runtime &)runtime
++                          callInvoker:(const std::shared_ptr<facebook::react::CallInvoker> &)callInvoker
++{
++  RNIObjcUtilsSetJSCallInvoker(callInvoker);
++  [self installJSIBindingsWithRuntime:runtime];
++}
++
++- (void)installJSIBindingsWithRuntime:(jsi::Runtime &)runtime
++{
++  RNIUtilitiesJSIRuntime = &runtime;
++  [self installHostObjectIfNeeded];
++}
++#endif
++
+ // MARK: Module Commands
+ // ---------------------
+ 
+@@ -384,7 +414,9 @@
+ /// Doesn't get called...
+ - (std::shared_ptr<TurboModule>)getTurboModule:(const ObjCTurboModule::InitParams &)params
+ {
++ #ifndef RNI_HAS_JSI_BINDINGS
+  [self installHostObjectIfNeeded];
++ #endif
+  return std::make_shared<react::NativeRNIUtilitiesModuleSpecJSI>(params);
+ }
+ #endif
+diff --git a/node_modules/react-native-ios-utilities/ios/Sources/RNIWrapperView/RNIWrapperViewManager.mm b/node_modules/react-native-ios-utilities/ios/Sources/RNIWrapperView/RNIWrapperViewManager.mm
+--- a/node_modules/react-native-ios-utilities/ios/Sources/RNIWrapperView/RNIWrapperViewManager.mm
++++ b/node_modules/react-native-ios-utilities/ios/Sources/RNIWrapperView/RNIWrapperViewManager.mm
+@@ -10,7 +10,7 @@
+ 
+ #import "RNIBaseViewUtils.h"
+ 
+-#import "RCTBridge.h"
++#import <React/RCTBridge.h>
+ #import <React/RCTViewManager.h>
+ #import <React/RCTUIManager.h>
+ 
